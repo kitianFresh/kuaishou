@@ -11,11 +11,14 @@ try:
 except ImportError as e:
     print(e)
     xgboost = False
-# try:
-#     from lightgbm import LGBMClassifier
-# except ImportError as e:
-#     print(e)
-lgbm = False
+try:
+    from lightgbm import LGBMClassifier
+except ImportError as e:
+    print(e)
+    lgbm = False
+    
+    
+    
 # params config
 
 # model config

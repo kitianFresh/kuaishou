@@ -1,11 +1,13 @@
 #coding:utf8
 import os
 import argparse
+import sys
+sys.path.append("..")
 
 import pandas as pd
 import numpy as np
 
-from utils import *
+from common.utils import read_data, store_data
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")

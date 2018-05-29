@@ -1,11 +1,13 @@
 #coding:utf8
 import os
 import argparse
+import sys
+sys.path.append("..")
 
 import numpy as np
 import pandas as pd
 
-from utils import *
+from common.utils import read_data, store_data
 
 def face_num_discretization(face_num):
     if face_num == 0:

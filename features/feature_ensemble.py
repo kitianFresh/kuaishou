@@ -7,7 +7,7 @@ sys.path.append("..")
 import pandas as pd
 import numpy as np
 
-from utils import *
+from common.utils import read_data, store_data
 from conf.modelconf import *
 
 parser = argparse.ArgumentParser()

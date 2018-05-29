@@ -1,12 +1,13 @@
 #coding:utf8
 import os
 import argparse
-
+import sys
+sys.path.append('..')
 
 import numpy as np
 import pandas as pd
 
-from utils import store_data
+from common.utils import read_data, store_data
 
 def add_face_feature(face_data):
     face_data['faces'] = face_data['faces'].apply(eval)
@@ -23,14 +24,6 @@ def add_face_feature(face_data):
     face_data['woman_avg_attr'] = face_data['faces'].apply(lambda lists: np.mean([l[3] for l in lists if l[1] == 0]))
     face_data['human_avg_attr'] = face_data['faces'].apply(lambda lists: np.mean([l[3] for l in lists]))
     return face_data
-
-def str2bool(v):
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
 parser = argparse.ArgumentParser()

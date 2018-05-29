@@ -18,22 +18,8 @@ from scipy.stats import spearmanr
 
 from conf.modelconf import user_action_features, face_features, user_face_favor_features, id_features, time_features, photo_features, user_features, y_label, features_to_train
 
+from common.utils import read_data, store_data, normalize_min_max, normalize_z_score
 
-def read_data(path, fmt):
-    '''
-    return DataFrame by given format data
-    '''
-    if fmt == 'csv':
-        df = pd.read_csv(path, sep='\t')
-    elif fmt == 'pkl':
-        df = pd.read_pickle(path)
-    return df
-
-def store_data(df, path, fmt, sep='\t', index=False):
-    if fmt == 'csv':
-        df.to_csv(path, sep=sep, index=index)
-    elif fmt == 'pkl':
-        df.to_pickle(path)
         
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
@@ -62,13 +48,14 @@ if __name__ == '__main__':
     print("all original features")
     print(all_features) 
     y = ensemble_train[y_label].values
+    features_to_train = ['click_ratio', 'exposure_num', 'duration_time', 'human_scale', 'time', 'woman_age_favor', 'woman_avg_age', 'woman_yen_value_favor', 'woman_cv_favor', 'human_avg_attr', 'woman_scale', 'playing_ratio', 'man_age_favor', 'human_avg_age', 'face_favor', 'man_cv_favor', 'man_avg_age', 'man_scale', 'man_yen_value_favor', 'click_num', 'playing_sum', 'browse_num', 'man_avg_attr', 'woman_favor', 'duration_sum', 'woman_avg_attr', 'face_num_class', 'have_face']
     
     submission = pd.DataFrame()
     submission['user_id'] = ensemble_test['user_id']
     submission['photo_id'] = ensemble_test['photo_id']
-    features_to_train = ['click_ratio', 'exposure_num', 'click_num', 'like_ratio',
- 'playing_ratio', 'playing_sum', 'follow_ratio', 'woman_favor', 'woman_age_favor', 'woman_scale',
- 'woman_cv_favor', 'human_scale', 'browse_num', 'duration_sum']
+#     features_to_train = ['click_ratio', 'exposure_num', 'click_num', 'like_ratio',
+#  'playing_ratio', 'playing_sum', 'follow_ratio', 'woman_favor', 'woman_age_favor', 'woman_scale',
+#  'woman_cv_favor', 'human_scale', 'browse_num', 'duration_sum']
     print("train features")
     print(features_to_train)    
 
@@ -77,12 +64,10 @@ if __name__ == '__main__':
     ensemble_test = ensemble_test[features_to_train]
     num_train, num_test = ensemble_train.shape[0], ensemble_test.shape[0]
     ensemble_data = pd.concat([ensemble_train, ensemble_test])
-    def normalize(df, features):
-        df[features] = df[features].apply(lambda x: (x-x.min())/(x.max()-x.min()))
     
     norm_features = ['exposure_num', 'click_num', 'playing_sum', 'woman_favor', 'woman_age_favor', 'woman_scale', 'woman_cv_favor', 'human_scale', 'browse_num', 'duration_sum']
     
-    normalize(ensemble_data, norm_features)
+    normalize_min_max(ensemble_data, norm_features)
     train = ensemble_data.iloc[:num_train,:]
     test = ensemble_data.iloc[num_train:,:]
     X = train.as_matrix()
@@ -104,10 +89,10 @@ if __name__ == '__main__':
     submission.to_csv(dst, sep='\t', index=False, header=False)
 
     try: 
+        important_features = []
         importances = clf.feature_importances_
         indices = np.argsort(importances)[::-1]
         print('{}特征权值分布为: '.format(name))
-        important_features = []
         for f in range(X_train.shape[1]):
             print("%d. feature %d [%s] (%f)" % (f + 1, indices[f], features_to_train[indices[f]], importances[indices[f]]))
             important_features.append(features_to_train[indices[f]])
