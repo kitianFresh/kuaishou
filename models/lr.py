@@ -65,7 +65,7 @@ if __name__ == '__main__':
     num_train, num_test = ensemble_train.shape[0], ensemble_test.shape[0]
     ensemble_data = pd.concat([ensemble_train, ensemble_test])
     
-    norm_features = ['exposure_num', 'click_num', 'playing_sum', 'woman_favor', 'woman_age_favor', 'woman_scale', 'woman_cv_favor', 'human_scale', 'browse_num', 'duration_sum']
+    norm_features = ['browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum', 'duration_sum', 'click_ratio', 'like_ratio', 'follow_ratio', 'playing_ratio', 'face_favor', 'man_favor', 'woman_favor', 'man_cv_favor', 'woman_cv_favor', 'man_age_favor', 'woman_age_favor', 'man_yen_value_favor', 'woman_yen_value_favor', 'exposure_num', 'face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age', 'woman_avg_age', 'human_avg_age', 'man_avg_attr', 'woman_avg_attr', 'human_avg_attr', 'time', 'duration_time']
     
     normalize_min_max(ensemble_data, norm_features)
     train = ensemble_data.iloc[:num_train,:]
