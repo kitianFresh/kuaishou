@@ -48,7 +48,7 @@ if __name__ == '__main__':
     y = ensemble_train[y_label].values
     
     # less features to avoid overfit
-#     features_to_train = ['click_ratio', 'exposure_num', 'duration_time', 'human_scale', 'time', 'woman_age_favor', 'woman_avg_age', 'woman_yen_value_favor', 'woman_cv_favor', 'human_avg_attr', 'woman_scale', 'playing_ratio', 'man_age_favor', 'human_avg_age', 'face_favor', 'man_cv_favor', 'man_avg_age', 'man_scale', 'man_yen_value_favor', 'click_num', 'playing_sum', 'browse_num', 'man_avg_attr', 'woman_favor', 'duration_sum', 'woman_avg_attr']
+    features_to_train = ['click_ratio', 'duration_time', 'exposure_num', 'woman_cv_favor', 'woman_age_favor', 'human_scale', 'man_age_favor', 'woman_yen_value_favor', 'man_cv_favor', 'woman_scale', 'time', 'woman_avg_age', 'woman_favor', 'man_yen_value_favor', 'man_scale', 'playing_ratio', 'man_avg_age', 'human_avg_attr', 'face_favor', 'click_num', 'human_avg_age', 'playing_sum', 'man_avg_attr', 'click_freq', 'woman_avg_attr', 'browse_num', 'browse_freq', 'woman_num', 'man_favor', 'playing_freq']
     
     submission = pd.DataFrame()
     submission['user_id'] = ensemble_test['user_id']
