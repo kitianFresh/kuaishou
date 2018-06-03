@@ -19,6 +19,10 @@ if __name__ == '__main__':
     
     USE_SAMPLE = args.sample
     fmt = args.format if args.format else 'csv'
+    feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
+    if not os.path.exists(feature_store_path):
+        os.mkdir(feature_store_path) 
+        
     
     TRAIN_USER_INTERACT = '../sample/train_interaction.txt' if USE_SAMPLE else '../data/train_interaction.txt'
     TEST_INTERACT = '../sample/test_interaction.txt' if USE_SAMPLE else '../data/test_interaction.txt'
@@ -34,12 +38,12 @@ if __name__ == '__main__':
 
     PHOTO_FEATURE_FILE = 'photo_feature'
     PHOTO_FEATURE_FILE = PHOTO_FEATURE_FILE + '_sample' + '.' + fmt if USE_SAMPLE else PHOTO_FEATURE_FILE + '.' + fmt
-    photo_data = read_data(PHOTO_FEATURE_FILE, fmt)
+    photo_data = read_data(os.path.join(feature_store_path, PHOTO_FEATURE_FILE), fmt)
     
     
     USER_FEATURE_FILE = 'user_feature'
     USER_FEATURE_FILE = USER_FEATURE_FILE + '_sample' + '.' + fmt if USE_SAMPLE else USER_FEATURE_FILE +  '.' + fmt
-    users = read_data(USER_FEATURE_FILE, fmt)
+    users = read_data(os.path.join(feature_store_path, USER_FEATURE_FILE), fmt)
     
     user_item_train = pd.merge(user_item_train, users,
                           how='inner',
@@ -70,11 +74,12 @@ if __name__ == '__main__':
     ensemble_test = user_item_test[input_features]
     print(ensemble_test.info())
     
+    
     ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
     ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
     
     ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
     ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
     
-    store_data(ensemble_train, ALL_FEATURE_TRAIN_FILE, fmt)
-    store_data(ensemble_test, ALL_FEATURE_TEST_FILE, fmt)
+    store_data(ensemble_train, os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
+    store_data(ensemble_test, os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)

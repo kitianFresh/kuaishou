@@ -60,4 +60,7 @@ if __name__ == '__main__':
 
     FACE_FEATURE_FILE = 'face_feature'
     FACE_FEATURE_FILE = FACE_FEATURE_FILE + '_sample' + '.' + fmt if USE_SAMPLE else FACE_FEATURE_FILE + '.' + fmt
-    store_data(face_data, FACE_FEATURE_FILE, fmt)
+    feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
+    if not os.path.exists(feature_store_path):
+        os.mkdir(feature_store_path)    
+    store_data(face_data, os.path.join(feature_store_path, FACE_FEATURE_FILE), fmt)

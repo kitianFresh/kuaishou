@@ -26,17 +26,18 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
     
-    path = '../features'
     USE_SAMPLE = args.sample
     fmt = args.format if args.format else 'csv'
     
+    feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
+
     ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
     ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
-    ensemble_train = read_data(os.path.join(path, ALL_FEATURE_TRAIN_FILE), fmt)
+    ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
 
     ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
     ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
-    ensemble_test = read_data(os.path.join(path, ALL_FEATURE_TEST_FILE), fmt)
+    ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
 
     print(ensemble_train.info())
     print(ensemble_test.info())
@@ -46,14 +47,14 @@ if __name__ == '__main__':
     print(all_features) 
     y = ensemble_train[y_label].values
     
-    features_to_train = ['click_ratio', 'exposure_num', 'duration_time', 'human_scale', 'time', 'woman_age_favor', 'woman_avg_age', 'woman_yen_value_favor', 'woman_cv_favor', 'human_avg_attr', 'woman_scale', 'playing_ratio', 'man_age_favor', 'human_avg_age', 'face_favor', 'man_cv_favor', 'man_avg_age', 'man_scale', 'man_yen_value_favor', 'click_num', 'playing_sum', 'browse_num', 'man_avg_attr', 'woman_favor', 'duration_sum', 'woman_avg_attr', 'face_num_class', 'have_face']
+    # less features to avoid overfit
+#     features_to_train = ['click_ratio', 'exposure_num', 'duration_time', 'human_scale', 'time', 'woman_age_favor', 'woman_avg_age', 'woman_yen_value_favor', 'woman_cv_favor', 'human_avg_attr', 'woman_scale', 'playing_ratio', 'man_age_favor', 'human_avg_age', 'face_favor', 'man_cv_favor', 'man_avg_age', 'man_scale', 'man_yen_value_favor', 'click_num', 'playing_sum', 'browse_num', 'man_avg_attr', 'woman_favor', 'duration_sum', 'woman_avg_attr']
     
     submission = pd.DataFrame()
     submission['user_id'] = ensemble_test['user_id']
     submission['photo_id'] = ensemble_test['photo_id']
     
-#     features_to_train = ['click_ratio', 'duration_time', 'exposure_num', 'woman_cv_favor', 'man_age_favor', 'man_cv_favor', 'woman_age_favor', 'woman_yen_value_favor', 'human_scale', 'time', 'man_scale', 'man_yen_value_favor']
-    
+
     print("train features")
     print(features_to_train)    
 
@@ -61,7 +62,7 @@ if __name__ == '__main__':
     ensemble_test = ensemble_test[features_to_train]
     num_train, num_test = ensemble_train.shape[0], ensemble_test.shape[0]
     ensemble_data = pd.concat([ensemble_train, ensemble_test])
-    norm_features = ['browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum', 'duration_sum', 'click_ratio', 'like_ratio', 'follow_ratio', 'playing_ratio', 'face_favor', 'man_favor', 'woman_favor', 'man_cv_favor', 'woman_cv_favor', 'man_age_favor', 'woman_age_favor', 'man_yen_value_favor', 'woman_yen_value_favor', 'exposure_num', 'face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age', 'woman_avg_age', 'human_avg_age', 'man_avg_attr', 'woman_avg_attr', 'human_avg_attr', 'time', 'duration_time']
+    norm_features = ['browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum', 'duration_sum', 'click_ratio', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq', 'playing_freq', 'face_favor', 'man_favor', 'woman_favor', 'man_cv_favor', 'woman_cv_favor', 'man_age_favor', 'woman_age_favor', 'man_yen_value_favor', 'woman_yen_value_favor', 'exposure_num', 'face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age', 'woman_avg_age', 'human_avg_age', 'man_avg_attr', 'woman_avg_attr', 'human_avg_attr', 'time', 'duration_time']
     
 #     normalize_z_score(ensemble_data, norm_features)
     normalize_min_max(ensemble_data, norm_features)
