@@ -54,7 +54,7 @@ if __name__ == '__main__':
     print(face_test.info())
     
     face_data = pd.concat([face_train, face_test])
-    face_tata = add_face_feature(face_data)
+    face_data = add_face_feature(face_data)
     face_data.drop(['faces'],axis=1,inplace=True)
     face_data.fillna(0, inplace=True)
 

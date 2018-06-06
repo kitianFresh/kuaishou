@@ -77,16 +77,32 @@ if __name__ == '__main__':
     users['playing_freq'] = users['playing_sum'] / users['browse_time_diff']
     
     # 用户点击视频中对人脸和颜值以及年龄的偏好，以后考虑离散化
-    users['face_favor'] = user_item_train.loc[user_item_train['click']==1, ['user_id', 'face_num']].groupby(user_item_train['user_id']).transform('mean').drop_duplicates(['user_id'])['face_num'].values
-    users['man_favor'] = user_item_train.loc[user_item_train['click']==1, ['user_id', 'man_num']].groupby(user_item_train['user_id']).transform('mean').drop_duplicates(['user_id'])['man_num'].values
-    users['woman_favor'] = user_item_train.loc[user_item_train['click']==1, ['user_id', 'woman_num']].groupby(user_item_train['user_id']).transform('mean').drop_duplicates(['user_id'])['woman_num'].values
-    users['man_cv_favor'] = user_item_train.loc[user_item_train['click']==1, ['user_id', 'man_scale']].groupby(user_item_train['user_id']).transform('mean').drop_duplicates(['user_id'])['man_scale'].values
-    users['woman_cv_favor'] = user_item_train.loc[user_item_train['click']==1, ['user_id', 'woman_scale']].groupby(user_item_train['user_id']).transform('mean').drop_duplicates(['user_id'])['woman_scale'].values
-    users['man_age_favor'] = user_item_train.loc[user_item_train['click']==1, ['user_id', 'man_avg_age']].groupby(user_item_train['user_id']).transform('mean').drop_duplicates(['user_id'])['man_avg_age'].values
-    users['woman_age_favor'] = user_item_train.loc[user_item_train['click']==1, ['user_id', 'woman_avg_age']].groupby(user_item_train['user_id']).transform('mean').drop_duplicates(['user_id'])['woman_avg_age'].values
-    users['man_yen_value_favor'] = user_item_train.loc[user_item_train['click']==1, ['user_id', 'man_avg_attr']].groupby(user_item_train['user_id']).transform('mean').drop_duplicates(['user_id'])['man_avg_attr'].values
-    users['woman_yen_value_favor'] = user_item_train.loc[user_item_train['click']==1, ['user_id', 'woman_avg_attr']].groupby(user_item_train['user_id']).transform('mean').drop_duplicates(['user_id'])['woman_avg_attr'].values
-
+    favor_cols = ['face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'man_avg_age', 'woman_avg_age', 'man_avg_attr', 'woman_avg_attr', 'cover_length']
+    favors = user_item_train.loc[user_item_train['click']==1, favor_cols+['user_id']]
+    favors['face_favor'] = favors['face_num'].groupby(favors['user_id']).transform('mean')
+    favors['man_favor'] = favors['man_num'].groupby(favors['user_id']).transform('mean')
+    favors['woman_favor'] = favors['woman_num'].groupby(favors['user_id']).transform('mean')
+    favors['man_cv_favor'] = favors['man_scale'].groupby(favors['user_id']).transform('mean')
+    favors['woman_cv_favor'] = favors['woman_scale'].groupby(favors['user_id']).transform('mean')
+    favors['man_age_favor'] = favors['man_avg_age'].groupby(favors['user_id']).transform('mean')
+    favors['woman_age_favor'] = favors['woman_avg_age'].groupby(favors['user_id']).transform('mean')
+    favors['man_yen_value_favor'] = favors['man_avg_attr'].groupby(favors['user_id']).transform('mean')
+    favors['woman_yen_value_favor'] = favors['woman_avg_attr'].groupby(favors['user_id']).transform('mean')
+    
+    favors['cover_length_favor'] = favors['cover_length']
+    
+    favors.drop_duplicates(['user_id'], inplace=True)
+    favors.drop(favor_cols, axis=1, inplace=True)
+    favors.reset_index(drop=True, inplace=True)
+    
+    users = pd.merge(users, favors,
+                how='left',
+                on=['user_id'])
+    
+    users.fillna(0, inplace=True)
+    
+    print(users.info())
+    
     USER_FEATURE_FILE = 'user_feature'
     USER_FEATURE_FILE = USER_FEATURE_FILE + '_sample' + '.' + fmt if USE_SAMPLE else USER_FEATURE_FILE + '.' + fmt
     

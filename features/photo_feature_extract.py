@@ -27,6 +27,10 @@ if __name__ == '__main__':
     FACE_FEATURE_FILE = 'face_feature'
     FACE_FEATURE_FILE = FACE_FEATURE_FILE + '_sample' + '.' + fmt if USE_SAMPLE else FACE_FEATURE_FILE + '.' + fmt
     face_data = read_data(os.path.join(feature_store_path, FACE_FEATURE_FILE), fmt)
+    
+    TEXT_FEATURE_FILE = 'text_feature'
+    TEXT_FEATURE_FILE = TEXT_FEATURE_FILE + '_sample' + '.' + fmt if USE_SAMPLE else TEXT_FEATURE_FILE + '.' + fmt
+    text_data = read_data(os.path.join(feature_store_path, TEXT_FEATURE_FILE), fmt)
 
     TRAIN_USER_INTERACT = '../sample/train_interaction.txt' if USE_SAMPLE else '../data/train_interaction.txt'
     TEST_INTERACT = '../sample/test_interaction.txt' if USE_SAMPLE else '../data/test_interaction.txt'
@@ -46,9 +50,13 @@ if __name__ == '__main__':
     photo_data = pd.DataFrame()
     photo_data['photo_id'] = user_item_data['photo_id']
     photo_data['exposure_num'] = user_item_data['photo_id'].groupby(user_item_data['photo_id']).transform('count') 
-    print(photo_data.info())
+    
     photo_data.drop_duplicates(inplace=True)
     photo_data = pd.merge(photo_data, face_data,
+                     how="left",
+                     on=['photo_id'])
+    
+    photo_data = pd.merge(photo_data, text_data,
                      how="left",
                      on=['photo_id'])
 
@@ -56,6 +64,7 @@ if __name__ == '__main__':
     photo_data['have_face_cate'] = photo_data['face_num'].apply(lambda x: x >= 1)
 #     photo_data.drop(['face_num'], axis=1, inplace=True)
     
+    print(photo_data.info())
     PHOTO_FEATURE_FILE = 'photo_feature'
     PHOTO_FEATURE_FILE = PHOTO_FEATURE_FILE + '_sample' + '.' + fmt if USE_SAMPLE else PHOTO_FEATURE_FILE + '.' + fmt
        

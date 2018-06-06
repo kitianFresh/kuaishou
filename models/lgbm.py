@@ -48,7 +48,7 @@ if __name__ == '__main__':
     y = ensemble_train[y_label].values
     
     # less features to avoid overfit
-    features_to_train = ['click_ratio', 'duration_time', 'exposure_num', 'woman_cv_favor', 'woman_age_favor', 'human_scale', 'man_age_favor', 'woman_yen_value_favor', 'man_cv_favor', 'woman_scale', 'time', 'woman_avg_age', 'woman_favor', 'man_yen_value_favor', 'man_scale', 'playing_ratio', 'man_avg_age', 'human_avg_attr', 'face_favor', 'click_num', 'human_avg_age', 'playing_sum', 'man_avg_attr', 'click_freq', 'woman_avg_attr', 'browse_num', 'browse_freq', 'woman_num', 'man_favor', 'playing_freq']
+#     features_to_train = ['click_ratio', 'duration_time', 'exposure_num', 'woman_cv_favor', 'woman_age_favor', 'human_scale', 'man_age_favor', 'woman_yen_value_favor', 'man_cv_favor', 'woman_scale', 'time', 'woman_avg_age', 'woman_favor', 'man_yen_value_favor', 'man_scale', 'playing_ratio', 'man_avg_age', 'human_avg_attr', 'face_favor', 'click_num', 'human_avg_age', 'playing_sum', 'man_avg_attr', 'click_freq', 'woman_avg_attr', 'browse_num', 'browse_freq', 'woman_num', 'man_favor', 'playing_freq']
     
     submission = pd.DataFrame()
     submission['user_id'] = ensemble_test['user_id']
@@ -62,10 +62,10 @@ if __name__ == '__main__':
     ensemble_test = ensemble_test[features_to_train]
     num_train, num_test = ensemble_train.shape[0], ensemble_test.shape[0]
     ensemble_data = pd.concat([ensemble_train, ensemble_test])
-    norm_features = ['browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum', 'duration_sum', 'click_ratio', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq', 'playing_freq', 'face_favor', 'man_favor', 'woman_favor', 'man_cv_favor', 'woman_cv_favor', 'man_age_favor', 'woman_age_favor', 'man_yen_value_favor', 'woman_yen_value_favor', 'exposure_num', 'face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age', 'woman_avg_age', 'human_avg_age', 'man_avg_attr', 'woman_avg_attr', 'human_avg_attr', 'time', 'duration_time']
+#     norm_features = ['browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum', 'duration_sum', 'click_ratio', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq', 'playing_freq', 'face_favor', 'man_favor', 'woman_favor', 'man_cv_favor', 'woman_cv_favor', 'man_age_favor', 'woman_age_favor', 'man_yen_value_favor', 'woman_yen_value_favor', 'exposure_num', 'face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age', 'woman_avg_age', 'human_avg_age', 'man_avg_attr', 'woman_avg_attr', 'human_avg_attr', 'time', 'duration_time']
     
 #     normalize_z_score(ensemble_data, norm_features)
-    normalize_min_max(ensemble_data, norm_features)
+#     normalize_min_max(ensemble_data, norm_features)
     train = ensemble_data.iloc[:num_train,:]
     test = ensemble_data.iloc[num_train:,:]
     del ensemble_data
