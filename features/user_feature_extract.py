@@ -7,7 +7,7 @@ sys.path.append("..")
 import pandas as pd
 import numpy as np
 
-from common.utils import read_data, store_data
+from common.utils import read_data, store_data, BayesianSmoothing
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
@@ -89,6 +89,7 @@ if __name__ == '__main__':
     favors['man_yen_value_favor'] = favors['man_avg_attr'].groupby(favors['user_id']).transform('mean')
     favors['woman_yen_value_favor'] = favors['woman_avg_attr'].groupby(favors['user_id']).transform('mean')
     
+    # 文本平均长度作为偏爱率
     favors['cover_length_favor'] = favors['cover_length'].groupby(favors['user_id']).transform('mean')
     
     favors.drop_duplicates(['user_id'], inplace=True)
@@ -100,6 +101,16 @@ if __name__ == '__main__':
                 on=['user_id'])
     
     users.fillna(0, inplace=True)
+    
+    # 对用户点击率做贝叶斯平滑
+    I, C = users['browse_num'].values, users['click_num'].values
+    #bs.update(I, C, 10000, 0.0000000001)
+    #print(bs.alpha, bs.beta)
+    #alpha, beta = bs.alpha, bs.beta
+    ctr = []
+    for i in range(len(I)):
+        ctr.append((C[i]+alpha)/(I[i]+alpha+beta))
+    users['click_ratio'] = ctr
     
     print(users.info())
     

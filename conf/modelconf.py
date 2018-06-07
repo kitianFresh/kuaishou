@@ -61,3 +61,7 @@ user_features = user_action_features + user_face_favor_features + user_text_favo
 y_label = ['click']
 
 features_to_train = user_features + photo_features + time_features
+
+# BayesianSmoothing parameters, this already trained
+alpha = 2.5171267342473382
+beta = 7.087836849232511
