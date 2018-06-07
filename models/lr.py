@@ -1,6 +1,7 @@
 #coding:utf8
 import os
 import gc
+import json
 import argparse
 import sys
 sys.path.append("..")
@@ -10,6 +11,7 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 
 from sklearn import preprocessing
+from sklearn.externals import joblib
 from sklearn.model_selection import cross_val_score, train_test_split, GridSearchCV
 from sklearn.metrics import roc_curve, auc
 from sklearn.metrics import recall_score, accuracy_score
@@ -24,22 +26,39 @@ from common.utils import read_data, store_data, normalize_min_max, normalize_z_s
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
+parser.add_argument('-v', '--version', help='model version, there will be a version control and a json description file for this model', required=True)
+parser.add_argument('-d', '--description', help='description for a model, a json description file attached to a model', required=True)
 
 args = parser.parse_args()
+
 
 if __name__ == '__main__':
     
     path = '../features'
     USE_SAMPLE = args.sample
     fmt = args.format if args.format else 'csv'
+    version = args.version
+    desc = args.description
+    
+    model_name = 'LR'
+    model_file = model_name + '-Sample' + '-' + version + '.model' if USE_SAMPLE else model_name + '-' + version + '.model'
+    model_metainfo_file = model_name + '-Sample' + '-' + version + '.json' if USE_SAMPLE else model_name + '-' + version + '.json'
+    sub_file = 'Sub-' + model_name + '-Sample' + '-' + version + '.txt' if USE_SAMPLE else 'Sub-' + model_name + '-' + version + '.txt'
+    
+    if os.path.exists(model_file):
+        print('There already has a model with the same version.')
+        sys.exit(-1)
+        
+    feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
+
     
     ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
     ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
-    ensemble_train = read_data(os.path.join(path, ALL_FEATURE_TRAIN_FILE), fmt)
+    ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
 
     ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
     ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
-    ensemble_test = read_data(os.path.join(path, ALL_FEATURE_TEST_FILE), fmt)
+    ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
 
     print(ensemble_train.info())
     print(ensemble_test.info())
@@ -48,14 +67,14 @@ if __name__ == '__main__':
     print("all original features")
     print(all_features) 
     y = ensemble_train[y_label].values
-    features_to_train = ['click_ratio', 'exposure_num', 'duration_time', 'human_scale', 'time', 'woman_age_favor', 'woman_avg_age', 'woman_yen_value_favor', 'woman_cv_favor', 'human_avg_attr', 'woman_scale', 'playing_ratio', 'man_age_favor', 'human_avg_age', 'face_favor', 'man_cv_favor', 'man_avg_age', 'man_scale', 'man_yen_value_favor', 'click_num', 'playing_sum', 'browse_num', 'man_avg_attr', 'woman_favor', 'duration_sum', 'woman_avg_attr', 'have_face_cate']
     
+    # less features to avoid overfit
+#     features_to_train = ['click_ratio', 'exposure_num', 'duration_time', 'woman_cv_favor', 'woman_age_favor', 'man_cv_favor', 'man_age_favor', 'woman_yen_value_favor', 'human_scale', 'time', 'man_scale', 'woman_favor', 'woman_scale', 'man_yen_value_favor', 'cover_length', 'click_num', 'woman_avg_age', 'human_avg_age', 'human_avg_attr', 'man_avg_age', 'man_favor', 'cover_length_favor', 'playing_sum', 'face_favor', 'playing_ratio', 'man_avg_attr', 'woman_avg_attr', 'click_freq', 'browse_freq', 'man_num']
+
     submission = pd.DataFrame()
     submission['user_id'] = ensemble_test['user_id']
     submission['photo_id'] = ensemble_test['photo_id']
-#     features_to_train = ['click_ratio', 'exposure_num', 'click_num', 'like_ratio',
-#  'playing_ratio', 'playing_sum', 'follow_ratio', 'woman_favor', 'woman_age_favor', 'woman_scale',
-#  'woman_cv_favor', 'human_scale', 'browse_num', 'duration_sum']
+
     print("train features")
     print(features_to_train)    
 
@@ -65,7 +84,7 @@ if __name__ == '__main__':
     num_train, num_test = ensemble_train.shape[0], ensemble_test.shape[0]
     ensemble_data = pd.concat([ensemble_train, ensemble_test])
     
-    norm_features = ['browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum', 'duration_sum', 'click_ratio', 'like_ratio', 'follow_ratio', 'playing_ratio', 'face_favor', 'man_favor', 'woman_favor', 'man_cv_favor', 'woman_cv_favor', 'man_age_favor', 'woman_age_favor', 'man_yen_value_favor', 'woman_yen_value_favor', 'exposure_num', 'face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age', 'woman_avg_age', 'human_avg_age', 'man_avg_attr', 'woman_avg_attr', 'human_avg_attr', 'time', 'duration_time']
+    norm_features = ['browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum', 'duration_sum', 'click_ratio', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq', 'playing_freq', 'face_favor', 'man_favor', 'woman_favor', 'man_cv_favor', 'woman_cv_favor', 'man_age_favor', 'woman_age_favor', 'man_yen_value_favor', 'woman_yen_value_favor', 'cover_length_favor', 'exposure_num', 'face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age', 'woman_avg_age', 'human_avg_age', 'man_avg_attr', 'woman_avg_attr', 'human_avg_attr', 'cover_length', 'time', 'duration_time']
     
     normalize_min_max(ensemble_data, norm_features)
     train = ensemble_data.iloc[:num_train,:]
@@ -78,39 +97,56 @@ if __name__ == '__main__':
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
     clf = LogisticRegression(C=1)
     name = "LogisticRegression"
-    clf.fit(X_train, y_train)
-    print("{:31} 测试集acc/recall: {:15}/{:15}".format(name, 
-        accuracy_score(y_test, clf.predict(X_test)), recall_score(y_test, clf.predict(X_test), average='macro')))
+    clf.fit(X_train, y_train.ravel())
+    acc = accuracy_score(y_test, clf.predict(X_test))
+    recall = recall_score(y_test, clf.predict(X_test), average='macro')
+    print("{:31} 测试集acc/recall: {:15}/{:15}".format(model_name, acc, recall))
 
     y_sub = clf.predict_proba(X_t)[:,1]
     submission['click_probability'] = y_sub
     submission['click_probability'] = submission['click_probability'].apply(lambda x: float('%.6f' % x))
-    dst = 'Sub-' + name + '-Sample.txt' if USE_SAMPLE else 'Sub-' + name + '.txt'
-    submission.to_csv(dst, sep='\t', index=False, header=False)
-
+    submission.to_csv(sub_file, sep='\t', index=False, header=False)
+    
     try: 
-        important_features = []
         importances = clf.feature_importances_
         indices = np.argsort(importances)[::-1]
-        print('{}特征权值分布为: '.format(name))
+        print('{}特征权值分布为: '.format(model_name))
+        features_distribution = []
+        important_features = []
         for f in range(X_train.shape[1]):
             print("%d. feature %d [%s] (%f)" % (f + 1, indices[f], features_to_train[indices[f]], importances[indices[f]]))
+            features_distribution.append((f + 1, indices[f], features_to_train[indices[f]], importances[indices[f]]))
             important_features.append(features_to_train[indices[f]])
     except AttributeError:
-        print('{} has no feture_importances_'.format(name))
-
+        print('{} has no feture_importances_'.format(model_name))
     print(important_features)
 
-    # y_score = classifier.fit(X_train, y_train).decision_function(X_test)
+
     try:
         y_score = clf.decision_function(X_test)[:,1]
     except AttributeError:
-        print('{} has no decision_function, use predict func.'.format(name))
+        print('{} has no decision_function, use predict func.'.format(model_name))
         y_score = clf.predict_proba(X_test)[:,1]
 
     # Compute ROC curve and ROC area for each class
-    fpr, tpr, _ = roc_curve(y_test, y_score, sample_weight=None)
-    roc_auc = auc(fpr, tpr)
-
+    roc_auc = roc_auc_score(y_test, y_score, sample_weight=None)
     # Plot ROC curve
-    print('{} ROC curve (area = {})'.format(name, roc_auc))
+    print('{} ROC curve (area = {})'.format(model_name, roc_auc))
+    
+    joblib.dump(clf, model_file)
+    model_metainfo = {
+        'sub_file': sub_file,
+        'model_file': model_file,
+        'model_name': model_name,
+        'version': version,
+        'description': desc,
+        'features_to_train': features_to_train,
+        'features_distribution': features_distribution,
+        'important_features': important_features,
+        'accuracy': acc,
+        'recall': recall,
+        'roc_auc': roc_auc,
+    }
+    with io.open(model_metainfo_file, 'w', encoding='utf8') as outfile:
+        metadata = json.dumps(model_metainfo, outfile, ensure_ascii=False, indent=4)
+        outfile.write(metadata.decode('utf8'))

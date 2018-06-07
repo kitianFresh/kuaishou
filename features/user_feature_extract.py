@@ -89,7 +89,7 @@ if __name__ == '__main__':
     favors['man_yen_value_favor'] = favors['man_avg_attr'].groupby(favors['user_id']).transform('mean')
     favors['woman_yen_value_favor'] = favors['woman_avg_attr'].groupby(favors['user_id']).transform('mean')
     
-    favors['cover_length_favor'] = favors['cover_length']
+    favors['cover_length_favor'] = favors['cover_length'].groupby(favors['user_id']).transform('mean')
     
     favors.drop_duplicates(['user_id'], inplace=True)
     favors.drop(favor_cols, axis=1, inplace=True)

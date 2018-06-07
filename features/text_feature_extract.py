@@ -38,7 +38,13 @@ if __name__ == '__main__':
     print(text_test.info())
     
     text_data = pd.concat([text_train, text_test])
-    text_data['cover_words'] = text_data['cover_words'].apply(lambda words: words.split(','))
+    def words_to_list(words):
+        if words == '0':
+            return []
+        else:
+            return words.split(',')
+        
+    text_data['cover_words'] = text_data['cover_words'].apply(words_to_list)
     text_data['cover_length'] = text_data['cover_words'].apply(lambda words: len(words))
     text_data.drop(['cover_words'], axis=1, inplace=True)
     text_data.fillna(0, inplace=True)
