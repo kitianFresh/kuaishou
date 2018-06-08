@@ -65,7 +65,9 @@ if __name__ == '__main__':
     y = ensemble_train[y_label].values
     
     # less features to avoid overfit
-
+    features_to_train = list(set(all_features) - set(['user_id', 'photo_id', 'click']))
+    
+    features_to_train = [name + '_cate' for name in features_to_train]
     
     submission = pd.DataFrame()
     submission['user_id'] = ensemble_test['user_id']
