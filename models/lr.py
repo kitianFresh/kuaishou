@@ -13,8 +13,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn import preprocessing
 from sklearn.externals import joblib
 from sklearn.model_selection import cross_val_score, train_test_split, GridSearchCV
-from sklearn.metrics import roc_curve, auc
-from sklearn.metrics import recall_score, accuracy_score
+from sklearn.metrics import recall_score, accuracy_score, roc_auc_score
 from scipy import sparse as ssp
 from scipy.stats import spearmanr
 
@@ -69,7 +68,6 @@ if __name__ == '__main__':
     y = ensemble_train[y_label].values
     
     # less features to avoid overfit
-#     features_to_train = ['click_ratio', 'exposure_num', 'duration_time', 'woman_cv_favor', 'woman_age_favor', 'man_cv_favor', 'man_age_favor', 'woman_yen_value_favor', 'human_scale', 'time', 'man_scale', 'woman_favor', 'woman_scale', 'man_yen_value_favor', 'cover_length', 'click_num', 'woman_avg_age', 'human_avg_age', 'human_avg_attr', 'man_avg_age', 'man_favor', 'cover_length_favor', 'playing_sum', 'face_favor', 'playing_ratio', 'man_avg_attr', 'woman_avg_attr', 'click_freq', 'browse_freq', 'man_num']
 
     submission = pd.DataFrame()
     submission['user_id'] = ensemble_test['user_id']
@@ -84,7 +82,7 @@ if __name__ == '__main__':
     num_train, num_test = ensemble_train.shape[0], ensemble_test.shape[0]
     ensemble_data = pd.concat([ensemble_train, ensemble_test])
     
-    norm_features = ['browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum', 'duration_sum', 'click_ratio', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq', 'playing_freq', 'face_favor', 'man_favor', 'woman_favor', 'man_cv_favor', 'woman_cv_favor', 'man_age_favor', 'woman_age_favor', 'man_yen_value_favor', 'woman_yen_value_favor', 'cover_length_favor', 'exposure_num', 'face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age', 'woman_avg_age', 'human_avg_age', 'man_avg_attr', 'woman_avg_attr', 'human_avg_attr', 'cover_length', 'time', 'duration_time']
+    norm_features = ['browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum', 'duration_sum', 'click_ratio', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq', 'playing_freq', 'man_favor', 'woman_favor', 'man_cv_favor', 'woman_cv_favor', 'man_age_favor', 'woman_age_favor', 'man_yen_value_favor', 'woman_yen_value_favor', 'face_click_favor', 'non_face_click_favor', 'cover_length_favor', 'exposure_num', 'face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age', 'woman_avg_age', 'human_avg_age', 'man_avg_attr', 'woman_avg_attr', 'human_avg_attr', 'cover_length', 'time', 'duration_time']
     
     normalize_min_max(ensemble_data, norm_features)
     train = ensemble_data.iloc[:num_train,:]
@@ -107,29 +105,29 @@ if __name__ == '__main__':
     submission['click_probability'] = submission['click_probability'].apply(lambda x: float('%.6f' % x))
     submission.to_csv(sub_file, sep='\t', index=False, header=False)
     
+    features_distribution = []
+    important_features = []
     try: 
         importances = clf.feature_importances_
         indices = np.argsort(importances)[::-1]
         print('{}特征权值分布为: '.format(model_name))
-        features_distribution = []
-        important_features = []
         for f in range(X_train.shape[1]):
             print("%d. feature %d [%s] (%f)" % (f + 1, indices[f], features_to_train[indices[f]], importances[indices[f]]))
             features_distribution.append((f + 1, indices[f], features_to_train[indices[f]], importances[indices[f]]))
             important_features.append(features_to_train[indices[f]])
+        print(important_features)
     except AttributeError:
         print('{} has no feture_importances_'.format(model_name))
-    print(important_features)
 
 
     try:
-        y_score = clf.decision_function(X_test)[:,1]
+        y_score = clf.decision_function(X_test)
     except AttributeError:
         print('{} has no decision_function, use predict func.'.format(model_name))
         y_score = clf.predict_proba(X_test)[:,1]
 
     # Compute ROC curve and ROC area for each class
-    roc_auc = roc_auc_score(y_test, y_score, sample_weight=None)
+    roc_auc = roc_auc_score(y_test, y_score.ravel(), sample_weight=None)
     # Plot ROC curve
     print('{} ROC curve (area = {})'.format(model_name, roc_auc))
     

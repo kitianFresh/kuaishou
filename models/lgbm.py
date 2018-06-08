@@ -110,19 +110,19 @@ if __name__ == '__main__':
     submission['click_probability'] = submission['click_probability'].apply(lambda x: float('%.6f' % x))
     submission.to_csv(sub_file, sep='\t', index=False, header=False)
     
+    features_distribution = []
+    important_features = []
     try: 
         importances = clf.feature_importances_
         indices = np.argsort(importances)[::-1]
         print('{}特征权值分布为: '.format(model_name))
-        features_distribution = []
-        important_features = []
         for f in range(X_train.shape[1]):
             print("%d. feature %d [%s] (%f)" % (f + 1, indices[f], features_to_train[indices[f]], importances[indices[f]]))
             features_distribution.append((f + 1, indices[f], features_to_train[indices[f]], importances[indices[f]]))
             important_features.append(features_to_train[indices[f]])
+        print(important_features)
     except AttributeError:
         print('{} has no feture_importances_'.format(model_name))
-    print(important_features)
 
 
     try:

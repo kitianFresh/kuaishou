@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 
 from common.utils import read_data, store_data, BayesianSmoothing
+from conf.modelconf import alpha, beta
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
@@ -88,6 +89,16 @@ if __name__ == '__main__':
     favors['woman_age_favor'] = favors['woman_avg_age'].groupby(favors['user_id']).transform('mean')
     favors['man_yen_value_favor'] = favors['man_avg_attr'].groupby(favors['user_id']).transform('mean')
     favors['woman_yen_value_favor'] = favors['woman_avg_attr'].groupby(favors['user_id']).transform('mean')
+    
+    def face_counts(group):
+        have_faces = group > 0
+        return 1. * np.sum(have_faces) / group.size
+ 
+    def non_face_counts(group):
+        have_faces = group == 0
+        return 1. * np.sum(have_faces) / group.size
+    favors['face_click_favor'] = favors['face_num'].groupby(favors['user_id']).transform(face_counts)
+    favors['non_face_click_favor'] = 1 - favors['face_click_favor']
     
     # 文本平均长度作为偏爱率
     favors['cover_length_favor'] = favors['cover_length'].groupby(favors['user_id']).transform('mean')
