@@ -17,17 +17,17 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
     
-    path = '../features'
     USE_SAMPLE = args.sample
     fmt = args.format if args.format else 'csv'
+    feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
     
     ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
     ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
-    ensemble_train = read_data(os.path.join(path, ALL_FEATURE_TRAIN_FILE), fmt)
+    ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
 
     ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
     ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
-    ensemble_test = read_data(os.path.join(path, ALL_FEATURE_TEST_FILE), fmt)
+    ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
 
     print(ensemble_train.info())
     print(ensemble_test.info())
@@ -72,7 +72,6 @@ if __name__ == '__main__':
     feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
     if not os.path.exists(feature_store_path):
         os.mkdir(feature_store_path)    
-    store_data(face_data, os.path.join(feature_store_path, FACE_FEATURE_FILE), fmt)
 
     CATE_TRAIN_FILE = 'ensemble_cate_feature_train'
     CATE_TRAIN_FILE = CATE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else CATE_TRAIN_FILE + '.' + fmt

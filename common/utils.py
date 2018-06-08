@@ -331,6 +331,76 @@ def woman_yen_value_favor_discretization(num):
     else:
         return 3
     
+def non_face_click_favor_discretization(num):
+    if 0 <= num <= 0.1:
+        return 0
+    elif 0.1 < num <= 0.2:
+        return 1
+    elif 0.2 < num <= 0.4:
+        return 2
+    elif 0.4 < num <= 0.6:
+        return 3
+    elif 0.6 < num <= 0.8:
+        return 4
+    else:
+        return 5
+    
+def face_click_favor_discretization(num):
+    if 0 <= num <= 0.1:
+        return 0
+    elif 0.1 < num <= 0.2:
+        return 1
+    elif 0.2 < num <= 0.4:
+        return 2
+    elif 0.4 < num <= 0.6:
+        return 3
+    elif 0.6 < num <= 0.8:
+        return 4
+    else:
+        return 5
+    
+    
+def playing_freq_discretization(num):
+    if 0 <= num <= 0.05:
+        return 0
+    elif 0.05 < num <= 0.1:
+        return 1
+    elif 0.15 < num <= 0.2:
+        return 2
+    else:
+        return 3
+
+def browse_freq_discretization(num):
+    if 0 <= num <= 0.02:
+        return 0
+    elif 0.02 < num <= 0.04:
+        return 1
+    elif 0.04 < num <= 0.06:
+        return 2
+    elif 0.06 < num <= 0.08:
+        return 3
+    else:
+        return 4
+    
+def click_freq_discretization(num):
+    if 0 <= num <= 0.003:
+        return 0
+    elif 0.003 < num <= 0.006:
+        return 1
+    elif 0.006 < num <= 0.01:
+        return 2
+    else:
+        return 3
+
+def cover_length_favor_discretization(num):
+    if num == 0:
+        return 0
+    elif 0 < num <= 3:
+        return 1
+    elif 3 < num <= 10:
+        return 2
+    else:
+        return 3    
     
 ##################
 # photo_features #
@@ -529,3 +599,15 @@ def woman_scale_discretization(woman_scale):
         return 6
     else:
         return 7
+
+def cover_length_discretization(num):
+    if num == 0:
+        return 0
+    elif 0 < num <= 3:
+        return 1
+    elif 3 < num <= 10:
+        return 2
+    elif 10 < num <= 20:
+        return 3
+    else:
+        return 4
