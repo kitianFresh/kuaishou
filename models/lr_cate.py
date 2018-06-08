@@ -70,7 +70,7 @@ if __name__ == '__main__':
     
     features_to_train = list(set(all_features) - set(['user_id', 'photo_id', 'click']))
     
-    features_to_train = [name + '_cate' for name in features_to_train]
+#     features_to_train = [name + '_cate' for name in features_to_train]
     submission = pd.DataFrame()
     submission['user_id'] = ensemble_test['user_id']
     submission['photo_id'] = ensemble_test['photo_id']
@@ -84,18 +84,23 @@ if __name__ == '__main__':
     ensemble_test = ensemble_test[features_to_train]
     num_train, num_test = ensemble_train.shape[0], ensemble_test.shape[0]
     ensemble_data = pd.concat([ensemble_train, ensemble_test])
-    # pd.get_dummies must be str type 
-    ensemble_data = ensemble_data.applymap(str)
-    ensemble_data = pd.get_dummies(ensemble_data)
     
-    print('---------------------------------------------------ont hot --------------------------------------------')
-    print(ensemble_data.head())
+    # 1. INSTANTIATE
+    enc = preprocessing.OneHotEncoder()
+    # 2. FIT
+    enc.fit(ensemble_data)
+    # 3. Transform
+    ensemble_data = enc.transform(ensemble_data)
+
+    # pd.get_dummies must be str type not a sparse matrix by pandas get dummies
+#     ensemble_data = ensemble_data.applymap(str)
+#     ensemble_data = pd.get_dummies(ensemble_data)
     
-    train = ensemble_data.iloc[:num_train,:]
-    test = ensemble_data.iloc[num_train:,:]
-    X = train.as_matrix()
+    train = ensemble_data[:num_train,:]
+    test = ensemble_data[num_train:,:]
+    X = train
     print(X.shape)
-    X_t = test.as_matrix()
+    X_t = test
     print(X_t.shape)
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
