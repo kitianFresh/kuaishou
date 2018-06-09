@@ -1,6 +1,7 @@
 #coding:utf8
 import os
 import gc
+import io
 import json
 import argparse
 import sys
@@ -105,7 +106,7 @@ if __name__ == '__main__':
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
     clf = LogisticRegression(C=1)
-    name = "LogisticRegression"
+    
     clf.fit(X_train, y_train.ravel())
     acc = accuracy_score(y_test, clf.predict(X_test))
     recall = recall_score(y_test, clf.predict(X_test), average='macro')

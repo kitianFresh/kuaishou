@@ -55,7 +55,7 @@ time_features = ['time', 'duration_time']
 
 text_features = ['cover_length']
 
-photo_features = ['exposure_num', 'have_face_cate'] + face_features + text_features
+photo_features = ['exposure_num', 'have_face_cate', 'clicked_ratio'] + face_features + text_features
 user_features = user_action_features + user_face_favor_features + user_text_favor_features
 
 y_label = ['click']

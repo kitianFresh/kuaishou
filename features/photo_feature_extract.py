@@ -40,18 +40,48 @@ if __name__ == '__main__':
                                  sep='\t', 
                                  header=None, 
                                  names=['user_id', 'photo_id', 'click', 'like', 'follow', 'time', 'playing_time', 'duration_time'])
-    user_item_train = user_item_train[['user_id', 'photo_id', 'time', 'duration_time']]
 
     user_item_test = pd.read_csv(TEST_INTERACT, 
                                  sep='\t', 
                                  header=None, 
                                  names=['user_id', 'photo_id', 'time', 'duration_time'])
-    user_item_data = pd.concat([user_item_train, user_item_test])
+    user_item_data = pd.concat([user_item_train[['user_id', 'photo_id', 'time', 'duration_time']], user_item_test])
+    num_train, num_test = user_item_train.shape[0], user_item_test.shape[0]
+    
+    items = pd.DataFrame()
+    common = ['photo_id']
+    items[common] = user_item_train[common]
+
+    items['exposure_num'] = user_item_train['photo_id'].groupby(user_item_train['photo_id']).transform('count')
+    items['clicked_num'] = user_item_train['click'].groupby(user_item_train['photo_id']).transform('sum')
+    items['clicked_ratio'] = items['clicked_num'] / items['exposure_num']
+    items.drop_duplicates(['photo_id'], inplace=True)
+    
+    # 对用户点击率做贝叶斯平滑
+    I, C = items['exposure_num'].values, items['clicked_num'].values
+    #bs.update(I, C, 10000, 0.0000000001)
+    #print(bs.alpha, bs.beta)
+    #alpha_item, beta_item = bs.alpha, bs.beta
+    alpha_item, beta_item = 2.8072236088257325, 13.280311727786964
+    ctr = []
+    for i in range(len(I)):
+        ctr.append((C[i]+alpha_item)/(I[i]+alpha_item+beta_item))
+    items['clicked_ratio'] = ctr
+    items.drop(['exposure_num', 'clicked_num'], axis=1, inplace=True)
+    
+
+    
     photo_data = pd.DataFrame()
     photo_data['photo_id'] = user_item_data['photo_id']
     photo_data['exposure_num'] = user_item_data['photo_id'].groupby(user_item_data['photo_id']).transform('count') 
-    
     photo_data.drop_duplicates(inplace=True)
+    
+    photo_data = pd.merge(photo_data, items,
+                         how='left',
+                         on=['photo_id'])
+    
+    photo_data.clicked_ratio.fillna(alpha_item/(alpha_item+beta_item), inplace=True)
+    
     photo_data = pd.merge(photo_data, face_data,
                      how="left",
                      on=['photo_id'])
@@ -65,6 +95,8 @@ if __name__ == '__main__':
 #     photo_data.drop(['face_num'], axis=1, inplace=True)
     
     print(photo_data.info())
+    
+    
     PHOTO_FEATURE_FILE = 'photo_feature'
     PHOTO_FEATURE_FILE = PHOTO_FEATURE_FILE + '_sample' + '.' + fmt if USE_SAMPLE else PHOTO_FEATURE_FILE + '.' + fmt
        

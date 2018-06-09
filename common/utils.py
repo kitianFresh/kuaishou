@@ -400,7 +400,30 @@ def cover_length_favor_discretization(num):
     elif 3 < num <= 10:
         return 2
     else:
-        return 3    
+        return 3
+    
+def browse_time_diff_discretization(num):
+    if 0 <= num <= 500:
+        return 0
+    elif 500 < num <= 10000:
+        return 1
+    elif 10000 < num <= 20000:
+        return 2
+    elif 20000 < num <= 30000:
+        return 3
+    elif 30000 < num <= 40000:
+        return 4
+    elif 40000 < num <= 50000:
+        return 5
+    elif 50000 < num <= 60000:
+        return 6
+    elif 60000 < num <= 80000:
+        return 7
+    elif 80000 < num <= 100000:
+        return 8
+    else:
+        return 9
+    
     
 ##################
 # photo_features #
@@ -608,6 +631,18 @@ def cover_length_discretization(num):
     elif 3 < num <= 10:
         return 2
     elif 10 < num <= 20:
+        return 3
+    else:
+        return 4
+    
+def clicked_ratio_discretization(num):
+    if 0 <= num <= 0.06:
+        return 0
+    elif 0.06 < num <= 0.12:
+        return 1
+    elif 0.12 < num <= 0.2:
+        return 2
+    elif 0.2 < num <= 0.3:
         return 3
     else:
         return 4
