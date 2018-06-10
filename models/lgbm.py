@@ -12,7 +12,7 @@ import pandas as pd
 
 from sklearn import preprocessing
 from sklearn.externals import joblib
-from sklearn.model_selection import cross_val_score, train_test_split, GridSearchCV
+from sklearn.model_selection import cross_val_score, train_test_split, GridSearchCV, StratifiedKFold
 from sklearn.metrics import roc_curve, auc, roc_auc_score
 from sklearn.metrics import recall_score, accuracy_score
 from lightgbm import LGBMClassifier
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     y = ensemble_train[y_label].values
     
     # less features to avoid overfit
-#     features_to_train = ['click_ratio', 'exposure_num', 'duration_time', 'woman_cv_favor', 'woman_age_favor', 'man_cv_favor', 'man_age_favor', 'woman_yen_value_favor', 'human_scale', 'time', 'man_scale', 'woman_favor', 'woman_scale', 'man_yen_value_favor', 'cover_length', 'click_num', 'woman_avg_age', 'human_avg_age', 'human_avg_attr', 'man_avg_age', 'man_favor', 'cover_length_favor', 'playing_sum', 'face_favor', 'playing_ratio', 'man_avg_attr', 'woman_avg_attr', 'click_freq', 'browse_freq', 'man_num']
+    features_to_train = ['exposure_num', 'click_ratio', 'cover_length_favor', 'woman_yen_value_favor', 'woman_cv_favor', 'cover_length', 'browse_num', 'man_age_favor', 'woman_age_favor', 'time', 'woman_scale', 'duration_time', 'woman_favor', 'playing_ratio', 'face_click_favor', 'click_num', 'man_cv_favor', 'man_scale', 'playing_sum', 'man_yen_value_favor', 'man_avg_age', 'playing_freq', 'woman_avg_attr', 'human_scale', 'browse_freq', 'non_face_click_favor', 'click_freq', 'woman_avg_age', 'human_avg_attr', 'duration_sum', 'man_favor', 'human_avg_age', 'follow_ratio', 'man_avg_attr']
     
     submission = pd.DataFrame()
     submission['user_id'] = ensemble_test['user_id']
@@ -98,17 +98,22 @@ if __name__ == '__main__':
     del test
     gc.collect()
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+    print('Training model %s......' % model_name)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
     clf = LGBMClassifier()
     clf.fit(X_train, y_train.ravel())
+    # KFold cross validation
+    print('StratifiedKFold cross validation......')
+    cv = StratifiedKFold(n_splits=10, random_state=0, shuffle=False)
+    scores = cross_val_score(clf, X, y.ravel(), cv=cv, scoring='roc_auc')
+    print('K Fold scores: %s' % scores)
+    print("Accuracy: %0.6f (+/- %0.6f)" % (scores.mean(), scores.std() ** 2))
+    roc_auc = scores.mean()
+    
     acc = accuracy_score(y_test, clf.predict(X_test))
     recall = recall_score(y_test, clf.predict(X_test), average='macro')
     print("{:31} 测试集acc/recall: {:15}/{:15}".format(model_name, acc, recall))
 
-    y_sub = clf.predict_proba(X_t)[:,1]
-    submission['click_probability'] = y_sub
-    submission['click_probability'] = submission['click_probability'].apply(lambda x: float('%.6f' % x))
-    submission.to_csv(sub_file, sep='\t', index=False, header=False)
     
     features_distribution = []
     important_features = []
@@ -133,9 +138,13 @@ if __name__ == '__main__':
 
     # Compute ROC curve and ROC area for each class
     roc_auc = roc_auc_score(y_test, y_score, sample_weight=None)
-
+    
+    
+    
     # Plot ROC curve
     print('{} ROC curve (area = {})'.format(model_name, roc_auc))
+    
+    print('Saving model %s to %s......' % (model_name, model_file))
     joblib.dump(clf, model_file)
     model_metainfo = {
         'sub_file': sub_file,
@@ -154,3 +163,10 @@ if __name__ == '__main__':
     with io.open(model_metainfo_file, 'w', encoding='utf8') as outfile:
         metadata = json.dumps(model_metainfo, outfile, ensure_ascii=False, indent=4)
         outfile.write(metadata.decode('utf8'))
+    
+    print('Make submission %s......' % sub_file)
+    y_sub = clf.predict_proba(X_t)[:,1]
+    submission['click_probability'] = y_sub
+    submission['click_probability'] = submission['click_probability'].apply(lambda x: float('%.6f' % x))
+    submission.to_csv(sub_file, sep='\t', index=False, header=False)
+    
