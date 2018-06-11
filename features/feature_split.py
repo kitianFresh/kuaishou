@@ -3,7 +3,7 @@ import os
 import argparse
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 sys.path.append("..")
     
 import pandas as pd
@@ -15,12 +15,15 @@ from conf.modelconf import *
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
+parser.add_argument('-t', '--worker-type', help='pool type, threads or process')
 args = parser.parse_args()
 
 if __name__ == '__main__':
     
     USE_SAMPLE = args.sample
     fmt = args.format if args.format else 'csv' 
+    pool_type = args.format if args.format else 'thread'
+    Executor = ThreadPoolExecutor if pool_type == 'thread' else ProcessPoolExecutor
     feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
     if not os.path.exists(feature_store_path):
         os.mkdir(feature_store_path)
@@ -117,7 +120,7 @@ if __name__ == '__main__':
         res = store_data(df, path, fmt)
         return res
     start_time_1 = time.clock()
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    with Executor(max_workers=8) as executor:
         for file in executor.map(feature_saver,  tasks_args):
             print('%s saved' % file)
     print ("Thread pool execution in " + str(time.clock() - start_time_1), "seconds")
