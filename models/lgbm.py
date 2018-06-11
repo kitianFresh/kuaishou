@@ -18,7 +18,8 @@ from sklearn.metrics import recall_score, accuracy_score
 from lightgbm import LGBMClassifier
 
 from conf.modelconf import user_action_features, face_features, user_face_favor_features, id_features, time_features, photo_features, user_features, y_label, features_to_train
-from common.utils import read_data, store_data, normalize_min_max, normalize_z_score
+
+from common.utils import read_data, store_data, normalize_min_max, normalize_z_score, FeatureMerger
 
         
 parser = argparse.ArgumentParser()
@@ -48,15 +49,24 @@ if __name__ == '__main__':
     feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
 
     
-    ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
-    ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
-    ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
+#     ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
+#     ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
+#     ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
 
-    ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
-    ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
-    ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
-
+#     ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
+#     ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
+#     ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
+    
+    col_feature_store_path = '../sample/features/columns' if USE_SAMPLE else '../data/features/columns'
+    
+    feature_to_use = user_features + photo_features + time_features
+    
+    fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=8)
+    fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=8)
+    
+    ensemble_train = fm_trainer.merge()
     print(ensemble_train.info())
+    ensemble_test = fm_tester.merge()
     print(ensemble_test.info())
 
     all_features = list(ensemble_train.columns.values)
@@ -75,24 +85,19 @@ if __name__ == '__main__':
     print("train features")
     print(features_to_train)    
 
-    ensemble_train = ensemble_train[features_to_train]
-    ensemble_test = ensemble_test[features_to_train]
-    num_train, num_test = ensemble_train.shape[0], ensemble_test.shape[0]
-    ensemble_data = pd.concat([ensemble_train, ensemble_test])
+    ensemble_offline = ensemble_train[features_to_train]
+    ensemble_online = ensemble_test[features_to_train]
     # 决策树模型不需要归一化，本身就是范围划分
 
-    train = ensemble_data.iloc[:num_train,:]
-    test = ensemble_data.iloc[num_train:,:]
-    del ensemble_data
     del ensemble_train
     del ensemble_test
     gc.collect()
-    X = train.as_matrix()
+    X = ensemble_offline.values
     print(X.shape)
-    X_t = test.as_matrix()
+    X_t = ensemble_online.values
     print(X_t.shape)
-    del train
-    del test
+    del ensemble_offline
+    del ensemble_online
     gc.collect()
     
     print('Training model %s......' % model_name)

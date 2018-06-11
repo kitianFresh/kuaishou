@@ -26,7 +26,7 @@ class FeatureMerger(object):
                 file = feature  + '.' + self.fmt
             else:    
                 file = feature  + '_' + self.data_type + '.' + self.fmt
-            args = (os.path.join(self.col_feature_dir, file), self.fmt)
+            args = (feature, os.path.join(self.col_feature_dir, file), self.fmt)
             tasks_args.append(args)
 
         dfs = []
@@ -44,11 +44,49 @@ class FeatureMerger(object):
         print("Merging data in memory execution in %s seconds" % (str(time.clock() - start_time_1)))
         return data
 
-        
+uint64_cols = ['user_id', 'photo_id', 'time']
+uint32_cols = ['playing_sum', 'browse_time_diff', 'duration_sum']
+uint16_cols = ['browse_num', 'exposure_num', 'click_num', 'duration_time', 'like_num', 'follow_num']
+uint8_cols = ['cover_length', 'man_num', 'woman_num', 'face_num']
+bool_cols = ['have_face_cate', 'click']
+float32_cols = ['clicked_ratio','non_face_click_favor', 'face_click_favor', 'man_favor', 'woman_avg_age', 'playing_freq', 'woman_age_favor', 'woman_yen_value_favor', 'human_scale', 'woman_favor', 'click_freq', 'woman_cv_favor', 'man_age_favor', 'man_yen_value_favor', 'follow_ratio', 'man_scale', 'browse_freq', 'man_avg_age', 'man_cv_favor', 'man_avg_attr', 'playing_ratio', 'woman_scale', 'click_ratio', 'human_avg_age', 'woman_avg_attr', 'like_ratio', 'cover_length_favor', 'human_avg_attr', 'avg_tfidf']
+float64_cols = []
+
+
+feature_dtype_map = {}
+for name in uint64_cols:
+    feature_dtype_map.update({name: 'uint64'})
+for name in uint32_cols:
+    feature_dtype_map.update({name: 'uint32'})
+for name in uint16_cols:
+    feature_dtype_map.update({name: 'uint16'})
+for name in uint8_cols:
+    feature_dtype_map.update({name: 'uint8'})
+for name in bool_cols:
+    feature_dtype_map.update({name: 'bool'})
+for name in float32_cols:
+    feature_dtype_map.update({name: 'float32'})
+for name in float64_cols:
+    feature_dtype_map.update({name: 'float64'})
+
 def feature_reader(args):
-    path, fmt = args
-    df = read_data(path, fmt)
-    return df        
+    global feature_dtype_map
+    feature, path, fmt = args
+    if fmt == 'csv':
+        dtype = feature_dtype_map.get(feature)
+        print(feature, dtype)
+        df = pd.read_csv(path, sep='\t', dtype = {feature: dtype})
+    elif fmt == 'pkl':
+        df = pd.read_pickle(path)
+    elif fmt == 'h5':
+        df = pd.read_hdf(path, 'table', mode='r')
+    
+    return df
+        
+# def feature_reader(args):
+#     feature, path, fmt = args
+#     df = read_data(path, fmt)
+#     return df        
 
 def read_data(path, fmt):
     '''
