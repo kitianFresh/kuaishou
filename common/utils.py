@@ -25,7 +25,8 @@ def store_data(df, path, fmt, sep='\t', index=False):
         df.to_pickle(path)
     elif fmt == 'h5':
         clib = 'blosc'
-        df.to_hdf(path, 'table', mode='w', append=True, complevel=9, complib=clib)
+#         df.to_hdf(path, 'table', mode='w', complevel=9, complib=clib)
+        df.to_hdf(path, 'table', mode='w')
         print('to hdf..')
     return path
         
