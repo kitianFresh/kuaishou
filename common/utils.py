@@ -22,7 +22,10 @@ class FeatureMerger(object):
     def merge(self):   
         tasks_args = []
         for feature in self.col_features_to_merge:
-            file = feature  + '_' + self.data_type + '.' + self.fmt
+            if self.data_type == "":
+                file = feature  + '.' + self.fmt
+            else:    
+                file = feature  + '_' + self.data_type + '.' + self.fmt
             args = (os.path.join(self.col_feature_dir, file), self.fmt)
             tasks_args.append(args)
 
