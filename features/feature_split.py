@@ -15,7 +15,7 @@ from conf.modelconf import *
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
-parser.add_argument('-p', '--pool-type', help='pool type, threads or process')
+parser.add_argument('-p', '--pool-type', help='pool type, threads or process, here use process for more performance')
 parser.add_argument('-n', '--num-workers', help='workers num in pool')
 args = parser.parse_args()
 
@@ -106,15 +106,15 @@ if __name__ == '__main__':
 #     fmt = 'h5'
     tasks_args = []
     for feature in set(input_features) - set(id_features):
-        train_file = feature  + '_train_sample' + '.' + fmt if USE_SAMPLE else feature + '_train' + '.' + fmt
-        test_file = feature  + '_test_sample' + '.' + fmt if USE_SAMPLE else feature + '_test' + '.' + fmt
+        train_file = feature  + '_train' + '.' + fmt
+        test_file = feature  + '_test' + '.' + fmt
         args = (ensemble_train[id_features+[feature]], os.path.join(col_feature_store_path, train_file), fmt)
         tasks_args.append(args)
         args = (ensemble_test[id_features+[feature]], os.path.join(col_feature_store_path, test_file), fmt)
         tasks_args.append(args)
         
     feature = y_label[0]
-    train_file = feature  + '_train_sample' + '.' + fmt if USE_SAMPLE else feature + '_train' + '.' + fmt
+    train_file = feature  + '_train' + '.' + fmt
     args = (ensemble_train[id_features+[feature]], os.path.join(col_feature_store_path, train_file), fmt)
     tasks_args.append(args)
     def feature_saver(args):
@@ -125,4 +125,4 @@ if __name__ == '__main__':
     with Executor(max_workers=n) as executor:
         for file in executor.map(feature_saver,  tasks_args):
             print('%s saved' % file)
-    print ("Thread pool execution in " + str(time.clock() - start_time_1), "seconds")
+    print ("%s pool execution in %s seconds" % (pool_type, str(time.clock() - start_time_1)))

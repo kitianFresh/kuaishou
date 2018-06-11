@@ -4,7 +4,48 @@ import os
 import numpy as np
 import pandas as pd
 import random
+import time
+import functools
 import scipy.special as special
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+
+class FeatureMerger(object):
+    
+    def __init__(self, col_feature_dir, col_features_to_merge, fmt='csv', data_type='train', pool_type='process', num_workers=8):
+        self.fmt = fmt
+        self.data_type = data_type
+        self.pool_type = pool_type
+        self.num_workers = num_workers
+        self.col_feature_dir = col_feature_dir
+        self.col_features_to_merge = col_features_to_merge
+    
+    def merge(self):   
+        tasks_args = []
+        for feature in self.col_features_to_merge:
+            file = feature  + '_' + self.data_type + '.' + self.fmt
+            args = (os.path.join(self.col_feature_dir, file), self.fmt)
+            tasks_args.append(args)
+
+        dfs = []
+        start_time_1 = time.clock()
+        pool = ThreadPoolExecutor if self.pool_type == 'thread' else ProcessPoolExecutor
+        with pool(max_workers=self.num_workers) as executor:
+            for df in executor.map(feature_reader,  tasks_args):
+                dfs.append(df)
+        print("%s pool reading execution in %s seconds" % (self.pool_type, str(time.clock() - start_time_1)))
+        
+        start_time_1 = time.clock()
+        print('Merging data')
+        merger = functools.partial(pd.merge, how='inner', on=['user_id', 'photo_id'])
+        data = reduce(merger, dfs)
+        print("Merging data in memory execution in %s seconds" % (str(time.clock() - start_time_1)))
+        return data
+
+        
+def feature_reader(args):
+    path, fmt = args
+    df = read_data(path, fmt)
+    return df        
 
 def read_data(path, fmt):
     '''
