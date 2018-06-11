@@ -14,6 +14,8 @@ def read_data(path, fmt):
         df = pd.read_csv(path, sep='\t')
     elif fmt == 'pkl':
         df = pd.read_pickle(path)
+    elif fmt == 'h5':
+        df = pd.read_hdf(path, 'table', mode='r')
     return df
 
 def store_data(df, path, fmt, sep='\t', index=False):
@@ -21,6 +23,11 @@ def store_data(df, path, fmt, sep='\t', index=False):
         df.to_csv(path, sep=sep, index=index)
     elif fmt == 'pkl':
         df.to_pickle(path)
+    elif fmt == 'h5':
+        clib = 'blosc'
+        df.to_hdf(path, 'table', mode='w', append=True, complevel=9, complib=clib)
+        print('to hdf..')
+    return path
         
         
 def str2bool(v):
