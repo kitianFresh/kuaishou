@@ -35,7 +35,6 @@ if __name__ == '__main__':
                             header=None, 
                             names=['photo_id', 'cover_words'])
 
-    print(text_test.info())
     
     text_data = pd.concat([text_train, text_test])
     def words_to_list(words):
@@ -46,8 +45,18 @@ if __name__ == '__main__':
         
     text_data['cover_words'] = text_data['cover_words'].apply(words_to_list)
     text_data['cover_length'] = text_data['cover_words'].apply(lambda words: len(words))
-    text_data.drop(['cover_words'], axis=1, inplace=True)
     text_data.fillna(0, inplace=True)
+    
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    vectorizer = TfidfVectorizer(max_df=0.7)
+    corpus = text_data['cover_words'].apply(lambda words: ' '.join(words))
+    tfidf = vectorizer.fit_transform(corpus)
+    avg_tfidf = np.mean(tfidf, axis=1)
+    text_data['avg_tfidf'] = avg_tfidf
+    
+    text_data.drop(['cover_words'], axis=1, inplace=True)
+    
+    print(text_test.info())
 
     TEXT_FEATURE_FILE = 'text_feature'
     TEXT_FEATURE_FILE = TEXT_FEATURE_FILE + '_sample' + '.' + fmt if USE_SAMPLE else TEXT_FEATURE_FILE + '.' + fmt

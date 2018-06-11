@@ -53,8 +53,9 @@ user_text_favor_features = ['cover_length_favor']
 id_features = ['user_id', 'photo_id']
 time_features = ['time', 'duration_time']
 
-text_features = ['cover_length']
+text_features = ['cover_length', 'avg_tfidf']
 
+#'clicked_ratio'
 photo_features = ['exposure_num', 'have_face_cate', 'clicked_ratio'] + face_features + text_features
 user_features = user_action_features + user_face_favor_features + user_text_favor_features
 
