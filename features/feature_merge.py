@@ -37,12 +37,11 @@ if __name__ == '__main__':
     fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test', pool_type=pool_type, num_workers=n)
     
     ensemble_train = fm_trainer.merge()
-    print(ensemble_train)
+    print(ensemble_train.info())
     ensemble_test = fm_tester.merge()
-    print(ensemble_test)
+    print(ensemble_test.info())
     
     print(feature_to_use)
-    ensemble_train = user_item_train[feature_to_use + y_label]
     uint64_cols = ['user_id', 'photo_id', 'time']
     uint32_cols = ['playing_sum', 'browse_time_diff', 'duration_sum']
     uint16_cols = ['browse_num', 'exposure_num', 'click_num', 'duration_time', 'like_num', 'follow_num']
@@ -58,7 +57,6 @@ if __name__ == '__main__':
     ensemble_train[y_label] = ensemble_train[y_label].astype('bool')
     print(ensemble_train.info())
     
-    ensemble_test = user_item_test[feature_to_use]
     ensemble_test[uint64_cols] = ensemble_test[uint64_cols].astype('uint64')
     ensemble_test[uint32_cols] = ensemble_test[uint32_cols].astype('uint32')
     ensemble_test[uint16_cols] = ensemble_test[uint16_cols].astype('uint16')

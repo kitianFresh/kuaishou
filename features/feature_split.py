@@ -24,7 +24,7 @@ if __name__ == '__main__':
     USE_SAMPLE = args.sample
     fmt = args.format if args.format else 'csv' 
     pool_type = args.pool_type if args.pool_type else 'thread'
-    n = args.num_workers if args.num_workers else 4
+    n = args.num_workers if args.num_workers else 8
     Executor = ThreadPoolExecutor if pool_type == 'thread' else ProcessPoolExecutor
     feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
     if not os.path.exists(feature_store_path):
