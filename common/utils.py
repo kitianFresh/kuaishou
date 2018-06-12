@@ -31,6 +31,7 @@ class FeatureMerger(object):
 
         dfs = []
         start_time_1 = time.clock()
+        
         pool = ThreadPoolExecutor if self.pool_type == 'thread' else ProcessPoolExecutor
         with pool(max_workers=self.num_workers) as executor:
             for df in executor.map(feature_reader,  tasks_args):
@@ -39,11 +40,23 @@ class FeatureMerger(object):
         
         start_time_1 = time.clock()
         print('Merging data')
-        merger = functools.partial(pd.merge, how='inner', on=['user_id', 'photo_id'])
-        data = reduce(merger, dfs)
+        data = reducer(dfs)
         print("Merging data in memory execution in %s seconds" % (str(time.clock() - start_time_1)))
         return data
 
+def reducer(dfs):
+    n = len(dfs)
+    mid = n/2+1
+    if n <= 3:
+        merger = functools.partial(pd.merge, how='inner', on=['user_id', 'photo_id'])
+        data = reduce(merger, dfs)
+        return data
+    with ProcessPoolExecutor(max_workers=2) as executor:
+        left = executor.submit(reducer, dfs[:mid])
+        right = executor.submit(reducer, dfs[mid:])
+        data = pd.merge(left.result(), right.result(), how='inner', on=['user_id', 'photo_id'])
+    return data
+    
 uint64_cols = ['user_id', 'photo_id', 'time']
 uint32_cols = ['playing_sum', 'browse_time_diff', 'duration_sum']
 uint16_cols = ['browse_num', 'exposure_num', 'click_num', 'duration_time', 'like_num', 'follow_num']

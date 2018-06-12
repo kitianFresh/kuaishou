@@ -15,7 +15,7 @@ from sklearn.externals import joblib
 from sklearn.model_selection import cross_val_score, train_test_split, GridSearchCV, StratifiedKFold
 from sklearn.metrics import roc_curve, auc, roc_auc_score
 from sklearn.metrics import recall_score, accuracy_score
-from lightgbm import LGBMClassifier
+from catboost import CatBoostClassifier
 
 from conf.modelconf import user_action_features, face_features, user_face_favor_features, id_features, time_features, photo_features, user_features, y_label, features_to_train
 
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     version = args.version
     desc = args.description
     
-    model_name = 'LGBM'
+    model_name = 'CATBOOST'
     model_file = model_name + '-Sample' + '-' + version + '.model' if USE_SAMPLE else model_name + '-' + version + '.model'
     model_metainfo_file = model_name + '-Sample' + '-' + version + '.json' if USE_SAMPLE else model_name + '-' + version + '.json'
     sub_file = 'Sub-' + model_name + '-Sample' + '-' + version + '.txt' if USE_SAMPLE else 'Sub-' + model_name + '-' + version + '.txt'    
@@ -102,7 +102,7 @@ if __name__ == '__main__':
     
     print('Training model %s......' % model_name)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
-    clf = LGBMClassifier(verbose=True)
+    clf = CatBoostClassifier(verbose=True)
     clf.fit(X_train, y_train.ravel())
     # KFold cross validation
     print('StratifiedKFold cross validation......')

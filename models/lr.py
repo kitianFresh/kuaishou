@@ -3,6 +3,7 @@ import os
 import gc
 import json
 import argparse
+import time
 import sys
 sys.path.append("..")
 
@@ -50,7 +51,7 @@ if __name__ == '__main__':
         
     feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
 
-    
+    start = time.clock()
     ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
     ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
     ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
@@ -58,7 +59,8 @@ if __name__ == '__main__':
     ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
     ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
     ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
-
+    print('Reading data in %s seconds' % str(time.clock()-start))
+    
     print(ensemble_train.info())
     print(ensemble_test.info())
 
