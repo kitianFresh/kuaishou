@@ -47,7 +47,7 @@ class FeatureMerger(object):
 def reducer(dfs):
     n = len(dfs)
     mid = n/2+1
-    if n <= 3:
+    if n <= 2:
         merger = functools.partial(pd.merge, how='inner', on=['user_id', 'photo_id'])
         data = reduce(merger, dfs)
         return data

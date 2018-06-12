@@ -27,12 +27,14 @@ parser.add_argument('-s', '--sample', help='use sample data or full data', actio
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-v', '--version', help='model version, there will be a version control and a json description file for this model', required=True)
 parser.add_argument('-d', '--description', help='description for a model, a json description file attached to a model', required=True)
+parser.add_argument('-g', '--gpu-mode', help='use gpu mode or not', action="store_true")
 
 args = parser.parse_args()
 
 if __name__ == '__main__':
     
     USE_SAMPLE = args.sample
+    gpu_mode = args.gpu_mode
     fmt = args.format if args.format else 'csv'
     version = args.version
     desc = args.description
@@ -102,7 +104,7 @@ if __name__ == '__main__':
     
     print('Training model %s......' % model_name)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
-    clf = CatBoostClassifier(verbose=True)
+    clf = CatBoostClassifier(verbose=True, task_type='GPU' if gpu_mode else 'CPU')
     clf.fit(X_train, y_train.ravel())
     # KFold cross validation
     print('StratifiedKFold cross validation......')
