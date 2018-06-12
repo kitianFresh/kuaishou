@@ -1,4 +1,5 @@
 #coding:utf8
+
 import os
 import argparse
 import sys
@@ -103,7 +104,7 @@ if __name__ == '__main__':
     ensemble_test[bool_cols] = ensemble_test[bool_cols].astype('bool')
     ensemble_test[float64_cols] = ensemble_test[float64_cols].astype('float32')
     print(ensemble_test.info())
-    fmt = 'h5'
+#     fmt = 'h5'
     tasks_args = []
     for feature in set(input_features) - set(id_features):
         train_file = feature  + '_train' + '.' + fmt

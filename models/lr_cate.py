@@ -1,4 +1,5 @@
 #coding:utf8
+
 import os
 import gc
 import io
@@ -157,6 +158,6 @@ if __name__ == '__main__':
         'recall': recall,
         'roc_auc': roc_auc,
     }
-    with io.open(model_metainfo_file, 'w', encoding='utf8') as outfile:
+    with io.open(model_metainfo_file, mode='w', encoding='utf8') as outfile:
         metadata = json.dumps(model_metainfo, outfile, ensure_ascii=False, indent=4)
         outfile.write(metadata.decode('utf8'))

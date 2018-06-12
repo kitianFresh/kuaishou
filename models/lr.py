@@ -1,4 +1,5 @@
 #coding:utf8
+
 import os
 import gc
 import json
@@ -95,7 +96,7 @@ if __name__ == '__main__':
     print(X_t.shape)
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
-    clf = LogisticRegression(C=1)
+    clf = LogisticRegression(C=1,verbose=True)
     name = "LogisticRegression"
     clf.fit(X_train, y_train.ravel())
     acc = accuracy_score(y_test, clf.predict(X_test))
@@ -147,6 +148,6 @@ if __name__ == '__main__':
         'recall': recall,
         'roc_auc': roc_auc,
     }
-    with io.open(model_metainfo_file, 'w', encoding='utf8') as outfile:
+    with io.open(model_metainfo_file, mode='w', encoding='utf8') as outfile:
         metadata = json.dumps(model_metainfo, outfile, ensure_ascii=False, indent=4)
         outfile.write(metadata.decode('utf8'))

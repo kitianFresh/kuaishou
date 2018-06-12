@@ -1,43 +1,8 @@
-#coding:utf8
-from sklearn import svm
-from sklearn.linear_model import LinearRegression
-from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
-xgboost = True
-lgbm = True
-try:
-    from xgboost import XGBClassifier
-except ImportError as e:
-    print(e)
-    xgboost = False
-try:
-    from lightgbm import LGBMClassifier
-except ImportError as e:
-    print(e)
-    lgbm = False
-    
-    
+#coding:utf8    
     
 # params config
 
 # model config
-
-models = {
-    "LightGBM": LGBMClassifier() if lgbm else None,
-    "LogisticRegression": LogisticRegression(C=1),
-    "LinearSVM": svm.SVC(kernel="linear", C=0.025),
-    "RBFSVM": svm.SVC(gamma=0.01, C=10),
-    "DecisionTree": DecisionTreeClassifier(max_depth=5),
-    "RandomForest": RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
-    "AdaBoost": AdaBoostClassifier(),
-    "GBDT": GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=4, min_samples_leaf=9),
-    "XGBoost": XGBClassifier() if xgboost else None,
-}
-
-classifiers = {
-    name: clf for name, clf in models.iteritems() if clf is not None
-}
 
 # feature config
 user_action_features = ['browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum','duration_sum', 'click_ratio', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq', 'playing_freq']

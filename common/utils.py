@@ -39,7 +39,7 @@ class FeatureMerger(object):
         start_time_1 = time.clock()
         print('Merging data')
         merger = functools.partial(pd.merge, how='inner', on=['user_id', 'photo_id'])
-        data = reduce(merger, dfs)
+        data = functools.reduce(merger, dfs)
         print("Merging data in memory execution in %s seconds" % (str(time.clock() - start_time_1)))
         return data
 
@@ -49,7 +49,7 @@ def reducer(dfs):
     mid = n/2+1
     if n <= 2:
         merger = functools.partial(pd.merge, how='inner', on=['user_id', 'photo_id'])
-        data = reduce(merger, dfs)
+        data = functools.reduce(merger, dfs)
         return data
     with ProcessPoolExecutor(max_workers=2) as executor:
         left = executor.submit(reducer, dfs[:mid])

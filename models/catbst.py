@@ -1,4 +1,5 @@
 #coding:utf8
+
 import os
 import gc
 import json
@@ -164,7 +165,7 @@ if __name__ == '__main__':
         'roc_auc': roc_auc,
     }
     #  ensure_ascii=False 保证输出的不是 unicode 编码形式，而是真正的中文文本
-    with io.open(model_metainfo_file, 'w', encoding='utf8') as outfile:
+    with io.open(model_metainfo_file, mode='w', encoding='utf8') as outfile:
         metadata = json.dumps(model_metainfo, outfile, ensure_ascii=False, indent=4)
         outfile.write(metadata.decode('utf8'))
     
