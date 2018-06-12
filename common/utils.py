@@ -29,21 +29,21 @@ class FeatureMerger(object):
             args = (feature, os.path.join(self.col_feature_dir, file), self.fmt)
             tasks_args.append(args)
 
-        dfs = []
         start_time_1 = time.clock()
         
         pool = ThreadPoolExecutor if self.pool_type == 'thread' else ProcessPoolExecutor
         with pool(max_workers=self.num_workers) as executor:
-            for df in executor.map(feature_reader,  tasks_args):
-                dfs.append(df)
+            dfs = (df for df in executor.map(feature_reader,  tasks_args))
         print("%s pool reading execution in %s seconds" % (self.pool_type, str(time.clock() - start_time_1)))
         
         start_time_1 = time.clock()
         print('Merging data')
-        data = reducer(dfs)
+        merger = functools.partial(pd.merge, how='inner', on=['user_id', 'photo_id'])
+        data = reduce(merger, dfs)
         print("Merging data in memory execution in %s seconds" % (str(time.clock() - start_time_1)))
         return data
 
+# 无法使用多进程，不采样的数据集df太大了，多进程pickle不了, 还是只能使用共享内存的方案，这样得自己写了，暂不考虑
 def reducer(dfs):
     n = len(dfs)
     mid = n/2+1
