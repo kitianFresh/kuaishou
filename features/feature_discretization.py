@@ -1,4 +1,5 @@
 #coding:utf8
+
 import os
 import argparse
 import sys
@@ -56,8 +57,6 @@ if __name__ == '__main__':
         else:
             user_item_cate[col] = ensemble_data[col]
             
-    print(user_item_cate.info())
-    print(user_item_cate.head())
     user_item_cate[cates] = user_item_cate[cates].astype('uint8')
     user_item_cate = pd.concat([ensemble_data[id_features], user_item_cate], axis=1)
     

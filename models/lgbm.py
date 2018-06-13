@@ -79,7 +79,6 @@ if __name__ == '__main__':
     
     # less features to avoid overfit
     # features_to_train = ['exposure_num', 'click_ratio', 'cover_length_favor', 'woman_yen_value_favor', 'woman_cv_favor', 'cover_length', 'browse_num', 'man_age_favor', 'woman_age_favor', 'time', 'woman_scale', 'duration_time', 'woman_favor', 'playing_ratio', 'face_click_favor', 'click_num', 'man_cv_favor', 'man_scale', 'playing_sum', 'man_yen_value_favor', 'man_avg_age', 'playing_freq', 'woman_avg_attr', 'human_scale', 'browse_freq', 'non_face_click_favor', 'click_freq', 'woman_avg_age', 'human_avg_attr', 'duration_sum', 'man_favor', 'human_avg_age', 'follow_ratio', 'man_avg_attr']
-    features_to_train = list(set(features_to_train) - set(['clicked_ratio']))
     submission = pd.DataFrame()
     submission['user_id'] = ensemble_test['user_id']
     submission['photo_id'] = ensemble_test['photo_id']
@@ -105,7 +104,7 @@ if __name__ == '__main__':
     
     print('Training model %s......' % model_name)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
-    clf = LGBMClassifier(verbose=True)
+    clf = LGBMClassifier(verbose=1)
     clf.fit(X_train, y_train.ravel())
     # KFold cross validation
     print('StratifiedKFold cross validation......')

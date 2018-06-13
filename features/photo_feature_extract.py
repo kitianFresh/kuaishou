@@ -57,7 +57,7 @@ if __name__ == '__main__':
     items['clicked_ratio'] = items['clicked_num'] / items['exposure_num']
     items.drop_duplicates(['photo_id'], inplace=True)
     
-    # 对用户点击率做贝叶斯平滑
+    # 对物品店击率做贝叶斯平滑
     I, C = items['exposure_num'].values, items['clicked_num'].values
     #bs.update(I, C, 10000, 0.0000000001)
     #print(bs.alpha, bs.beta)
