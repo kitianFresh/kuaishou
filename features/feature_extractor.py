@@ -62,28 +62,31 @@ if __name__ == '__main__':
         ctr.append((C[i]+alpha_item)/(I[i]+alpha_item+beta_item))
     items['clicked_ratio'] = ctr
     items.drop(['exposure_num', 'clicked_num'], axis=1, inplace=True)
-    print(items.head(20))
     clicked_ratio_col_train = pd.merge(photo_train[['user_id', 'photo_id']], items[['photo_id', 'clicked_ratio']],
                                   how='left',
                                   on=['photo_id'])
     print(clicked_ratio_col_train.head())
     store_data(clicked_ratio_col_train, os.path.join(col_feature_store_path, 'clicked_ratio_train.csv'), fmt)
     
-    sigma = items.clicked_ratio.std()
-    u = alpha_item/(alpha_item+beta_item)
-    items1 = photo_test[['photo_id', 'exposure_num']]
-    print(photo_test.head())
-    items1 = items1.drop_duplicates(['photo_id'])
-    items1['exposure_num_sigma'] = items1['exposure_num'].apply(lambda x: np.exp(-x) * sigma)
-    print(items1.head(20))
-    items1['noise'] = items1['exposure_num_sigma'].apply(lambda x: normal(0, x))
-    print(items1.head(20))
-    items1['clicked_ratio'] = u + items1['noise']
-    print(items1.head(20))
-    items1.loc[items1['clicked_ratio']<0, ['clicked_ratio']] = 0
-    print(items1.head(20))
+#     高斯噪声
+#     sigma = items.clicked_ratio.std()
+#     u = alpha_item/(alpha_item+beta_item)
+#     items1 = photo_test[['photo_id', 'exposure_num']]
+#     print(photo_test.head())
+#     items1 = items1.drop_duplicates(['photo_id'])
+#     items1['exposure_num_sigma'] = items1['exposure_num'].apply(lambda x: np.exp(-x) * sigma)
+#     print(items1.head(20))
+#     items1['noise'] = items1['exposure_num_sigma'].apply(lambda x: normal(0, x))
+#     print(items1.head(20))
+#     items1['clicked_ratio'] = u + items1['noise']
+#     print(items1.head(20))
+#     items1.loc[items1['clicked_ratio']<0, ['clicked_ratio']] = 0
+#     print(items1.head(20))
     
-    clicked_ratio_col_test = pd.merge(photo_test[['user_id', 'photo_id']], items1[['photo_id', 'clicked_ratio']],
+    items = photo_test[['photo_id', 'exposure_num']]
+    items = items.drop_duplicates(['photo_id'])
+    items['clicked_ratio'] = np.random.beta(alpha_item, beta_item, items.shape[0])
+    clicked_ratio_col_test = pd.merge(photo_test[['user_id', 'photo_id']], items[['photo_id', 'clicked_ratio']],
                                   how='left',
                                   on=['photo_id'])
     print(clicked_ratio_col_test.head())
