@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 from numpy.random import normal
 
-from common.utils import read_data, store_data, FeatureMerger
+from common.utils import read_data, store_data, FeatureMerger, BayesianSmoothing
 from conf.modelconf import *
 
 parser = argparse.ArgumentParser()
@@ -44,6 +44,8 @@ if __name__ == '__main__':
     
     items = photo_train[['photo_id', 'exposure_num', 'clicked_num', 'clicked_ratio']]
     items = photo_train.drop_duplicates(['photo_id'])
+    
+    bs = BayesianSmoothing(1, 1)
     I, C = items['exposure_num'].values, items['clicked_num'].values
     bs.update(I, C, 10000, 0.0000000001)
     print(bs.alpha, bs.beta)
