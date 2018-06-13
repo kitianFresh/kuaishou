@@ -42,7 +42,7 @@ if __name__ == '__main__':
     photo_test = fm_tester.merge()
     print(photo_test.info())
     
-    items = photo_train['photo_id', 'exposure_num', 'clicked_num', 'clicked_ratio']
+    items = photo_train[['photo_id', 'exposure_num', 'clicked_num', 'clicked_ratio']]
     items = photo_train.drop_duplicates(['photo_id'])
     I, C = items['exposure_num'].values, items['clicked_num'].values
     bs.update(I, C, 10000, 0.0000000001)
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
     sigma = items.clicked_ratio.std()
     u = alpha_item/(alpha_item+beta_item)
-    items = photo_test['photo_id', 'exposure_num']
+    items = photo_test[['photo_id', 'exposure_num']]
     items = photo_train.drop_duplicates(['photo_id'])
     items['exposure_num_sigma'] = items['exposure_num'].apply(lambda x: np.exp(-x) * sigma)
     
