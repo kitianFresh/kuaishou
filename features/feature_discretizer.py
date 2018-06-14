@@ -41,6 +41,7 @@ if __name__ == '__main__':
                 print(func.__name__)
                 data_cate[col+'_cate'] = data[col].apply(func)
             else:
+                print('No %s discretization func ' % col)
                 data_cate[col] = data[col]
 
             data_cate[col+'_cate'] = data_cate[col+'_cate'].astype('uint8')

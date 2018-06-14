@@ -104,6 +104,8 @@ if __name__ == '__main__':
     
     print('Training model %s......' % model_name)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+    print(y_train.mean(), y_train.std())
+    print(y_test.mean(), y_test.std())
     clf = LGBMClassifier(verbose=1)
     clf.fit(X_train, y_train.ravel())
     # KFold cross validation

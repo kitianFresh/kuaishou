@@ -60,7 +60,7 @@ def reducer(dfs):
 uint64_cols = ['user_id', 'photo_id', 'time']
 uint32_cols = ['playing_sum', 'browse_time_diff', 'duration_sum']
 uint16_cols = ['browse_num', 'exposure_num', 'click_num', 'duration_time', 'like_num', 'follow_num', 'clicked_num']
-uint8_cols = ['cover_length', 'man_num', 'woman_num', 'face_num']
+uint8_cols = ['cover_length', 'man_num', 'woman_num', 'face_num', 'time_cate', 'duration_time_cate']
 bool_cols = ['have_face_cate', 'click']
 float32_cols = ['clicked_ratio','non_face_click_favor', 'face_click_favor', 'man_favor', 'woman_avg_age', 'playing_freq', 'woman_age_favor', 'woman_yen_value_favor', 'human_scale', 'woman_favor', 'click_freq', 'woman_cv_favor', 'man_age_favor', 'man_yen_value_favor', 'follow_ratio', 'man_scale', 'browse_freq', 'man_avg_age', 'man_cv_favor', 'man_avg_attr', 'playing_ratio', 'woman_scale', 'click_ratio', 'human_avg_age', 'woman_avg_attr', 'like_ratio', 'cover_length_favor', 'human_avg_attr', 'avg_tfidf']
 float64_cols = []
@@ -191,35 +191,94 @@ class BayesianSmoothing(object):
 # time_features #
 #################
 import datetime
-# 凌晨 1-5 早上 5-8 上午 8-12 中午 12-15 下午 15-17 晚上 17-23 深夜 23-1
-period_1_5 = (datetime.time(1,0,0), datetime.time(5,0,0))
-period_5_8 = (datetime.time(5,0,0), datetime.time(8,0,0))
-period_8_12 = (datetime.time(8,0,0), datetime.time(12,0,0))
-period_12_15 = (datetime.time(12,0,0), datetime.time(15,0,0))
-period_15_17 = (datetime.time(15,0,0), datetime.time(17,0,0))
-period_17_23 = (datetime.time(17,0,0), datetime.time(23,0,0))
-period_0_1 = (datetime.time(0,0,0), datetime.time(1,0,0))
-period_23_0 = (datetime.time(23,0,0), datetime.time(0,0,0))
+# # 凌晨 1-5 早上 5-8 上午 8-12 中午 12-15 下午 15-17 晚上 17-23 深夜 23-1
+# period_1_5 = (datetime.time(1,0,0), datetime.time(5,0,0))
+# period_5_8 = (datetime.time(5,0,0), datetime.time(8,0,0))
+# period_8_12 = (datetime.time(8,0,0), datetime.time(12,0,0))
+# period_12_15 = (datetime.time(12,0,0), datetime.time(15,0,0))
+# period_15_17 = (datetime.time(15,0,0), datetime.time(17,0,0))
+# period_17_23 = (datetime.time(17,0,0), datetime.time(23,0,0))
+# period_0_1 = (datetime.time(0,0,0), datetime.time(1,0,0))
+# period_23_0 = (datetime.time(23,0,0), datetime.time(0,0,0))
+
+# def time_discretization(ts):
+#     global period_1_5, period_5_8, period_8_12, period_12_15, period_15_17, period_17_23, period_0_1, period_23_0
+#     dt = pd.to_datetime(ts-8*3600*1000, utc=True, unit='ms')
+# #     print(type(dt))
+#     t = dt.time()
+#     if period_1_5[0] <= t <= period_1_5[1]:
+#         return 0
+#     elif period_5_8[0] < t <= period_5_8[1]:
+#         return 1
+#     elif period_8_12[0] < t <= period_8_12[1]:
+#         return 2
+#     elif period_12_15[0] < t <= period_12_15[1]:
+#         return 3
+#     elif period_15_17[0] < t <= period_15_17[1]:
+#         return 4
+#     elif period_17_23[0] < t <= period_17_23[1]:
+#         return 5
+#     elif period_0_1[0] <= t < period_0_1[1] or period_23_0[0] < t:
+#         return 6
+
+import datetime
+periods_24 = []
+for i in range(24):
+    periods_24.append(datetime.time(i,0,0))
 
 def time_discretization(ts):
-    global period_1_5, period_5_8, period_8_12, period_12_15, period_15_17, period_17_23, period_0_1, period_23_0
+    global periods_24
     dt = pd.to_datetime(ts-8*3600*1000, utc=True, unit='ms')
-#     print(type(dt))
     t = dt.time()
-    if period_1_5[0] <= t <= period_1_5[1]:
+    if periods_24[0] <= t < periods_24[1]:
         return 0
-    elif period_5_8[0] < t <= period_5_8[1]:
+    elif periods_24[1] <= t < periods_24[2]:
         return 1
-    elif period_8_12[0] < t <= period_8_12[1]:
+    elif periods_24[2] < t < periods_24[3]:
         return 2
-    elif period_12_15[0] < t <= period_12_15[1]:
+    elif periods_24[3] < t < periods_24[4]:
         return 3
-    elif period_15_17[0] < t <= period_15_17[1]:
+    elif periods_24[4] < t < periods_24[5]:
         return 4
-    elif period_17_23[0] < t <= period_17_23[1]:
+    elif periods_24[5] < t < periods_24[6]:
         return 5
-    elif period_0_1[0] <= t < period_0_1[1] or period_23_0[0] < t:
+    elif periods_24[6] <= t < periods_24[7]:
         return 6
+    elif periods_24[7] <= t < periods_24[8]:
+        return 7
+    elif periods_24[8] <= t < periods_24[9]:
+        return 8
+    elif periods_24[9] <= t < periods_24[10]:
+        return 9
+    elif periods_24[10] <= t < periods_24[11]:
+        return 10
+    elif periods_24[11] <= t < periods_24[12]:
+        return 11
+    elif periods_24[12] <= t < periods_24[13]:
+        return 12
+    elif periods_24[13] <= t < periods_24[14]:
+        return 13
+    elif periods_24[14] <= t < periods_24[15]:
+        return 14
+    elif periods_24[15] <= t < periods_24[16]:
+        return 15
+    elif periods_24[16] <= t < periods_24[17]:
+        return 16
+    elif periods_24[17] <= t < periods_24[18]:
+        return 17
+    elif periods_24[18] <= t < periods_24[19]:
+        return 18
+    elif periods_24[19] <= t < periods_24[20]:
+        return 19
+    elif periods_24[20] <= t < periods_24[21]:
+        return 20
+    elif periods_24[21] <= t < periods_24[22]:
+        return 21
+    elif periods_24[22] <= t < periods_24[23]:
+        return 22
+    else:
+        return 23
+    
     
 def datetime_discretization(dt):
     global period_1_5, period_5_8, period_8_12, period_12_15, period_15_17, period_17_23, period_0_1, period_23_0
