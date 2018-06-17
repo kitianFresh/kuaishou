@@ -1,52 +1,23 @@
 #coding:utf8
 
 import os
-import numpy as np
-import pandas as pd
-import random
 import time
 import functools
-import scipy.special as special
+import logging
+import argparse
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
-class FeatureMerger(object):
-    
-    def __init__(self, col_feature_dir, col_features_to_merge, fmt='csv', data_type='train', pool_type='process', num_workers=8):
-        self.fmt = fmt
-        self.data_type = data_type
-        self.pool_type = pool_type
-        self.num_workers = num_workers
-        self.col_feature_dir = col_feature_dir
-        self.col_features_to_merge = col_features_to_merge
-    
-    def merge(self):   
-        tasks_args = []
-        for feature in self.col_features_to_merge:
-            if self.data_type == "":
-                file = feature  + '.' + self.fmt
-            else:    
-                file = feature  + '_' + self.data_type + '.' + self.fmt
-            args = (feature, os.path.join(self.col_feature_dir, file), self.fmt)
-            tasks_args.append(args)
+import numpy as np
+import pandas as pd
+import scipy.special as special
 
-        start_time_1 = time.clock()
-        
-        pool = ThreadPoolExecutor if self.pool_type == 'thread' else ProcessPoolExecutor
-        with pool(max_workers=self.num_workers) as executor:
-            dfs = (df for df in executor.map(feature_reader,  tasks_args))
-        print("%s pool reading execution in %s seconds" % (self.pool_type, str(time.clock() - start_time_1)))
-        
-        start_time_1 = time.clock()
-        print('Merging data')
-        merger = functools.partial(pd.merge, how='inner', on=['user_id', 'photo_id'])
-        data = functools.reduce(merger, dfs)
-        print("Merging data in memory execution in %s seconds" % (str(time.clock() - start_time_1)))
-        return data
+from conf.modelconf import feature_dtype_map
+
 
 # 无法使用多进程，不采样的数据集df太大了，多进程pickle不了, 还是只能使用共享内存的方案，这样得自己写了，暂不考虑
 def reducer(dfs):
     n = len(dfs)
-    mid = n/2+1
+    mid = n / 2 + 1
     if n <= 2:
         merger = functools.partial(pd.merge, how='inner', on=['user_id', 'photo_id'])
         data = functools.reduce(merger, dfs)
@@ -56,50 +27,64 @@ def reducer(dfs):
         right = executor.submit(reducer, dfs[mid:])
         data = pd.merge(left.result(), right.result(), how='inner', on=['user_id', 'photo_id'])
     return data
-    
-uint64_cols = ['user_id', 'photo_id', 'time']
-uint32_cols = ['playing_sum', 'browse_time_diff', 'duration_sum']
-uint16_cols = ['browse_num', 'exposure_num', 'click_num', 'duration_time', 'like_num', 'follow_num', 'clicked_num']
-uint8_cols = ['cover_length', 'man_num', 'woman_num', 'face_num', 'time_cate', 'duration_time_cate']
-bool_cols = ['have_face_cate', 'click']
-float32_cols = ['clicked_ratio','non_face_click_favor', 'face_click_favor', 'man_favor', 'woman_avg_age', 'playing_freq', 'woman_age_favor', 'woman_yen_value_favor', 'human_scale', 'woman_favor', 'click_freq', 'woman_cv_favor', 'man_age_favor', 'man_yen_value_favor', 'follow_ratio', 'man_scale', 'browse_freq', 'man_avg_age', 'man_cv_favor', 'man_avg_attr', 'playing_ratio', 'woman_scale', 'click_ratio', 'human_avg_age', 'woman_avg_attr', 'like_ratio', 'cover_length_favor', 'human_avg_attr', 'avg_tfidf', 'hour_click_ratio']
-float64_cols = []
 
-
-feature_dtype_map = {}
-for name in uint64_cols:
-    feature_dtype_map.update({name: 'uint64'})
-for name in uint32_cols:
-    feature_dtype_map.update({name: 'uint32'})
-for name in uint16_cols:
-    feature_dtype_map.update({name: 'uint16'})
-for name in uint8_cols:
-    feature_dtype_map.update({name: 'uint8'})
-for name in bool_cols:
-    feature_dtype_map.update({name: 'bool'})
-for name in float32_cols:
-    feature_dtype_map.update({name: 'float32'})
-for name in float64_cols:
-    feature_dtype_map.update({name: 'float64'})
 
 def feature_reader(args):
-    global feature_dtype_map
     feature, path, fmt = args
+    df = None
     if fmt == 'csv':
         dtype = feature_dtype_map.get(feature)
-        print(feature, dtype)
-        df = pd.read_csv(path, sep='\t', dtype = {feature: dtype})
+        logging.info("(%s, %s, %s)" % (feature, dtype, path))
+        df = pd.read_csv(path, sep='\t', dtype={feature: dtype})
     elif fmt == 'pkl':
         df = pd.read_pickle(path)
     elif fmt == 'h5':
         df = pd.read_hdf(path, 'table', mode='r')
-    
+
     return df
+
+class FeatureMerger(object):
+
+    _merge_how = 'left'
+    _index_columns = ['user_id', 'photo_id']
+
+    def __init__(self, col_feature_dir, col_features_to_merge, fmt='csv', data_type='train', pool_type='process', num_workers=8):
+        self.fmt = fmt
+        self.data_type = data_type
+        self.pool_type = pool_type
+        self.num_workers = num_workers
+        self.col_feature_dir = col_feature_dir
+        self.col_features_to_merge = col_features_to_merge
+    
+    def merge(self):
+        '''
+
+        :param return_type: df means dataframe,
+        :return:
+        '''
+        tasks_args = []
+        for feature in self.col_features_to_merge:
+            if self.data_type == "":
+                file = feature  + '.' + self.fmt
+            else:
+                file = feature  + '_' + self.data_type + '.' + self.fmt
+            args = (feature, os.path.join(self.col_feature_dir, file), self.fmt)
+            tasks_args.append(args)
+
+        start_time_1 = time.clock()
         
-# def feature_reader(args):
-#     feature, path, fmt = args
-#     df = read_data(path, fmt)
-#     return df        
+        pool = ThreadPoolExecutor if self.pool_type == 'thread' else ProcessPoolExecutor
+        with pool(max_workers=self.num_workers) as executor:
+            dfs = (df for df in executor.map(feature_reader,  tasks_args))
+        logging.info("%s pool reading execution in %s seconds" % (self.pool_type, str(time.clock() - start_time_1)))
+
+        start_time_2 = time.clock()
+        merger = functools.partial(pd.merge, how=self._merge_how, on=self._index_columns)
+        data = functools.reduce(merger, dfs)
+        logging.info("Merging data in memory execution in %s seconds" % (str(time.clock() - start_time_2)))
+        logging.info("Construct data in %s seconds" % (str(time.clock() - start_time_1)))
+        return data
+
 
 def read_data(path, fmt):
     '''
@@ -122,7 +107,7 @@ def store_data(df, path, fmt, sep='\t', index=False):
         clib = 'blosc'
 #         df.to_hdf(path, 'table', mode='w', complevel=9, complib=clib)
         df.to_hdf(path, 'table', mode='w')
-        print('to hdf..')
+        logging.info('to hdf..')
     return path
         
         
@@ -137,13 +122,13 @@ def str2bool(v):
 def normalize_min_max(df, features):
     all_features = set(list(df.columns.values))
     features = list(all_features & set(features))
-    print('----------------------------------min_max norm------------------------------\n%s' % features)
+    logging.info('----------------------------------min_max norm------------------------------\n%s' % features)
     df[features] = df[features].apply(lambda x: (x-x.min())/(x.max()-x.min()))
 
 def normalize_z_score(df, features):
     all_features = set(list(df.columns.values))
     features = list(all_features & set(features))
-    print('----------------------------------z_score norm------------------------------\n%s' % features)
+    logging.info('----------------------------------z_score norm------------------------------\n%s' % features)
     df[features] = df[features].apply(lambda x: (x-x.mean())/x.std())
 
 
@@ -153,8 +138,7 @@ class BayesianSmoothing(object):
         self.beta = beta
 
     def sample(self, alpha, beta, num, imp_upperbound):
-        sample = numpy.random.beta(alpha, beta, num)
-        print(sample)
+        sample = np.random.beta(alpha, beta, num)
         I = []
         C = []
         for clk_rt in sample:
@@ -221,63 +205,63 @@ import datetime
 #     elif period_0_1[0] <= t < period_0_1[1] or period_23_0[0] < t:
 #         return 6
 
-import datetime
-periods_24 = []
-for i in range(24):
-    periods_24.append(datetime.time(i,0,0))
-
-def time_discretization(ts):
-    global periods_24
-    dt = pd.to_datetime(ts-8*3600*1000, utc=True, unit='ms')
-    t = dt.time()
-    if periods_24[0] <= t < periods_24[1]:
-        return 0
-    elif periods_24[1] <= t < periods_24[2]:
-        return 1
-    elif periods_24[2] < t < periods_24[3]:
-        return 2
-    elif periods_24[3] < t < periods_24[4]:
-        return 3
-    elif periods_24[4] < t < periods_24[5]:
-        return 4
-    elif periods_24[5] < t < periods_24[6]:
-        return 5
-    elif periods_24[6] <= t < periods_24[7]:
-        return 6
-    elif periods_24[7] <= t < periods_24[8]:
-        return 7
-    elif periods_24[8] <= t < periods_24[9]:
-        return 8
-    elif periods_24[9] <= t < periods_24[10]:
-        return 9
-    elif periods_24[10] <= t < periods_24[11]:
-        return 10
-    elif periods_24[11] <= t < periods_24[12]:
-        return 11
-    elif periods_24[12] <= t < periods_24[13]:
-        return 12
-    elif periods_24[13] <= t < periods_24[14]:
-        return 13
-    elif periods_24[14] <= t < periods_24[15]:
-        return 14
-    elif periods_24[15] <= t < periods_24[16]:
-        return 15
-    elif periods_24[16] <= t < periods_24[17]:
-        return 16
-    elif periods_24[17] <= t < periods_24[18]:
-        return 17
-    elif periods_24[18] <= t < periods_24[19]:
-        return 18
-    elif periods_24[19] <= t < periods_24[20]:
-        return 19
-    elif periods_24[20] <= t < periods_24[21]:
-        return 20
-    elif periods_24[21] <= t < periods_24[22]:
-        return 21
-    elif periods_24[22] <= t < periods_24[23]:
-        return 22
-    else:
-        return 23
+# import datetime
+# periods_24 = []
+# for i in range(24):
+#     periods_24.append(datetime.time(i,0,0))
+#
+# def time_discretization(ts):
+#     global periods_24
+#     dt = pd.to_datetime(ts-8*3600*1000, utc=True, unit='ms')
+#     t = dt.time()
+#     if periods_24[0] <= t < periods_24[1]:
+#         return 0
+#     elif periods_24[1] <= t < periods_24[2]:
+#         return 1
+#     elif periods_24[2] < t < periods_24[3]:
+#         return 2
+#     elif periods_24[3] < t < periods_24[4]:
+#         return 3
+#     elif periods_24[4] < t < periods_24[5]:
+#         return 4
+#     elif periods_24[5] < t < periods_24[6]:
+#         return 5
+#     elif periods_24[6] <= t < periods_24[7]:
+#         return 6
+#     elif periods_24[7] <= t < periods_24[8]:
+#         return 7
+#     elif periods_24[8] <= t < periods_24[9]:
+#         return 8
+#     elif periods_24[9] <= t < periods_24[10]:
+#         return 9
+#     elif periods_24[10] <= t < periods_24[11]:
+#         return 10
+#     elif periods_24[11] <= t < periods_24[12]:
+#         return 11
+#     elif periods_24[12] <= t < periods_24[13]:
+#         return 12
+#     elif periods_24[13] <= t < periods_24[14]:
+#         return 13
+#     elif periods_24[14] <= t < periods_24[15]:
+#         return 14
+#     elif periods_24[15] <= t < periods_24[16]:
+#         return 15
+#     elif periods_24[16] <= t < periods_24[17]:
+#         return 16
+#     elif periods_24[17] <= t < periods_24[18]:
+#         return 17
+#     elif periods_24[18] <= t < periods_24[19]:
+#         return 18
+#     elif periods_24[19] <= t < periods_24[20]:
+#         return 19
+#     elif periods_24[20] <= t < periods_24[21]:
+#         return 20
+#     elif periods_24[21] <= t < periods_24[22]:
+#         return 21
+#     elif periods_24[22] <= t < periods_24[23]:
+#         return 22
+#     else:
+#         return 23
     
     
 def datetime_discretization(dt):

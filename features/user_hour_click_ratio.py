@@ -2,23 +2,17 @@
 import os
 import argparse
 import sys
-import time
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 sys.path.append("..")
     
 import pandas as pd
-import numpy as np
-from numpy.random import normal
 
-from common.utils import read_data, store_data, FeatureMerger, BayesianSmoothing
-from conf.modelconf import *
+from common.utils import read_data, store_data, FeatureMerger
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-p', '--pool-type', help='pool type, threads or process, here use process for more performance')
 parser.add_argument('-n', '--num-workers', help='workers num in pool')
-parser.add_argument('-b', '--use-pretrained-beta', help='use pre trained beta alpha, beta', action="store_true")
 args = parser.parse_args()
 
 if __name__ == '__main__':
