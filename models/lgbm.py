@@ -52,21 +52,21 @@ if __name__ == '__main__':
     feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
 
     
-#     ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
-#     ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
-#     ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
-
-#     ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
-#     ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
-#     ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
+    # ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
+    # ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
+    # ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
+    #
+    # ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
+    # ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
+    # ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
     
     col_feature_store_path = '../sample/features/columns' if USE_SAMPLE else '../data/features/columns'
-    
+
     feature_to_use = user_features + photo_features + time_features
-    
+
     fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=8)
     fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=8)
-    
+
     ensemble_train = fm_trainer.merge()
     print(ensemble_train.info())
     ensemble_test = fm_tester.merge()

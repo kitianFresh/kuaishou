@@ -58,7 +58,7 @@ def reducer(dfs):
     return data
     
 uint64_cols = ['user_id', 'photo_id', 'time']
-uint32_cols = ['playing_sum', 'browse_time_diff', 'duration_sum']
+uint32_cols = ['playing_sum', 'browse_time_diff', 'duration_sum', 'key_words_num']
 uint16_cols = ['browse_num', 'exposure_num', 'click_num', 'duration_time', 'like_num', 'follow_num', 'clicked_num']
 uint8_cols = ['cover_length', 'man_num', 'woman_num', 'face_num', 'time_cate', 'duration_time_cate']
 bool_cols = ['have_face_cate', 'click']
