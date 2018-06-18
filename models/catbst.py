@@ -2,25 +2,18 @@
 
 import os
 import gc
-import json
-import io
 import argparse
 import sys
 sys.path.append("..")
 
-import numpy as np
 import pandas as pd
 
-from sklearn import preprocessing
-from sklearn.externals import joblib
-from sklearn.model_selection import cross_val_score, train_test_split, GridSearchCV, StratifiedKFold
-from sklearn.metrics import roc_curve, auc, roc_auc_score
-from sklearn.metrics import recall_score, accuracy_score
+from sklearn.model_selection import cross_val_score, train_test_split, StratifiedKFold
 from catboost import CatBoostClassifier
 
-from conf.modelconf import user_action_features, face_features, user_face_favor_features, id_features, time_features, photo_features, user_features, y_label, features_to_train
-
-from common.utils import read_data, store_data, normalize_min_max, normalize_z_score, FeatureMerger
+from conf.modelconf import time_features, photo_features, user_features, y_label, features_to_train
+from common.utils import FeatureMerger
+from common.base import Classifier
 
         
 parser = argparse.ArgumentParser()
@@ -41,13 +34,8 @@ if __name__ == '__main__':
     desc = args.description
     
     model_name = 'CATBOOST'
-    model_file = model_name + '-Sample' + '-' + version + '.model' if USE_SAMPLE else model_name + '-' + version + '.model'
-    model_metainfo_file = model_name + '-Sample' + '-' + version + '.json' if USE_SAMPLE else model_name + '-' + version + '.json'
-    sub_file = 'Sub-' + model_name + '-Sample' + '-' + version + '.txt' if USE_SAMPLE else 'Sub-' + model_name + '-' + version + '.txt'    
-    if os.path.exists(model_file):
-        print('There already has a model with the same version.')
-        sys.exit(-1)
-        
+
+    model_store_path = './sample/' if USE_SAMPLE else './data'
     
     feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
 
@@ -79,7 +67,6 @@ if __name__ == '__main__':
     
     # less features to avoid overfit
     # features_to_train = ['exposure_num', 'click_ratio', 'cover_length_favor', 'woman_yen_value_favor', 'woman_cv_favor', 'cover_length', 'browse_num', 'man_age_favor', 'woman_age_favor', 'time', 'woman_scale', 'duration_time', 'woman_favor', 'playing_ratio', 'face_click_favor', 'click_num', 'man_cv_favor', 'man_scale', 'playing_sum', 'man_yen_value_favor', 'man_avg_age', 'playing_freq', 'woman_avg_attr', 'human_scale', 'browse_freq', 'non_face_click_favor', 'click_freq', 'woman_avg_age', 'human_avg_attr', 'duration_sum', 'man_favor', 'human_avg_age', 'follow_ratio', 'man_avg_attr']
-    features_to_train = list(set(features_to_train) - set(['clicked_ratio']))
     submission = pd.DataFrame()
     submission['user_id'] = ensemble_test['user_id']
     submission['photo_id'] = ensemble_test['photo_id']
@@ -92,86 +79,29 @@ if __name__ == '__main__':
     ensemble_online = ensemble_test[features_to_train]
     # 决策树模型不需要归一化，本身就是范围划分
 
-    del ensemble_train
-    del ensemble_test
     gc.collect()
     X = ensemble_offline.values
     print(X.shape)
     X_t = ensemble_online.values
     print(X_t.shape)
-    del ensemble_offline
-    del ensemble_online
-    gc.collect()
-    
+
     print('Training model %s......' % model_name)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
-    clf = CatBoostClassifier(verbose=True, task_type='GPU' if gpu_mode else 'CPU')
-    clf.fit(X_train, y_train.ravel())
+    print(y_train.mean(), y_train.std())
+    print(y_test.mean(), y_test.std())
+    model = Classifier(CatBoostClassifier(verbose=True, task_type='GPU' if gpu_mode else 'CPU'), dir=model_store_path, name=model_name, version=version,
+                       description=desc, features_to_train=features_to_train)
+    model.clf.fit(X_train, y_train.ravel())
+    model.compute_metrics(X_test, y_test)
+    model.compute_features_distribution()
+
     # KFold cross validation
-    print('StratifiedKFold cross validation......')
-    cv = StratifiedKFold(n_splits=3, random_state=0, shuffle=False)
-    scores = cross_val_score(clf, X, y.ravel(), cv=cv, scoring='roc_auc')
-    print('K Fold scores: %s' % scores)
-    print("Accuracy: %0.6f (+/- %0.6f)" % (scores.mean(), scores.std() ** 2))
-    roc_auc = scores.mean()
-    
-    acc = accuracy_score(y_test, clf.predict(X_test))
-    recall = recall_score(y_test, clf.predict(X_test), average='macro')
-    print("{:31} 测试集acc/recall: {:15}/{:15}".format(model_name, acc, recall))
-
-    
-    features_distribution = []
-    important_features = []
-    try: 
-        importances = clf.feature_importances_
-        indices = np.argsort(importances)[::-1]
-        print('{}特征权值分布为: '.format(model_name))
-        for f in range(X_train.shape[1]):
-            print("%d. feature %d [%s] (%f)" % (f + 1, indices[f], features_to_train[indices[f]], importances[indices[f]]))
-            features_distribution.append((f + 1, indices[f], features_to_train[indices[f]], importances[indices[f]]))
-            important_features.append(features_to_train[indices[f]])
-        print(important_features)
-    except AttributeError:
-        print('{} has no feture_importances_'.format(model_name))
+    def cross_validate(*args, **kwargs):
+        cv = StratifiedKFold(n_splits=3, random_state=0, shuffle=False)
+        scores = cross_val_score(model.clf, X, y.ravel(), cv=cv, scoring='roc_auc')
+        return scores
 
 
-    try:
-        y_score = clf.decision_function(X_test)[:,1]
-    except AttributeError:
-        print('{} has no decision_function, use predict func.'.format(model_name))
-        y_score = clf.predict_proba(X_test)[:,1]
-
-    # Compute ROC curve and ROC area for each class
-    roc_auc = roc_auc_score(y_test, y_score, sample_weight=None)
-    
-    
-    
-    # Plot ROC curve
-    print('{} ROC curve (area = {})'.format(model_name, roc_auc))
-    
-    print('Saving model %s to %s......' % (model_name, model_file))
-    joblib.dump(clf, model_file)
-    model_metainfo = {
-        'sub_file': sub_file,
-        'model_file': model_file,
-        'model_name': model_name,
-        'version': version,
-        'description': desc,
-        'features_to_train': features_to_train,
-        'features_distribution': features_distribution,
-        'important_features': important_features,
-        'accuracy': acc,
-        'recall': recall,
-        'roc_auc': roc_auc,
-    }
-    #  ensure_ascii=False 保证输出的不是 unicode 编码形式，而是真正的中文文本
-    with io.open(model_metainfo_file, mode='w', encoding='utf8') as outfile:
-        metadata = json.dumps(model_metainfo, outfile, ensure_ascii=False, indent=4)
-        outfile.write(metadata.decode('utf8'))
-    
-    print('Make submission %s......' % sub_file)
-    y_sub = clf.predict_proba(X_t)[:,1]
-    submission['click_probability'] = y_sub
-    submission['click_probability'] = submission['click_probability'].apply(lambda x: float('%.6f' % x))
-    submission.to_csv(sub_file, sep='\t', index=False, header=False)
-    
+    model.cross_validation(cross_validate)
+    model.save()
+    model.submit(ensemble_test)
