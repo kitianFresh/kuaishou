@@ -263,24 +263,6 @@ def time_discretization(ts):
 #     else:
 #         return 23
     
-    
-def datetime_discretization(dt):
-    global period_1_5, period_5_8, period_8_12, period_12_15, period_15_17, period_17_23, period_0_1, period_23_0
-    t = dt.time()
-    if period_1_5[0] <= t <= period_1_5[1]:
-        return 0
-    elif period_5_8[0] < t <= period_5_8[1]:
-        return 1
-    elif period_8_12[0] < t <= period_8_12[1]:
-        return 2
-    elif period_12_15[0] < t <= period_12_15[1]:
-        return 3
-    elif period_15_17[0] < t <= period_15_17[1]:
-        return 4
-    elif period_17_23[0] < t <= period_17_23[1]:
-        return 5
-    elif period_0_1[0] <= t < period_0_1[1] or period_23_0[0] < t:
-        return 6
 
 #################
 # user_features #
