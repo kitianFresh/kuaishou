@@ -39,7 +39,7 @@ time_features = ['time', 'duration_time']
 # time_features = ['time_cate', 'duration_time_cate']
 
 
-text_features = ['cover_length', 'avg_tfidf']
+text_features = ['cover_length', 'avg_tfidf', 'key_words_num']
 
 #'clicked_ratio'
 photo_features = ['exposure_num', 'have_face_cate'] + face_features + text_features
