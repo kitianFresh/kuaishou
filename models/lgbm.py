@@ -90,13 +90,14 @@ if __name__ == '__main__':
     print(y_test.mean(), y_test.std())
     model = Classifier(LGBMClassifier(verbose=1),dir=model_store_path, name=model_name,version=version, description=desc, features_to_train=features_to_train)
     model.clf.fit(X_train, y_train.ravel())
-    model.compute_metrics(X_test, y_test)
-    model.compute_features_distribution()
     # KFold cross validation
     def cross_validate(*args, **kwargs):
         cv = StratifiedKFold(n_splits=3, random_state=0, shuffle=False)
         scores = cross_val_score(model.clf, X, y.ravel(), cv=cv, scoring='roc_auc')
         return scores
     model.cross_validation(cross_validate)
+
+    model.compute_metrics(X_test, y_test)
+    model.compute_features_distribution()
     model.save()
     model.submit(ensemble_test)
