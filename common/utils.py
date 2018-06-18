@@ -175,35 +175,35 @@ class BayesianSmoothing(object):
 # time_features #
 #################
 import datetime
-# # 凌晨 1-5 早上 5-8 上午 8-12 中午 12-15 下午 15-17 晚上 17-23 深夜 23-1
-# period_1_5 = (datetime.time(1,0,0), datetime.time(5,0,0))
-# period_5_8 = (datetime.time(5,0,0), datetime.time(8,0,0))
-# period_8_12 = (datetime.time(8,0,0), datetime.time(12,0,0))
-# period_12_15 = (datetime.time(12,0,0), datetime.time(15,0,0))
-# period_15_17 = (datetime.time(15,0,0), datetime.time(17,0,0))
-# period_17_23 = (datetime.time(17,0,0), datetime.time(23,0,0))
-# period_0_1 = (datetime.time(0,0,0), datetime.time(1,0,0))
-# period_23_0 = (datetime.time(23,0,0), datetime.time(0,0,0))
+# 凌晨 1-5 早上 5-8 上午 8-12 中午 12-15 下午 15-17 晚上 17-23 深夜 23-1
+period_1_5 = (datetime.time(1,0,0), datetime.time(5,0,0))
+period_5_8 = (datetime.time(5,0,0), datetime.time(8,0,0))
+period_8_12 = (datetime.time(8,0,0), datetime.time(12,0,0))
+period_12_15 = (datetime.time(12,0,0), datetime.time(15,0,0))
+period_15_17 = (datetime.time(15,0,0), datetime.time(17,0,0))
+period_17_23 = (datetime.time(17,0,0), datetime.time(23,0,0))
+period_0_1 = (datetime.time(0,0,0), datetime.time(1,0,0))
+period_23_0 = (datetime.time(23,0,0), datetime.time(0,0,0))
 
-# def time_discretization(ts):
-#     global period_1_5, period_5_8, period_8_12, period_12_15, period_15_17, period_17_23, period_0_1, period_23_0
-#     dt = pd.to_datetime(ts-8*3600*1000, utc=True, unit='ms')
-# #     print(type(dt))
-#     t = dt.time()
-#     if period_1_5[0] <= t <= period_1_5[1]:
-#         return 0
-#     elif period_5_8[0] < t <= period_5_8[1]:
-#         return 1
-#     elif period_8_12[0] < t <= period_8_12[1]:
-#         return 2
-#     elif period_12_15[0] < t <= period_12_15[1]:
-#         return 3
-#     elif period_15_17[0] < t <= period_15_17[1]:
-#         return 4
-#     elif period_17_23[0] < t <= period_17_23[1]:
-#         return 5
-#     elif period_0_1[0] <= t < period_0_1[1] or period_23_0[0] < t:
-#         return 6
+def time_discretization(ts):
+    global period_1_5, period_5_8, period_8_12, period_12_15, period_15_17, period_17_23, period_0_1, period_23_0
+    dt = pd.to_datetime(ts-8*3600*1000, utc=True, unit='ms')
+#     print(type(dt))
+    t = dt.time()
+    if period_1_5[0] <= t <= period_1_5[1]:
+        return 0
+    elif period_5_8[0] < t <= period_5_8[1]:
+        return 1
+    elif period_8_12[0] < t <= period_8_12[1]:
+        return 2
+    elif period_12_15[0] < t <= period_12_15[1]:
+        return 3
+    elif period_15_17[0] < t <= period_15_17[1]:
+        return 4
+    elif period_17_23[0] < t <= period_17_23[1]:
+        return 5
+    elif period_0_1[0] <= t < period_0_1[1] or period_23_0[0] < t:
+        return 6
 
 # import datetime
 # periods_24 = []
