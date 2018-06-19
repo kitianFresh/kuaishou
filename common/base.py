@@ -68,7 +68,7 @@ class Feature(TransformerMixin):
             df = pd.read_hdf(path, 'table', mode='r')
         else:
             raise IOError('fmt not found')
-        self.df = df
+        return df
 
     def load(self):
         if self.df == None:
@@ -112,18 +112,19 @@ class Table(TransformerMixin):
                  table_dir='../data/features',
                  table_type=None,
                  table_fmt='csv',
-                 merge_by_columns=False,
                  col_feature_dir='../data/features/columns', pool_type='process', num_workers=8):
         '''
-        :param name:
-        :param features: features to combine this table, if not None, it will overwrite `_columns`. this param is not valid if use merge_by_columns
-        :param table_dir:
-        :param table_type:
+        :param name: table name, if `features` is None, it will try to read a table with the `name` in `table_dir`, and then combine it with features given.
+        :param features: features used to composite this table, if not None, it will overwrite `_columns`.
+                        if features element type is Feature in memory, it will composite a table with the name given.
+                        if features element is str, it will read from disk and combine with the table in `table_dir`.
+
+        :param table_dir: table dir to store to and read from
+        :param table_type: online or offline(train or test)
         :param table_fmt:
-        :param merge_by_columns: if True, it will use FeatureMerger to merge all features concurrently `_columns` by default
-        :param col_feature_dir:
-        :param pool_type:
-        :param num_workers:
+        :param col_feature_dir: column features to store and read
+        :param pool_type: pool type to use columns features to merge
+        :param num_workers: worker nums to use columns features to merge
         '''
 
         self.name = name
@@ -136,25 +137,46 @@ class Table(TransformerMixin):
                 self.features.update({feat.name: feat})
             self.df = self.__merge(how=self._merge_how, on=self._index_columns, features=features)
         else:
-            if features is not None:
-                feats = features
+            # use a table and some column features.
+            path = os.path.join(self.table_dir, name + '-' + self._table_type + '.' + self.table_fmt)
+            if features:
+                fm = FeatureMerger(col_feature_dir=col_feature_dir,
+                               col_features_to_merge=features)
+                feats_table = fm.merge()
             else:
-                feats = self._columns
+                feats_table = None
 
-            fm = FeatureMerger(col_feature_dir=col_feature_dir,
-                               col_features_to_merge=feats)
-            self.df = fm.merge()
+            if os.path.exists(path):
+                one_table = self.__read_data(path, self.table_fmt)
+            else:
+                one_table = None
+            self.df = self.__merge(how=self._merge_how, on=self._index_columns, features=[one_table, feats_table])
+
+    def __read_data(self, path, fmt='csv'):
+        '''
+            return DataFrame by given format data
+        '''
+        if fmt == 'csv':
+            df = pd.read_csv(path, sep='\t', dtype=feature_dtype_map)
+        elif fmt == 'pkl':
+            df = pd.read_pickle(path)
+        elif fmt == 'h5':
+            df = pd.read_hdf(path, 'table', mode='r')
+        else:
+            raise IOError('fmt not found')
+        return df
 
     def add_feature(self, feature):
         if feature.name not in self.features:
+            self.features.update({feature.name: feature})
             self.df = self.__merge(how=self._merge_how, on=self._index_columns, features=[self.df, feature.df])
-
 
     def add_features(self, features):
         if features and self.__check_feature_valid(features):
             for feat in features:
                 self.features.update({feat.name: feat})
-            self.df = self.__merge(how=self._merge_how, on=self._index_columns, features=features)
+            df = self.__merge(how=self._merge_how, on=self._index_columns, features=features)
+            self.df = self.__merge(how=self._merge_how, on=self._index_columns, features=[self.df, df])
 
     def __check_feature_valid(self, features):
         for feat in features:
@@ -163,7 +185,7 @@ class Table(TransformerMixin):
         return True
 
     def __merge(self, how, on, features=None):
-        merger = functools.partial(pd.merge(how=how, on=on))
+        merger = functools.partial(pd.merge, how=how, on=on)
         return functools.reduce(merger, [feat.df for feat in features if feat.df is not None])
 
     def get_feature(self, feature_name):
@@ -291,20 +313,20 @@ class Classifier(ModelMixin):
         '''
 
         self.model_name = name
-        self.dir = dir
+        self.dir = os.path.join(dir, self.model_name)
         self.clf = clf
-        if not os.path.exists(dir):
-            os.mkdir(dir)
+        if not os.path.exists(self.dir):
+            os.makedirs(self.dir)
 
-        self.sub_file = os.path.join(dir, 'sub-' + name + '-' + version + '.txt')
-        self.model_file = os.path.join(dir, name + '-' + version + '.model')
-        self.meta_info_file = os.path.join(dir, name + '-' + version + '.json')
+        self.sub_file = os.path.join(self.dir, 'sub-' + name + '-' + version + '.txt')
+        self.model_file = os.path.join(self.dir, name + '-' + version + '.model')
+        self.meta_info_file = os.path.join(self.dir, name + '-' + version + '.json')
 
         if os.path.exists(os.path.join(self.dir, self.model_file)) or \
             os.path.exists(os.path.join(self.dir, self.meta_info_file)) or \
             os.path.exists(os.path.join(self.dir, self.sub_file)):
             logging.warning(
-                'There already has a model %s with the same version %s.' % (self.model_name, self.version))
+                'There already has a model %s with the same version %s in %s' % (self.model_name, self.version, self.dir))
             sys.exit(-1)
 
         self.version = version

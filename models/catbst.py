@@ -49,6 +49,10 @@ if __name__ == '__main__':
 #     ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
     
     col_feature_store_path = '../sample/features/columns' if USE_SAMPLE else '../data/features/columns'
+
+    model = Classifier(clf=None, dir=model_store_path,
+                       name=model_name, version=version,
+                       description=desc, features_to_train=features_to_train)
     
     feature_to_use = user_features + photo_features + time_features
     
@@ -86,11 +90,22 @@ if __name__ == '__main__':
     print(X_t.shape)
 
     print('Training model %s......' % model_name)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+    ensemble_train = ensemble_train.sort_values('time')
+    train_num = ensemble_train.shape[0]
+    train_data = ensemble_train.iloc[:int(train_num * 0.7)].copy()
+    print(train_data.shape)
+    val_data = ensemble_train.iloc[int(train_num * 0.7):].copy()
+    print(val_data.shape)
+    val_photo_ids = list(set(val_data['photo_id'].unique()) - set(train_data['photo_id'].unique()))
+    val_data = val_data.loc[val_data.photo_id.isin(val_photo_ids)]
+    print(val_data.shape)
+    X_train, X_test, y_train, y_test = train_data[features_to_train].values, val_data[features_to_train].values, \
+                                       train_data[y_label].values, val_data[y_label].values
+
     print(y_train.mean(), y_train.std())
     print(y_test.mean(), y_test.std())
-    model = Classifier(CatBoostClassifier(verbose=True, task_type='GPU' if gpu_mode else 'CPU'), dir=model_store_path, name=model_name, version=version,
-                       description=desc, features_to_train=features_to_train)
+    model.clf = CatBoostClassifier(verbose=True, task_type='GPU' if gpu_mode else 'CPU'),
     model.clf.fit(X_train, y_train.ravel())
 
     # KFold cross validation
