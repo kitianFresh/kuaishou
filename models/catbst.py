@@ -4,6 +4,7 @@ import os
 import gc
 import argparse
 import sys
+import time
 sys.path.append("..")
 
 import pandas as pd
@@ -105,16 +106,19 @@ if __name__ == '__main__':
 
     print(y_train.mean(), y_train.std())
     print(y_test.mean(), y_test.std())
+    start_time_1 = time.clock()
+
     model.clf = CatBoostClassifier(verbose=True, task_type='GPU' if gpu_mode else 'CPU'),
     model.clf.fit(X_train, y_train.ravel())
 
-    # KFold cross validation
-    def cross_validate(*args, **kwargs):
-        cv = StratifiedKFold(n_splits=3, random_state=0, shuffle=False)
-        scores = cross_val_score(model.clf, X, y.ravel(), cv=cv, scoring='roc_auc')
-        return scores
-
-    model.cross_validation(cross_validate)
+    # # KFold cross validation
+    # def cross_validate(*args, **kwargs):
+    #     cv = StratifiedKFold(n_splits=3, random_state=0, shuffle=False)
+    #     scores = cross_val_score(model.clf, X, y.ravel(), cv=cv, scoring='roc_auc')
+    #     return scores
+    #
+    # model.cross_validation(cross_validate)
+    print("Model trained in %s seconds" % (str(time.clock() - start_time_1)))
 
     model.compute_metrics(X_test, y_test)
     model.compute_features_distribution()

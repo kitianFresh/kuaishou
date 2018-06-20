@@ -246,7 +246,7 @@ class ModelMixin(object):
         try:
             importances = self.clf.feature_importances_
             indices = np.argsort(importances)[::-1]
-            logging.info('{}特征权值分布为: '.format(self.name))
+            logging.info('{}特征权值分布为: '.format(self.model_name))
             for f in range(len(self.features_to_train)):
                 logging.info("%d. feature %d [%s] (%f)" % (
                     f + 1, indices[f], self.features_to_train[indices[f]], importances[indices[f]]))

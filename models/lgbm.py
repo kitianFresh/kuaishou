@@ -5,6 +5,7 @@
 import gc
 import argparse
 import sys
+import time
 sys.path.append("..")
 
 
@@ -101,6 +102,7 @@ if __name__ == '__main__':
 
     print(y_train.mean(), y_train.std())
     print(y_test.mean(), y_test.std())
+    start_time_1 = time.clock()
     model.clf = LGBMClassifier(verbose=1)
     model.clf.fit(X_train, y_train.ravel())
     # KFold cross validation
@@ -109,6 +111,7 @@ if __name__ == '__main__':
     #     scores = cross_val_score(model.clf, X, y.ravel(), cv=cv, scoring='roc_auc')
     #     return scores
     # model.cross_validation(cross_validate)
+    print("Model trained in %s seconds" % (str(time.clock() - start_time_1)))
 
     model.compute_metrics(X_test, y_test)
     model.compute_features_distribution()
