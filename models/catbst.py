@@ -108,7 +108,7 @@ if __name__ == '__main__':
     print(y_test.mean(), y_test.std())
     start_time_1 = time.clock()
 
-    model.clf = CatBoostClassifier(verbose=True, task_type='GPU' if gpu_mode else 'CPU'),
+    model.clf = CatBoostClassifier(verbose=True, task_type='GPU' if gpu_mode else 'CPU')
     model.clf.fit(X_train, y_train.ravel())
 
     # # KFold cross validation
