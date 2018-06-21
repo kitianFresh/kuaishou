@@ -278,41 +278,35 @@ def browse_num_discretization(num):
         return 3
     else:
         return 4
+
 def click_num_discretization(num):
-    if 0 <= num and num <= 50:
+    if 0 <= num <= 50:
         return 0
-    elif 50 < num and num <= 100:
+    elif 50 < num <= 100:
         return 1
-    elif 100 < num and num <= 200:
+    elif 100 < num <= 500:
         return 2
-    elif 200 < num and num <= 500:
+    elif 500 < num <= 1000:
         return 3
-    elif 500 < num and num <= 1000:
-        return 4
     else:
-        return 5
+        return 4
+
 def like_num_discretization(num):
-    if 0 <= num and num <= 10:
+    if 0 == num:
         return 0
-    elif 10 < num and num <= 20:
+    elif 1 <= num <= 5:
         return 1
-    elif 20 < num and num <= 30:
+    elif 5 < num <= 20:
         return 3
-    elif 30 < num and num <= 40:
-        return 4
     else:
-        return 5
+        return 4
+
 def follow_num_discretization(num):
-    if 0 <= num and num <= 5:
+    if 0 == num:
         return 0
-    elif 5 < num and num <= 10:
-        return 1
-    elif 10 < num and num <= 15:
-        return 3
-    elif 15 < num and num <= 30:
-        return 4
     else:
-        return 5
+        return 1
+
 def playing_sum_discretization(num):
     if 0 <= num and num <= 2000:
         return 0
@@ -525,7 +519,7 @@ def cover_length_favor_discretization(num):
         return 0
     elif 0 < num <= 3:
         return 1
-    elif 3 < num <= 10:
+    elif 3 < num <= 8:
         return 2
     else:
         return 3
@@ -652,7 +646,7 @@ def man_avg_age_discretization(man_age):
         return 3
     elif 24 < man_age and man_age <= 40:
         return 4
-    elif woman_age > 40:
+    elif man_age > 40:
         return 5
     
 def human_avg_attr_discretization(human_attr):
@@ -756,13 +750,22 @@ def cover_length_discretization(num):
         return 0
     elif 0 < num <= 3:
         return 1
-    elif 3 < num <= 10:
+    elif 3 < num <= 8:
         return 2
-    elif 10 < num <= 20:
+    elif 8 < num <= 20:
         return 3
     else:
         return 4
-    
+
+
+def key_words_num_discretization(num):
+    if num == 0:
+        return 0
+    elif 0 < num <= 4:
+        return 1
+    else:
+        return 2
+
 def clicked_ratio_discretization(num):
     if 0 <= num <= 0.06:
         return 0

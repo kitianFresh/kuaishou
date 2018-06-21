@@ -42,8 +42,7 @@ if __name__ == '__main__':
     ensemble_test = ensemble_test[id_features + features_to_train]
     num_train, num_test = ensemble_train.shape[0], ensemble_test.shape[0]
     ensemble_data = pd.concat([ensemble_train, ensemble_test])
-    
-    
+
     category_features = time_features + user_features + photo_features
     user_item_cate = pd.DataFrame()
     cates = []

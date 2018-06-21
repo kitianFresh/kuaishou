@@ -1,11 +1,14 @@
 #coding:utf8
 
+#from __future__ import unicode_literals
+from builtins import str as text
 import functools
 import os
 import sys
 import io
 import json
 import logging
+
 
 import pandas as pd
 import numpy as np
@@ -15,6 +18,8 @@ from sklearn.metrics import recall_score, roc_auc_score, precision_score, accura
 
 from conf.modelconf import feature_dtype_map
 from common.utils import FeatureMerger
+
+
 
 
 class TransformerMixin(object):
@@ -216,19 +221,21 @@ class ModelMixin(object):
         logging.info("Accuracy: %0.6f (+/- %0.6f)" % (scores.mean(), scores.std() ** 2))
 
     def compute_metrics(self, X_test, y_test):
+        # predict 返回的是（n_sample,）预测标签，0，1，2，3....
+        # predict_proba 返回的是 (n_sample, k) k分类的概率，第 i 行 第 j 列上的数值是模型预测 第 i 个预测样本为某个标签的概率，并且每一行的概率和为1。
+        # 因此这里的2分类问题 predict_proba(X_test)[:, 1] 就是返回点击了的概率
+        # decision_function 与参数decision_function_shape取'ovr'、'ovo'有关，是点到超平面的距离。程序首先是计算出'ovo'结果，然后聚合成'ovr'结果
         self.precision = precision_score(y_test, self.clf.predict(X_test))
         self.recall = recall_score(y_test, self.clf.predict(X_test), average='macro')
         logging.info("{:31} 测试集precision/recall: {:15}/{:15}".format(self.model_name, self.precision, self.recall))
         self.accuracy = accuracy_score(y_test, self.clf.predict(X_test))
         logging.info("{:31} 测试集accuracy: {:15}".format(self.model_name, self.accuracy))
 
-
-        try:
-            y_score = self.clf.decision_function(X_test)[:, 1]
-        except AttributeError:
+        if hasattr(self.clf, "decision_function"):
+            y_score = self.clf.decision_function(X_test)
+        else:
             logging.warning('{} has no decision_function, use predict func.'.format(self.model_name))
             y_score = self.clf.predict_proba(X_test)[:, 1]
-
 
 
         # Compute ROC curve and ROC area for each class
@@ -276,18 +283,28 @@ class ModelMixin(object):
             'recall': self.recall,
             'roc_auc': self.roc_auc,
         }
-        #  ensure_ascii=False 保证输出的不是 unicode 编码形式，而是真正的中文文本
+
+        # for python 2 and python 3 compatible, python 3 has a bug for this. https://stackoverflow.com/questions/11942364/typeerror-integer-is-not-json-serializable-when-serializing-json-in-python
+        def default(o):
+            if isinstance(o, np.int64): return int(o)
+            raise TypeError
+        # ensure_ascii=False 保证输出的不是 unicode 编码形式，而是真正的中文文本
+        # from __future__ import unicode_literals
         with io.open(self.meta_info_file, mode='w', encoding='utf8') as outfile:
-            metadata = json.dumps(model_metainfo, ensure_ascii=False, indent=4)
-            outfile.write(metadata.decode('utf8'))
+            metadata = json.dumps(model_metainfo, ensure_ascii=False, indent=4, default=default)
+            # metadata is str in python2 which is actually bytearray, but in python3 all str is unicode. for compatibilty
+            if sys.version_info < (3,):
+                outfile.write(metadata.decode('utf8'))
+            else:
+                outfile.write(metadata)
             logging.info('Model %s meta info saved in %s' % (self.model_name, self.meta_info_file))
 
-    def submit(self, ensemble_online):
+    def submit(self, ensemble_online, sparse_matrix=None):
         submission = pd.DataFrame()
         submission['user_id'] = ensemble_online['user_id']
         submission['photo_id'] = ensemble_online['photo_id']
         logging.info('Model %s make submission %s......' % (self.model_name, self.sub_file))
-        X_t = ensemble_online[self.features_to_train].values
+        X_t = sparse_matrix if sparse_matrix is not None else ensemble_online[self.features_to_train].values
         y_sub = []
         from sklearn.exceptions import NotFittedError
         try:
@@ -315,6 +332,7 @@ class Classifier(ModelMixin):
         self.model_name = name
         self.dir = os.path.join(dir, self.model_name)
         self.clf = clf
+        self.version = version
         if not os.path.exists(self.dir):
             os.makedirs(self.dir)
 
@@ -322,9 +340,9 @@ class Classifier(ModelMixin):
         self.model_file = os.path.join(self.dir, name + '-' + version + '.model')
         self.meta_info_file = os.path.join(self.dir, name + '-' + version + '.json')
 
-        if os.path.exists(os.path.join(self.dir, self.model_file)) or \
-            os.path.exists(os.path.join(self.dir, self.meta_info_file)) or \
-            os.path.exists(os.path.join(self.dir, self.sub_file)):
+        if os.path.exists(self.model_file) or \
+            os.path.exists(self.meta_info_file) or \
+            os.path.exists(self.sub_file):
             logging.warning(
                 'There already has a model %s with the same version %s in %s' % (self.model_name, self.version, self.dir))
             sys.exit(-1)
