@@ -43,14 +43,12 @@ if __name__ == '__main__':
 
     train_table = HourClickTableTrain('hour_click_num', features=None,
                  table_dir=feature_store_path,
-                 merge_by_columns=True,
                  col_feature_dir=col_feature_store_path,num_workers=n)
 
     user_item_train = train_table.df
     # print(user_item_train.info())
     test_table = HourClickTableTest('hour_click_num', features=None,
                  table_dir=feature_store_path,
-                 merge_by_columns=True,
                  col_feature_dir=col_feature_store_path,num_workers=n)
     user_item_test = test_table.df
     # print(user_item_test.info())

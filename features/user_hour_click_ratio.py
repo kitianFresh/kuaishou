@@ -36,8 +36,7 @@ if __name__ == '__main__':
     print(user_item_train.info())
     user_item_test = fm_tester.merge()
     print(user_item_test.info())
-    
-    
+
     
     user_item_train['hour_click_ratio'] = user_item_train.set_index(['user_id', 'time_cate']).groupby(level=['user_id', 'time_cate'])['click'].transform('mean').values
     

@@ -18,7 +18,8 @@ parser.add_argument('-s', '--sample', help='use sample data or full data', actio
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-p', '--pool-type', help='pool type, threads or process, here use process for more performance')
 parser.add_argument('-n', '--num-workers', help='workers num in pool')
-parser.add_argument('-c', '--column-split', action='append')
+parser.add_argument('-c', '--column-split', help='column to split', action='append')
+parser.add_argument('-t', '--table', help='original table used to split')
 
 args = parser.parse_args()
 
@@ -29,6 +30,7 @@ if __name__ == '__main__':
     pool_type = args.pool_type if args.pool_type else 'thread'
     n = args.num_workers if args.num_workers else 8
     split_features = args.column_split if args.column_split else []
+    table = args.table if args.table else None
 
     Executor = ThreadPoolExecutor if pool_type == 'thread' else ProcessPoolExecutor
     feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
@@ -41,7 +43,7 @@ if __name__ == '__main__':
         
     TRAIN_USER_INTERACT = '../sample/train_interaction.txt' if USE_SAMPLE else '../data/train_interaction.txt'
     TEST_INTERACT = '../sample/test_interaction.txt' if USE_SAMPLE else '../data/test_interaction.txt'
-    
+
     user_item_train = pd.read_csv(TRAIN_USER_INTERACT,
                              sep='\t',
                              header=None,
@@ -75,9 +77,13 @@ if __name__ == '__main__':
     user_item_test = pd.merge(user_item_test, photo_data,
                           how='left',
                           on=['photo_id'])
+
+
     print(user_item_train.columns)
     user_item_train.fillna(0, inplace=True)
     user_item_test.fillna(0, inplace=True)
+
+
     input_features = id_features + user_features + photo_features + time_features
     ensemble_train = user_item_train[input_features + y_label]
     ensemble_test = user_item_test[input_features]

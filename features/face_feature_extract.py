@@ -23,6 +23,8 @@ def add_face_feature(face_data):
     face_data['man_avg_attr'] = face_data['faces'].apply(lambda lists: np.mean([l[3] for l in lists if l[1] == 1]))
     face_data['woman_avg_attr'] = face_data['faces'].apply(lambda lists: np.mean([l[3] for l in lists if l[1] == 0]))
     face_data['human_avg_attr'] = face_data['faces'].apply(lambda lists: np.mean([l[3] for l in lists]))
+    face_data['man_num_ratio'] = 1. * face_data['man_num'] / face_data['face_num']
+    face_data['woman_num_ratio'] = 1. * face_data['woman_num'] / face_data['face_num']
     return face_data
 
 

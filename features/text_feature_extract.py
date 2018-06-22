@@ -50,6 +50,7 @@ if __name__ == '__main__':
 
     text_data['cover_words'] = text_data['cover_words'].apply(words_to_list)
     text_data['cover_length'] = text_data['cover_words'].apply(lambda words: len(words))
+    text_data['have_text_cate'] = text_data['cover_length'].apply(lambda x: x > 0)
 
     text_data.fillna(0, inplace=True)
 
