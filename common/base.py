@@ -297,7 +297,9 @@ class ModelMixin(object):
 
         # for python 2 and python 3 compatible, python 3 has a bug for this. https://stackoverflow.com/questions/11942364/typeerror-integer-is-not-json-serializable-when-serializing-json-in-python
         def default(o):
-            if isinstance(o, np.int64): return int(o)
+            if isinstance(o, np.uint64) or isinstance(o, np.uint32) or isinstance(o, np.uint16) or isinstance(o, np.uint8) \
+                    or isinstance(o, np.int64) or isinstance(o, np.int32) or isinstance(o, np.int16) or isinstance(o, np.int8):
+                return int(o)
             raise TypeError
         # ensure_ascii=False 保证输出的不是 unicode 编码形式，而是真正的中文文本
         # from __future__ import unicode_literals

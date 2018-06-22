@@ -200,26 +200,21 @@ if __name__ == '__main__':
 
     start_time_1 = time.clock()
     model.clf = LGBMLR()
-    print(type(X_train))
-    print(type(y_train))
-    print(type(X_val))
-    print(type(y_val))
-    print(type(y_val[0]))
-    print(type(y_val.ravel()[0]))
+
     y_train = y_train.astype('int')
     y_val = y_val.astype('int')
-    from sklearn import preprocessing
-    from sklearn import utils
+    # from sklearn import preprocessing
+    # from sklearn import utils
 
-    lab_enc = preprocessing.LabelEncoder()
-    encoded = lab_enc.fit_transform(y_train.ravel())
+    # lab_enc = preprocessing.LabelEncoder()
+    # encoded = lab_enc.fit_transform(y_train.ravel())
 
-    print(utils.multiclass.type_of_target(y_train))
-
-    print(utils.multiclass.type_of_target(y_train.astype('int')))
-
-    print(utils.multiclass.type_of_target(encoded))
-
+    # print(utils.multiclass.type_of_target(y_train))
+    #
+    # print(utils.multiclass.type_of_target(y_train.astype('int')))
+    #
+    # print(utils.multiclass.type_of_target(encoded))
+    #
     model.clf.fit(X_train, y_train.ravel(), X_val, y_val.ravel())
 
     # KFold cross validation
