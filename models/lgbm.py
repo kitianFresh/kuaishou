@@ -25,6 +25,7 @@ parser.add_argument('-s', '--sample', help='use sample data or full data', actio
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-v', '--version', help='model version, there will be a version control and a json description file for this model', required=True)
 parser.add_argument('-d', '--description', help='description for a model, a json description file attached to a model', required=True)
+parser.add_argument('-a', '--all', help='use one ensemble table all, or merge by columns',action='store_true')
 
 args = parser.parse_args()
 
@@ -35,6 +36,7 @@ if __name__ == '__main__':
     fmt = args.format if args.format else 'csv'
     version = args.version
     desc = args.description
+    all_one = args.all
     
     model_name = 'lgbm'
 
@@ -46,20 +48,20 @@ if __name__ == '__main__':
 
     model = Classifier(None,dir=model_store_path, name=model_name,version=version, description=desc, features_to_train=features_to_train)
 
-    ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
-    ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
-    ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
+    if all_one:
+        ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
+        ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
+        ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
 
-    ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
-    ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
-    ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
-    
-
-    # feature_to_use = user_features + photo_features + time_features
-    # fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=8)
-    # fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=8)
-    # ensemble_train = fm_trainer.merge()
-    # ensemble_test = fm_tester.merge()
+        ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
+        ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
+        ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
+    else:
+        feature_to_use = user_features + photo_features + time_features
+        fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=8)
+        fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=8)
+        ensemble_train = fm_trainer.merge()
+        ensemble_test = fm_tester.merge()
 
     print(ensemble_train.info())
     print(ensemble_test.info())
@@ -85,7 +87,7 @@ if __name__ == '__main__':
     print('Training model %s......' % model_name)
 
 
-    ensemble_train = ensemble_train.sort_values('time')
+    # ensemble_train = ensemble_train.sort_values('time')
     train_num = ensemble_train.shape[0]
     train_data = ensemble_train.iloc[:int(train_num * 0.7)].copy()
     val_data = ensemble_train.iloc[int(train_num * 0.7):].copy()
