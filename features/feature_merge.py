@@ -42,27 +42,9 @@ if __name__ == '__main__':
     print(ensemble_test.info())
     
     print(feature_to_use)
-    uint64_cols = ['user_id', 'photo_id', 'time']
-    uint32_cols = ['playing_sum', 'browse_time_diff', 'duration_sum']
-    uint16_cols = ['browse_num', 'exposure_num', 'click_num', 'duration_time', 'like_num', 'follow_num']
-    uint8_cols = ['cover_length', 'man_num', 'woman_num', 'face_num']
-    bool_cols = ['have_face_cate']
-    float64_cols = ['clicked_ratio','non_face_click_favor', 'face_click_favor', 'man_favor', 'woman_avg_age', 'playing_freq', 'woman_age_favor', 'woman_yen_value_favor', 'human_scale', 'woman_favor', 'click_freq', 'woman_cv_favor', 'man_age_favor', 'man_yen_value_favor', 'follow_ratio', 'man_scale', 'browse_freq', 'man_avg_age', 'man_cv_favor', 'man_avg_attr', 'playing_ratio', 'woman_scale', 'click_ratio', 'human_avg_age', 'woman_avg_attr', 'like_ratio', 'cover_length_favor', 'human_avg_attr', 'avg_tfidf']
-    ensemble_train[uint64_cols] = ensemble_train[uint64_cols].astype('uint64')
-    ensemble_train[uint32_cols] = ensemble_train[uint32_cols].astype('uint32')
-    ensemble_train[uint16_cols] = ensemble_train[uint16_cols].astype('uint16')
-    ensemble_train[uint8_cols] = ensemble_train[uint8_cols].astype('uint8')
-    ensemble_train[bool_cols] = ensemble_train[bool_cols].astype('bool')
-    ensemble_train[float64_cols] = ensemble_train[float64_cols].astype('float32')
-    ensemble_train[y_label] = ensemble_train[y_label].astype('bool')
+
     print(ensemble_train.info())
-    
-    ensemble_test[uint64_cols] = ensemble_test[uint64_cols].astype('uint64')
-    ensemble_test[uint32_cols] = ensemble_test[uint32_cols].astype('uint32')
-    ensemble_test[uint16_cols] = ensemble_test[uint16_cols].astype('uint16')
-    ensemble_test[uint8_cols] = ensemble_test[uint8_cols].astype('uint8')
-    ensemble_test[bool_cols] = ensemble_test[bool_cols].astype('bool')
-    ensemble_test[float64_cols] = ensemble_test[float64_cols].astype('float32')
+
     print(ensemble_test.info())
     
     ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'

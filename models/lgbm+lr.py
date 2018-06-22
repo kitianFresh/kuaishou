@@ -85,7 +85,7 @@ class LGBMLR(object):
         # print('基于LGBM特征编码后的LR AUC: %.5f' % lgbm_lr_auc1)
 
         # 定义LR模型
-        self.lr = LogisticRegression(verbose=1, n_jobs=-1)
+        self.lr = LogisticRegression(verbose=1)
         # 组合特征，含有稀疏矩阵无法合并成功 np.column_stack(a, b) 或者 sparse.hstack
         # X_train_ext = np.hstack((X_trans[:train_rows, :], X_train))
         # X_val_ext = np.hstack((X_trans[train_rows:, :], X_val))
@@ -110,7 +110,7 @@ class LGBMLR(object):
             X_test_leaves = self.lgbm.apply(X_test)
 
         X_trans = self.lgbmenc.transform(X_test_leaves)
-        X_test_ext = sparse.hstack([X_trans, X_test])
+        X_test_ext = sparse.hstack((X_trans, X_test))
         return self.lr.predict_proba(X_test_ext)
 
     def predict(self, X_test):
@@ -120,7 +120,7 @@ class LGBMLR(object):
             X_test_leaves = self.lgbm.apply(X_test)
 
         X_trans = self.lgbmenc.transform(X_test_leaves)
-        X_test_ext = sparse.hstack([X_trans, X_test])
+        X_test_ext = sparse.hstack((X_trans, X_test))
         return self.lr.predict(X_test_ext)
 
 

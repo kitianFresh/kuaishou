@@ -289,6 +289,7 @@ class ModelMixin(object):
             'description': self.description,
             'features_distribution': self.features_distribution,
             'sorted_important_features': self.sorted_important_features,
+            'features_to_train': self.features_to_train,
             'accuracy': self.accuracy,
             'precision': self.precision,
             'recall': self.recall,

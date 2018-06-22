@@ -90,7 +90,7 @@ if __name__ == '__main__':
     print(len(count))
     # top_k关键词
     top_key_words = count.most_common(2000)
-    top_key_words = [i[0] for i in top_key_words]
+    top_key_words = set([i[0] for i in top_key_words])
 
 
     def key_words_num(words):
@@ -107,11 +107,13 @@ if __name__ == '__main__':
     from sklearn.feature_extraction.text import TfidfVectorizer
     vectorizer = TfidfVectorizer(max_df=0.7)
     corpus = text_data['cover_words'].apply(lambda words: ' '.join(words))
-    tfidf = vectorizer.fit_transform(corpus)
-    avg_tfidf = np.mean(tfidf, axis=1)
+    corpus_tfidf = vectorizer.fit_transform(corpus)
+    avg_tfidf = np.mean(corpus_tfidf, axis=1)
     text_data['avg_tfidf'] = avg_tfidf
 
     text_data.drop(['cover_words'], axis=1, inplace=True)
+    print(text_data.head())
+
     TEXT_FEATURE_FILE = 'text_feature'
     TEXT_FEATURE_FILE = TEXT_FEATURE_FILE + '_sample' + '.' + fmt if USE_SAMPLE else TEXT_FEATURE_FILE + '.' + fmt
     feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
