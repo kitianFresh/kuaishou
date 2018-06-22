@@ -23,8 +23,8 @@ logging.getLogger('').addHandler(console)
 # model config
 
 # feature config
-# 'hour_click_ratio',
-user_action_features = ['period_click_ratio', 'browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum','duration_sum', 'click_ratio', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq', 'playing_freq']
+# 'hour_click_ratio', 'period_click_ratio'
+user_action_features = ['browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum','duration_sum', 'click_ratio', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq', 'playing_freq']
     
 face_features = ['face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age', 'woman_avg_age', 'human_avg_age',  'man_avg_attr', 'woman_avg_attr', 'human_avg_attr']
     
@@ -35,8 +35,8 @@ user_text_favor_features = ['cover_length_favor']
     
     
 id_features = ['user_id', 'photo_id']
-# time_features = ['time', 'duration_time']
-time_features = ['time_cate', 'duration_time_cate']
+time_features = ['time', 'duration_time']
+# time_features = ['time_cate', 'duration_time_cate']
 
 
 text_features = ['cover_length', 'avg_tfidf', 'key_words_num']

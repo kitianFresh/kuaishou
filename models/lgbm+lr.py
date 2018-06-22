@@ -32,6 +32,8 @@ parser.add_argument('-v', '--version',
                     required=True)
 parser.add_argument('-d', '--description', help='description for a model, a json description file attached to a model',
                     required=True)
+parser.add_argument('-a', '--all', help='use one ensemble table all, or merge by columns',action='store_true')
+
 
 args = parser.parse_args()
 
@@ -59,6 +61,8 @@ class LGBMLR(object):
         X_val_leaves = self.lgbm.predict(X_val, pred_leaf=True)
 
         # 对所有特征进行ont-hot编码
+        print(X_train.shape)
+
         (train_rows, cols) = X_train_leaves.shape
         print(train_rows, cols)
 
@@ -79,8 +83,10 @@ class LGBMLR(object):
         # 定义LR模型
         lr = LogisticRegression(verbose=1, n_jobs=-1)
         # 组合特征
-        X_train_ext = np.hstack([X_trans[:train_rows, :], X_train])
-        X_val_ext = np.hstack([X_trans[train_rows:, :], X_val])
+        print(X_trans[:train_rows, :].shape)
+        print(X_train.shape)
+        X_train_ext = np.hstack((X_trans[:train_rows, :], X_train))
+        X_val_ext = np.hstack((X_trans[train_rows:, :], X_val))
 
         print(X_train_ext.shape)
         # lr对组合特征的样本模型训练
@@ -109,6 +115,8 @@ if __name__ == '__main__':
     fmt = args.format if args.format else 'csv'
     version = args.version
     desc = args.description
+    all_one = args.all
+
 
     model_name = 'lgbmlr'
 
@@ -121,19 +129,21 @@ if __name__ == '__main__':
     model = Classifier(None, dir=model_store_path, name=model_name, version=version, description=desc,
                        features_to_train=features_to_train)
 
-    ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
-    ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
-    ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
+    if all_one:
+        ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
+        ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
+        ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
 
-    ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
-    ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
-    ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
+        ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
+        ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
+        ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
+    else:
+        feature_to_use = user_features + photo_features + time_features
+        fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=8)
+        fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=8)
+        ensemble_train = fm_trainer.merge()
+        ensemble_test = fm_tester.merge()
 
-    # feature_to_use = user_features + photo_features + time_features
-    # fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=8)
-    # fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=8)
-    # ensemble_train = fm_trainer.merge()
-    # ensemble_test = fm_tester.merge()
 
     print(ensemble_train.info())
     print(ensemble_test.info())
@@ -188,7 +198,7 @@ if __name__ == '__main__':
     from sklearn import utils
 
     lab_enc = preprocessing.LabelEncoder()
-    encoded = lab_enc.fit_transform(y_train)
+    encoded = lab_enc.fit_transform(y_train.ravel())
 
     print(utils.multiclass.type_of_target(y_train))
 
@@ -196,7 +206,7 @@ if __name__ == '__main__':
 
     print(utils.multiclass.type_of_target(encoded))
 
-    model.clf.fit(X_train, y_train, X_val, y_val)
+    model.clf.fit(X_train, y_train.ravel(), X_val, y_val.ravel())
 
     # KFold cross validation
     # def cross_validate(*args, **kwargs):
