@@ -9,6 +9,7 @@ import time
 sys.path.append("..")
 
 import numpy as np
+from scipy import sparse
 
 from sklearn.model_selection import cross_val_score, train_test_split, StratifiedKFold
 from sklearn.metrics import roc_auc_score
@@ -82,11 +83,11 @@ class LGBMLR(object):
 
         # 定义LR模型
         lr = LogisticRegression(verbose=1, n_jobs=-1)
-        # 组合特征
-        print(X_trans[:train_rows, :].shape)
-        print(X_train.shape)
-        X_train_ext = np.hstack((X_trans[:train_rows, :], X_train))
-        X_val_ext = np.hstack((X_trans[train_rows:, :], X_val))
+        # 组合特征，含有稀疏矩阵无法合并成功 np.column_stack(a, b) 或者 sparse.hstack
+        # X_train_ext = np.hstack((X_trans[:train_rows, :], X_train))
+        # X_val_ext = np.hstack((X_trans[train_rows:, :], X_val))
+        X_train_ext = sparse.hstack((X_trans[:train_rows, :], X_train))
+        X_val_ext = sparse.hstack((X_trans[train_rows:, :], X_val))
 
         print(X_train_ext.shape)
         # lr对组合特征的样本模型训练
