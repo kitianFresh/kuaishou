@@ -91,7 +91,7 @@ def read_data(path, fmt):
     return DataFrame by given format data
     '''
     if fmt == 'csv':
-        df = pd.read_csv(path, sep='\t')
+        df = pd.read_csv(path, sep='\t', dtype=feature_dtype_map)
     elif fmt == 'pkl':
         df = pd.read_pickle(path)
     elif fmt == 'h5':
