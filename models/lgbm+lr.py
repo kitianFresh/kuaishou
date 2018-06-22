@@ -55,11 +55,14 @@ class LGBMLR(object):
 
 
         # GBDT编码原有特征
-        # X_train_leaves = self.lgbm.apply(X_train) # LGBMDeprecationWarning: apply method is deprecated and will be removed in 2.2 version. Please use pred_leaf parameter of predict method instead.
-        # X_test_leaves = self.lgbm.apply(X_val)
+        #  LGBMDeprecationWarning: apply method is deprecated and will be removed in 2.2 version. Please use pred_leaf parameter of predict method instead.
+        try:
+            X_train_leaves = self.lgbm.predict(X_train, pred_leaf=True)
+            X_val_leaves = self.lgbm.predict(X_val, pred_leaf=True)
+        except Exception:
+            X_train_leaves = self.lgbm.apply(X_train)
+            X_val_leaves = self.lgbm.apply(X_val)
 
-        X_train_leaves = self.lgbm.predict(X_train, pred_leaf=True)
-        X_val_leaves = self.lgbm.predict(X_val, pred_leaf=True)
 
         # 对所有特征进行ont-hot编码
         print(X_train.shape)
@@ -92,6 +95,8 @@ class LGBMLR(object):
         print(X_train_ext.shape)
         # lr对组合特征的样本模型训练
         self.lr.fit(X_train_ext, y_train)
+
+        self.feature_importances_ = self.lgbm.feature_importances_
         #
         # # 预测及AUC评测
         # y_pred_lgbmlr2 = lr.predict_proba(X_test_ext)[:, 1]
@@ -99,13 +104,21 @@ class LGBMLR(object):
         # print('基于组合特征的LR AUC: %.5f' % lgbm_lr_auc2)
 
     def predict_proba(self, X_test):
-        X_test_leaves = self.lgbm.predict(X_test, pred_leaf=True)
+        try:
+            X_test_leaves = self.lgbm.predict(X_test, pred_leaf=True)
+        except Exception:
+            X_test_leaves = self.lgbm.apply(X_test)
+
         X_trans = self.lgbmenc.transform(X_test_leaves)
         X_test_ext = sparse.hstack([X_trans, X_test])
         return self.lr.predict_proba(X_test_ext)
 
     def predict(self, X_test):
-        X_test_leaves = self.lgbm.predict(X_test, pred_leaf=True)
+        try:
+            X_test_leaves = self.lgbm.predict(X_test, pred_leaf=True)
+        except Exception:
+            X_test_leaves = self.lgbm.apply(X_test)
+
         X_trans = self.lgbmenc.transform(X_test_leaves)
         X_test_ext = sparse.hstack([X_trans, X_test])
         return self.lr.predict(X_test_ext)
