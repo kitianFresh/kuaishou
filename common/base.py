@@ -1,7 +1,7 @@
 #coding:utf8
 
 #from __future__ import unicode_literals
-from builtins import str as text
+#from builtins import str as text
 import functools
 import os
 import sys
@@ -148,6 +148,10 @@ class Table(TransformerMixin):
                 fm = FeatureMerger(col_feature_dir=col_feature_dir,
                                col_features_to_merge=features)
                 feats_table = fm.merge()
+            elif len(self._columns) > 0:
+                fm = FeatureMerger(col_feature_dir=col_feature_dir,
+                                   col_features_to_merge=self._columns)
+                feats_table = fm.merge()
             else:
                 feats_table = None
 
@@ -155,7 +159,14 @@ class Table(TransformerMixin):
                 one_table = self.__read_data(path, self.table_fmt)
             else:
                 one_table = None
-            self.df = self.__merge(how=self._merge_how, on=self._index_columns, features=[one_table, feats_table])
+            if feats_table is not None and one_table is not None:
+                self.df = self.__merge(how=self._merge_how, on=self._index_columns, features=[one_table, feats_table])
+            elif feats_table is None and one_table is not None:
+                self.df = one_table
+            elif feats_table is not None and one_table is None:
+                self.df = feats_table
+            else:
+                raise Exception('No table named %s or no features %s' % (self.name, features))
 
     def __read_data(self, path, fmt='csv'):
         '''
