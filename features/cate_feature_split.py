@@ -70,10 +70,11 @@ if __name__ == '__main__':
     for feature in set(input_features) - set(id_features):
         train_file = feature + '_train' + '.' + fmt
         test_file = feature + '_test' + '.' + fmt
-        args = (ensemble_train[id_features + [feature]], os.path.join(col_feature_store_path, train_file), fmt)
-        tasks_args.append(args)
-        args = (ensemble_test[id_features + [feature]], os.path.join(col_feature_store_path, test_file), fmt)
-        tasks_args.append(args)
+        if feature in ensemble_train.columns:
+            args = (ensemble_train[id_features + [feature]], os.path.join(col_feature_store_path, train_file), fmt)
+            tasks_args.append(args)
+            args = (ensemble_test[id_features + [feature]], os.path.join(col_feature_store_path, test_file), fmt)
+            tasks_args.append(args)
 
     if len(split_features) == 0:
         feature = y_label[0]

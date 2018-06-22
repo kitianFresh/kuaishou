@@ -56,35 +56,35 @@ class LGBMLR(object):
         # X_test_leaves = self.lgbm.apply(X_val)
 
         X_train_leaves = self.lgbm.predict(X_train, pred_leaf=True)
-        X_test_leaves = self.lgbm.predict(X_val, pred_leaf=True)
+        X_val_leaves = self.lgbm.predict(X_val, pred_leaf=True)
 
         # 对所有特征进行ont-hot编码
         (train_rows, cols) = X_train_leaves.shape
         print(train_rows, cols)
 
         self.lgbmenc = OneHotEncoder()
-        X_trans = self.lgbmenc.fit_transform(np.concatenate((X_train_leaves, X_test_leaves), axis=0))
+        X_trans = self.lgbmenc.fit_transform(np.concatenate((X_train_leaves, X_val_leaves), axis=0))
         print(X_trans.shape)
 
-        # 定义LR模型
-        self.lr = LogisticRegression(C=1, verbose=1)
-        # lr对gbdt特征编码后的样本模型训练
-        self.lr.fit(X_trans[:train_rows, :], y_train)
+        # # 定义LR模型
+        # self.lr = LogisticRegression(C=1, verbose=1)
+        # # lr对gbdt特征编码后的样本模型训练
+        # self.lr.fit(X_trans[:train_rows, :], y_train)
 
         # 预测及AUC评测
         # y_pred_lgbmlr1 = lr.predict_proba(X_trans[train_rows:, :])[:, 1]
         # lgbm_lr_auc1 = roc_auc_score(y_val, y_pred_lgbmlr1)
         # print('基于LGBM特征编码后的LR AUC: %.5f' % lgbm_lr_auc1)
 
-        # # 定义LR模型
-        # lr = LogisticRegression(n_jobs=-1)
-        # # 组合特征
-        # X_train_ext = np.hstack([X_trans[:train_rows, :], X_train])
-        # X_test_ext = np.hstack([X_trans[train_rows:, :], X_test])
-        #
-        # print(X_train_ext.shape)
-        # # lr对组合特征的样本模型训练
-        # lr.fit(X_train_ext, y_train)
+        # 定义LR模型
+        lr = LogisticRegression(verbose=1, n_jobs=-1)
+        # 组合特征
+        X_train_ext = np.hstack([X_trans[:train_rows, :], X_train])
+        X_val_ext = np.hstack([X_trans[train_rows:, :], X_val])
+
+        print(X_train_ext.shape)
+        # lr对组合特征的样本模型训练
+        lr.fit(X_train_ext, y_train)
         #
         # # 预测及AUC评测
         # y_pred_lgbmlr2 = lr.predict_proba(X_test_ext)[:, 1]
@@ -94,12 +94,14 @@ class LGBMLR(object):
     def predict_proba(self, X_test):
         X_test_leaves = self.lgbm.apply(X_test)
         X_trans = self.lgbmenc.transform(X_test_leaves)
-        return self.lr.predict_proba(X_trans)
+        X_test_ext = np.hstack([X_trans, X_test])
+        return self.lr.predict_proba(X_test_ext)
 
     def predict(self, X_test):
         X_test_leaves = self.lgbm.apply(X_test)
         X_trans = self.lgbmenc.transform(X_test_leaves)
-        return self.lr.predict(X_trans)
+        X_test_ext = np.hstack([X_trans, X_test])
+        return self.lr.predict(X_test_ext)
 
 
 if __name__ == '__main__':
