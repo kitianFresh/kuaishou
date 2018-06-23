@@ -134,6 +134,7 @@ class Table(TransformerMixin):
 
         self.name = name
         self.table_type = table_type if table_type else self._table_type
+        print(self.table_type)
         self.table_dir = table_dir
         self.table_fmt = table_fmt
         self.features = {}
@@ -145,11 +146,11 @@ class Table(TransformerMixin):
             # use a table and some column features.
             path = os.path.join(self.table_dir, name + '-' + self._table_type + '.' + self.table_fmt)
             if features:
-                fm = FeatureMerger(col_feature_dir=col_feature_dir,
+                fm = FeatureMerger(col_feature_dir=col_feature_dir,data_type=self.table_type,
                                col_features_to_merge=features)
                 feats_table = fm.merge()
             elif len(self._columns) > 0:
-                fm = FeatureMerger(col_feature_dir=col_feature_dir,
+                fm = FeatureMerger(col_feature_dir=col_feature_dir,data_type=self.table_type,
                                    col_features_to_merge=self._columns)
                 feats_table = fm.merge()
             else:
@@ -157,6 +158,7 @@ class Table(TransformerMixin):
 
             if os.path.exists(path):
                 one_table = self.__read_data(path, self.table_fmt)
+                logging.info('Table %s load from %s' % (self.name, path))
             else:
                 one_table = None
             if feats_table is not None and one_table is not None:

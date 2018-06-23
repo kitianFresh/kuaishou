@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     for feat in input_features:
         if feat in ensemble_test.columns:
-            ensemble_test[feat] = ensemble_train[feat].astype(feature_dtype_map.get(feat))
+            ensemble_test[feat] = ensemble_test[feat].astype(feature_dtype_map.get(feat))
     print(ensemble_test.info())
     #     fmt = 'h5'
 
