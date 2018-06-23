@@ -95,7 +95,7 @@ if __name__ == '__main__':
     print(ensemble_train.info())
 
     for feat in input_features:
-        ensemble_test[feat] = ensemble_train[feat].astype(feature_dtype_map.get(feat))
+        ensemble_test[feat] = ensemble_test[feat].astype(feature_dtype_map.get(feat))
     print(ensemble_test.info())
 #     fmt = 'h5'
 

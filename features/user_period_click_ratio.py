@@ -46,12 +46,12 @@ if __name__ == '__main__':
                  col_feature_dir=col_feature_store_path,num_workers=n)
 
     user_item_train = train_table.df
-    # print(user_item_train.info())
+    print(user_item_train.info())
     test_table = PeriodClickTableTest('period_click_ratio', features=None,
                  table_dir=feature_store_path,
                  col_feature_dir=col_feature_store_path,num_workers=n)
     user_item_test = test_table.df
-    # print(user_item_test.info())
+    print(user_item_test.info())
 
 
     user_item_train['period_click_ratio'] = \
@@ -70,6 +70,6 @@ if __name__ == '__main__':
     user_item_test['period_click_ratio'].fillna(user_item_test['period_click_ratio'].mean(), inplace=True)
 
     period_click_ratio_feat_test = Feature('period_click_ratio', feature_type='test', feature_dir=col_feature_store_path, fmt=fmt,
-                           feature_data=user_item_train[['user_id', 'photo_id', 'period_click_ratio']])
+                           feature_data=user_item_test[['user_id', 'photo_id', 'period_click_ratio']])
 
     period_click_ratio_feat_test.save()
