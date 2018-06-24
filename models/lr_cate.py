@@ -47,7 +47,7 @@ if __name__ == '__main__':
 
 
 
-    cont_features_to_train = ['click_ratio', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq',
+    cont_features_to_train = ['time', 'click_ratio', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq',
                  'playing_freq', 'man_favor', 'woman_favor', 'man_cv_favor', 'woman_cv_favor', 'man_age_favor',
                  'woman_age_favor', 'man_yen_value_favor', 'woman_yen_value_favor', 'face_click_favor',
                  'non_face_click_favor', 'cover_length_favor',  'man_scale', 'woman_scale', 'human_scale', 'man_avg_age',
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     ensemble_test = ensemble_data.iloc[num_train:, :]
 
 
-    # ensemble_train = ensemble_train.sort_values('time')
+    ensemble_train = ensemble_train.sort_values('time')
     train_num = ensemble_train.shape[0]
     train_data = ensemble_train.iloc[:int(train_num * 0.7)].copy()
     print(train_data.shape)
@@ -119,7 +119,7 @@ if __name__ == '__main__':
     # pd.get_dummies must be str type not a sparse matrix by pandas get dummies
     #     ensemble_data = ensemble_data.applymap(str)
     #     ensemble_data = pd.get_dummies(ensemble_data)
-
+    print(ensemble_data.shape)
     train_data = ensemble_data[:num_train, :]
     val_data = ensemble_data[num_train:(num_train+num_val), :]
     test_data = ensemble_data[(num_train+num_val):, :]
