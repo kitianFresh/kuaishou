@@ -23,6 +23,7 @@ parser.add_argument('-v', '--version', help='model version, there will be a vers
 parser.add_argument('-d', '--description', help='description for a model, a json description file attached to a model', required=True)
 parser.add_argument('-g', '--gpu-mode', help='use gpu mode or not', action="store_true")
 parser.add_argument('-a', '--all', help='use one ensemble table all, or merge by columns',action='store_true')
+parser.add_argument('-r', '--down-sampling', help='down sampling rate, default 1. no sampling', default=1.)
 
 
 args = parser.parse_args()
@@ -35,7 +36,7 @@ if __name__ == '__main__':
     version = args.version
     desc = args.description
     all_one = args.all
-
+    down_sample_rate = float(args.down_sampling)
     
     model_name = 'catboost'
 
@@ -80,7 +81,16 @@ if __name__ == '__main__':
     
 
     print("train features")
-    print(features_to_train)    
+    print(features_to_train)
+    if down_sample_rate < 1.:
+        print('down sampling by %f' % down_sample_rate)
+        ensemble_train_neg = ensemble_train[ensemble_train[y_label[0]] == 0]
+        print(ensemble_train_neg.shape)
+        ensemble_train_pos = ensemble_train[ensemble_train[y_label[0]] == 1]
+        print(ensemble_train_pos.shape)
+        ensemble_train_neg = ensemble_train_neg.sample(frac=down_sample_rate)
+        print(ensemble_train_neg.shape)
+        ensemble_train = pd.concat([ensemble_train_pos, ensemble_train_neg])
 
     ensemble_offline = ensemble_train[features_to_train]
     ensemble_online = ensemble_test[features_to_train]
@@ -116,8 +126,14 @@ if __name__ == '__main__':
     #
     # model.cross_validation(cross_validate)
     print("Model trained in %s seconds" % (str(time.clock() - start_time_1)))
+    if down_sample_rate < 1.:
+        model.compute_metrics(X_val, y_val.ravel(), calibration_weight=down_sample_rate)
+    else:
+        model.compute_metrics(X_val, y_val.ravel())
 
-    model.compute_metrics(X_val, y_val.ravel())
     model.compute_features_distribution()
     model.save()
-    model.submit(ensemble_test)
+    if down_sample_rate < 1.:
+        model.submit(ensemble_test, calibration_weight=down_sample_rate)
+    else:
+        model.submit(ensemble_test)

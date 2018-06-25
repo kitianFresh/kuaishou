@@ -233,26 +233,33 @@ class ModelMixin(object):
         logging.info('K Fold scores: %s' % scores)
         logging.info("Accuracy: %0.6f (+/- %0.6f)" % (scores.mean(), scores.std() ** 2))
 
-    def compute_metrics(self, X_test, y_test):
+    def compute_metrics(self, X_test, y_test, calibration_weight=None):
         # predict 返回的是（n_sample,）预测标签，0，1，2，3....
         # predict_proba 返回的是 (n_sample, k) k分类的概率，第 i 行 第 j 列上的数值是模型预测 第 i 个预测样本为某个标签的概率，并且每一行的概率和为1。
         # 因此这里的2分类问题 predict_proba(X_test)[:, 1] 就是返回点击了的概率
         # decision_function 与参数decision_function_shape取'ovr'、'ovo'有关，是点到超平面的距离。程序首先是计算出'ovo'结果，然后聚合成'ovr'结果
-        self.precision = precision_score(y_test, self.clf.predict(X_test))
-        self.recall = recall_score(y_test, self.clf.predict(X_test), average='macro')
+        y_score = self.clf.predict_proba(X_test)
+        if calibration_weight is not None and isinstance(calibration_weight, float):
+            self.down_sample_rate = calibration_weight
+            y_score = y_score/(y_score + (1-y_score)/calibration_weight)
+
+        y_hat = np.argmax(y_score, axis=1)
+
+        self.precision = precision_score(y_test, y_hat)
+        self.recall = recall_score(y_test, y_hat, average='macro')
         logging.info("{:31} 测试集precision/recall: {:15}/{:15}".format(self.model_name, self.precision, self.recall))
-        self.accuracy = accuracy_score(y_test, self.clf.predict(X_test))
+        self.accuracy = accuracy_score(y_test, y_hat)
         logging.info("{:31} 测试集accuracy: {:15}".format(self.model_name, self.accuracy))
 
-        if hasattr(self.clf, "decision_function"):
-            y_score = self.clf.decision_function(X_test)
-        else:
-            logging.warning('{} has no decision_function, use predict func.'.format(self.model_name))
-            y_score = self.clf.predict_proba(X_test)[:, 1]
+        # if hasattr(self.clf, "decision_function"):
+        #     y_score = self.clf.decision_function(X_test)
+        # else:
+        #     logging.warning('{} has no decision_function, use predict func.'.format(self.model_name))
+        #     y_score = self.clf.predict_proba(X_test)[:, 1]
 
 
         # Compute ROC curve and ROC area for each class
-        self.roc_auc = roc_auc_score(y_test, y_score, sample_weight=None)
+        self.roc_auc = roc_auc_score(y_test, y_score[:,1], sample_weight=None)
         # Plot ROC curve
         logging.info('{} ROC curve (area = {})'.format(self.model_name, self.roc_auc))
 
@@ -296,6 +303,7 @@ class ModelMixin(object):
             'precision': self.precision,
             'recall': self.recall,
             'roc_auc': self.roc_auc,
+            'down_sample_rate': self.down_sample_rate,
         }
 
         # for python 2 and python 3 compatible, python 3 has a bug for this. https://stackoverflow.com/questions/11942364/typeerror-integer-is-not-json-serializable-when-serializing-json-in-python
@@ -315,7 +323,7 @@ class ModelMixin(object):
                 outfile.write(metadata)
             logging.info('Model %s meta info saved in %s' % (self.model_name, self.meta_info_file))
 
-    def submit(self, ensemble_online, sparse_matrix=None):
+    def submit(self, ensemble_online, sparse_matrix=None, calibration_weight=None):
         submission = pd.DataFrame()
         submission['user_id'] = ensemble_online['user_id']
         submission['photo_id'] = ensemble_online['photo_id']
@@ -324,7 +332,11 @@ class ModelMixin(object):
         y_sub = []
         from sklearn.exceptions import NotFittedError
         try:
-            y_sub = self.clf.predict_proba(X_t)[:, 1]
+            y_score = self.clf.predict_proba(X_t)
+            if calibration_weight is not None and isinstance(calibration_weight, float):
+                self.down_sample_rate = calibration_weight
+                y_score = y_score / (y_score + (1 - y_score) / calibration_weight)
+            y_sub = y_score[:, 1]
         except NotFittedError as e:
             logging.error(repr(e))
             exit(-1)
@@ -373,5 +385,6 @@ class Classifier(ModelMixin):
         self.precision = None
         self.recall = None
         self.roc_auc = None
+        self.down_sample_rate = None
 
 
