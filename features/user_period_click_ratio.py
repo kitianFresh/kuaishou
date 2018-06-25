@@ -72,6 +72,7 @@ if __name__ == '__main__':
                               how='left', on=['user_id', 'time_cate'])
 
     # wrong anwser
+    # np.where(np.isnan(df)) df.index[np.where(np.isnan(df))[0]]  df.columns[np.where(np.isnan(df))[1]]
     # user_item_test.loc[np.isnan(user_item_test['period_click_ratio']), ['period_click_ratio']] = \
     #     user_item_test.loc[np.isnan(user_item_test['period_click_ratio']), ['click_ratio']]
     user_item_test['period_click_ratio'].fillna(user_item_test['click_ratio'].mean(), inplace=True)
