@@ -61,7 +61,8 @@ if __name__ == '__main__':
                 'mean').values
     period_click_ratio_feat_train = Feature('period_click_ratio', feature_type='train', feature_dir=col_feature_store_path, fmt=fmt,
                            feature_data=user_item_train[['user_id', 'photo_id', 'period_click_ratio']])
-
+    print(period_click_ratio_feat_train.df.info())
+    print(np.sum(period_click_ratio_feat_train.df.isnull()))
     period_click_ratio_feat_train.save()
 
     users_click_ratio = user_item_train[['user_id', 'click_ratio']].drop_duplicates(['user_id'])
@@ -70,11 +71,13 @@ if __name__ == '__main__':
                               user_item_train[['user_id', 'time_cate', 'period_click_ratio', 'click_ratio']].drop_duplicates(),
                               how='left', on=['user_id', 'time_cate'])
 
-    user_item_test.loc[np.isnan(user_item_test['period_click_ratio']), ['period_click_ratio']] = \
-        user_item_test[np.isnan(user_item_test['period_click_ratio'])]['click_ratio']
-    # user_item_test['period_click_ratio'].fillna(user_item_test['period_click_ratio'].mean(), inplace=True)
+    # wrong anwser
+    # user_item_test.loc[np.isnan(user_item_test['period_click_ratio']), ['period_click_ratio']] = \
+    #     user_item_test.loc[np.isnan(user_item_test['period_click_ratio']), ['click_ratio']]
+    user_item_test['period_click_ratio'].fillna(user_item_test['click_ratio'].mean(), inplace=True)
 
     period_click_ratio_feat_test = Feature('period_click_ratio', feature_type='test', feature_dir=col_feature_store_path, fmt=fmt,
                            feature_data=user_item_test[['user_id', 'photo_id', 'period_click_ratio']])
+    print(period_click_ratio_feat_test.df.info())
 
     period_click_ratio_feat_test.save()
