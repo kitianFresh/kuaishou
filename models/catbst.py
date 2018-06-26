@@ -24,6 +24,7 @@ parser.add_argument('-d', '--description', help='description for a model, a json
 parser.add_argument('-g', '--gpu-mode', help='use gpu mode or not', action="store_true")
 parser.add_argument('-a', '--all', help='use one ensemble table all, or merge by columns',action='store_true')
 parser.add_argument('-r', '--down-sampling', help='down sampling rate, default 1. no sampling', default=1.)
+parser.add_argument('-k', '--topk-features', help='top k features to use again to train model', default=100)
 
 
 args = parser.parse_args()
@@ -37,6 +38,7 @@ if __name__ == '__main__':
     desc = args.description
     all_one = args.all
     down_sample_rate = float(args.down_sampling)
+    k = int(args.topk_features)
     
     model_name = 'catboost'
 
@@ -75,10 +77,6 @@ if __name__ == '__main__':
     
     # less features to avoid overfit
     # features_to_train = ['exposure_num', 'click_ratio', 'cover_length_favor', 'woman_yen_value_favor', 'woman_cv_favor', 'cover_length', 'browse_num', 'man_age_favor', 'woman_age_favor', 'time', 'woman_scale', 'duration_time', 'woman_favor', 'playing_ratio', 'face_click_favor', 'click_num', 'man_cv_favor', 'man_scale', 'playing_sum', 'man_yen_value_favor', 'man_avg_age', 'playing_freq', 'woman_avg_attr', 'human_scale', 'browse_freq', 'non_face_click_favor', 'click_freq', 'woman_avg_age', 'human_avg_attr', 'duration_sum', 'man_favor', 'human_avg_age', 'follow_ratio', 'man_avg_attr']
-    submission = pd.DataFrame()
-    submission['user_id'] = ensemble_test['user_id']
-    submission['photo_id'] = ensemble_test['photo_id']
-    
 
     print("train features")
     print(features_to_train)
@@ -92,8 +90,6 @@ if __name__ == '__main__':
         print(ensemble_train_neg.shape)
         ensemble_train = pd.concat([ensemble_train_pos, ensemble_train_neg])
 
-    ensemble_offline = ensemble_train[features_to_train]
-    ensemble_online = ensemble_test[features_to_train]
     # 决策树模型不需要归一化，本身就是范围划分
 
     print('Training model %s......' % model_name)
@@ -115,7 +111,7 @@ if __name__ == '__main__':
     print(y_val.mean(), y_val.std())
 
     start_time_1 = time.clock()
-    model.clf = CatBoostClassifier(verbose=True, task_type='GPU' if gpu_mode else 'CPU')
+    model.clf = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU')
     model.clf.fit(X_train, y_train.ravel())
 
     # # KFold cross validation
@@ -132,8 +128,29 @@ if __name__ == '__main__':
         model.compute_metrics(X_val, y_val.ravel())
 
     model.compute_features_distribution()
-    model.save()
+
+    golden_features_tree = model.sorted_important_features[:k]
+    print("Top %d strongly features %s" % (k, golden_features_tree))
+    # df_num_corr = ensemble_train.corr()['click'][:-1]  # -1 because the latest row is SalePrice
+    # golden_features_corr = df_num_corr[abs(df_num_corr) > 0.03].sort_values(ascending=False)
+    # print(
+    # "There is {} strongly correlated values with click:\n{}".format(len(golden_features_corr), golden_features_corr))
+
+    golden_features = golden_features_tree
+    X_train, X_val, y_train, y_val = train_data[features_to_train].values, val_data[features_to_train].values, \
+                                     train_data[y_label].values, val_data[y_label].values
+
+    model.clf.fit(X_train, y_train.ravel())
+    if down_sample_rate < 1.:
+        model.compute_metrics(X_val, y_val.ravel(), calibration_weight=down_sample_rate)
+    else:
+        model.compute_metrics(X_val, y_val.ravel())
+
+    model.compute_features_distribution()
+
     if down_sample_rate < 1.:
         model.submit(ensemble_test, calibration_weight=down_sample_rate)
     else:
         model.submit(ensemble_test)
+    model.save()
+
