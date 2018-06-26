@@ -270,7 +270,7 @@ class ModelMixin(object):
         '''
         self.features_distribution = []
         self.sorted_important_features = []
-        self.features_to_train = features_to_train
+        self.features_to_train = features_to_train if len(features_to_train) != 0 else self.features_to_train
         try:
             importances = self.clf.feature_importances_
             indices = np.argsort(importances)[::-1]
