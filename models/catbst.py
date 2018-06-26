@@ -128,25 +128,25 @@ if __name__ == '__main__':
         model.compute_metrics(X_val, y_val.ravel())
 
     model.compute_features_distribution()
+    if k < len(model.sorted_important_features):
+        golden_features_tree = model.sorted_important_features[:k]
+        print("Top %d strongly features %s" % (k, golden_features_tree))
+        # df_num_corr = ensemble_train.corr()['click'][:-1]  # -1 because the latest row is SalePrice
+        # golden_features_corr = df_num_corr[abs(df_num_corr) > 0.03].sort_values(ascending=False)
+        # print(
+        # "There is {} strongly correlated values with click:\n{}".format(len(golden_features_corr), golden_features_corr))
 
-    golden_features_tree = model.sorted_important_features[:k]
-    print("Top %d strongly features %s" % (k, golden_features_tree))
-    # df_num_corr = ensemble_train.corr()['click'][:-1]  # -1 because the latest row is SalePrice
-    # golden_features_corr = df_num_corr[abs(df_num_corr) > 0.03].sort_values(ascending=False)
-    # print(
-    # "There is {} strongly correlated values with click:\n{}".format(len(golden_features_corr), golden_features_corr))
+        golden_features = golden_features_tree
+        X_train, X_val, y_train, y_val = train_data[golden_features].values, val_data[golden_features].values, \
+                                         train_data[y_label].values, val_data[y_label].values
 
-    golden_features = golden_features_tree
-    X_train, X_val, y_train, y_val = train_data[golden_features].values, val_data[golden_features].values, \
-                                     train_data[y_label].values, val_data[y_label].values
+        model.clf.fit(X_train, y_train.ravel())
+        if down_sample_rate < 1.:
+            model.compute_metrics(X_val, y_val.ravel(), calibration_weight=down_sample_rate)
+        else:
+            model.compute_metrics(X_val, y_val.ravel())
 
-    model.clf.fit(X_train, y_train.ravel())
-    if down_sample_rate < 1.:
-        model.compute_metrics(X_val, y_val.ravel(), calibration_weight=down_sample_rate)
-    else:
-        model.compute_metrics(X_val, y_val.ravel())
-
-    model.compute_features_distribution(golden_features)
+        model.compute_features_distribution(golden_features)
 
     if down_sample_rate < 1.:
         model.submit(ensemble_test, calibration_weight=down_sample_rate)
