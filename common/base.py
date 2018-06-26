@@ -263,13 +263,14 @@ class ModelMixin(object):
         # Plot ROC curve
         logging.info('{} ROC curve (area = {})'.format(self.model_name, self.roc_auc))
 
-    def compute_features_distribution(self):
+    def compute_features_distribution(self, features_to_train=[]):
         '''
 
         :return: feature distribution list
         '''
         self.features_distribution = []
         self.sorted_important_features = []
+        self.features_to_train = features_to_train
         try:
             importances = self.clf.feature_importances_
             indices = np.argsort(importances)[::-1]

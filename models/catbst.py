@@ -146,7 +146,7 @@ if __name__ == '__main__':
     else:
         model.compute_metrics(X_val, y_val.ravel())
 
-    model.compute_features_distribution()
+    model.compute_features_distribution(golden_features)
 
     if down_sample_rate < 1.:
         model.submit(ensemble_test, calibration_weight=down_sample_rate)
