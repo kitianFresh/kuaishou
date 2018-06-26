@@ -137,7 +137,7 @@ if __name__ == '__main__':
     # "There is {} strongly correlated values with click:\n{}".format(len(golden_features_corr), golden_features_corr))
 
     golden_features = golden_features_tree
-    X_train, X_val, y_train, y_val = train_data[features_to_train].values, val_data[features_to_train].values, \
+    X_train, X_val, y_train, y_val = train_data[golden_features].values, val_data[golden_features].values, \
                                      train_data[y_label].values, val_data[y_label].values
 
     model.clf.fit(X_train, y_train.ravel())
