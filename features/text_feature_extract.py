@@ -11,7 +11,7 @@ from gensim import corpora, models
 from collections import Counter
 import fasttext
 from common.utils import read_data, store_data
-from text_cluster import load_cluster_model,train_cluster_model,cluster_model_predict
+from text_cluster import train_cluster_model,cluster_model_predict
 from word_embedding import load_model,train_word2vec
 
 parser = argparse.ArgumentParser()
@@ -71,9 +71,9 @@ if __name__ == '__main__':
 
     print (text_click_data.info())
 
-    # 原始被点击语料库
+    # 原始语料库
     corpus = []
-    for cover_words in text_click_data['cover_words']:
+    for cover_words in text_data['cover_words']:
         corpus.append(cover_words)
 
     # 词典
@@ -84,20 +84,26 @@ if __name__ == '__main__':
     else:
         dictionary = corpora.Dictionary.load(DICTIONARY_PATH)
 
-    corpus = [dictionary.doc2bow(text) for text in corpus]
+    corpus_index = [dictionary.doc2bow(text) for text in corpus]
 
     # tfidf模型
     TFIDF_MODEL_PATH = '../sample/tfidf_model.model' if USE_SAMPLE else '../data/tfidf_model.model'
     if not os.path.exists(TFIDF_MODEL_PATH):
-        tfidf_model = models.TfidfModel(corpus)
+        tfidf_model = models.TfidfModel(corpus_index)
         tfidf_model.save(TFIDF_MODEL_PATH)
     else:
         tfidf_model = models.TfidfModel.load(TFIDF_MODEL_PATH)
-    corpus_tfidf = tfidf_model[corpus]
+    corpus_tfidf = tfidf_model[corpus_index]
 
     key_words = []
+    avg_tfidf = []
     for item in corpus_tfidf:
         word_tfidf = sorted(item, key=lambda x: x[1], reverse=True)
+        word_tfidf_val = [i[1] for i in word_tfidf]
+        if len(word_tfidf_val) == 0 :
+            avg_tfidf.append(0)
+        else:
+            avg_tfidf.append(np.mean(word_tfidf_val))
         if len(word_tfidf) >= 2:
             key_words.extend([dictionary.get(i[0]) for i in word_tfidf[:2]])
         elif len(word_tfidf) == 1:
@@ -108,50 +114,51 @@ if __name__ == '__main__':
     # top_k关键词
     k = 2000
     top_key_words = count.most_common(k)
-    top_key_words_word = [i[0] for i in top_key_words]
+    top_key_words = [i[0] for i in top_key_words]
 
     def key_words_num(words):
         num = 0
         for word in words:
-            if word in top_key_words_word:
+            if word in top_key_words:
                 num += 1
         return num
 
 
     text_data['key_words_num'] = text_data['cover_words'].apply(key_words_num)
-
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    vectorizer = TfidfVectorizer(max_df=0.7)
-    corpus = text_data['cover_words'].apply(lambda words: ' '.join(words))
-    tfidf = vectorizer.fit_transform(corpus)
-    avg_tfidf = np.mean(tfidf, axis=1)
     text_data['avg_tfidf'] = avg_tfidf
 
-    # WORD2VEC_MODEL_PATH = '../sample/word2vec.model' if USE_SAMPLE else '../data/word2vec.model'
-    # word_embedding_corpus = []
-    # if os.path.exists(WORD2VEC_MODEL_PATH):
-    #     model = load_model(WORD2VEC_MODEL_PATH)
-    #     for sentence in corpus:
-    #         word_embedding = np.zeros(100,)
-    #         for word in sentence:
-    #             word_embedding += model.wv[word]
-    #         word_embedding_corpus.append(word_embedding)
-    # else:
-    #     model = train_word2vec(corpus,WORD2VEC_MODEL_PATH)
-    #     for sentence in corpus:
-    #         word_embedding = np.zeros(100, )
-    #         for word in sentence:
-    #             word_embedding += model.wv[word]
-    #         word_embedding_corpus.append(word_embedding)
 
-    CLUSTER_MODEL_PATH = '../sample/doc_cluster.pkl' if USE_SAMPLE else '../data/doc_cluster.pkl'
-
-    if os.path.exists(CLUSTER_MODEL_PATH):
-        km = load_cluster_model(CLUSTER_MODEL_PATH)
-        text_data['cluster_label'] = cluster_model_predict(km,tfidf)
+    WORD2VEC_MODEL_PATH = '../sample/word2vec.model' if USE_SAMPLE else '../data/word2vec.model'
+    word_embedding_corpus = []
+    if os.path.exists(WORD2VEC_MODEL_PATH):
+        model = load_model(WORD2VEC_MODEL_PATH)
+        for sentence in corpus:
+            word_embedding = np.zeros(100,)
+            for word in sentence:
+                try:
+                    word_embedding += model.wv[word]
+                except:
+                    continue
+            word_embedding_corpus.append(word_embedding)
     else:
-        model = train_cluster_model(CLUSTER_MODEL_PATH,tfidf)
-        text_data['cluster_label'] = model.predict(tfidf)
+        model = train_word2vec(corpus,WORD2VEC_MODEL_PATH)
+        for sentence in corpus:
+            word_embedding = np.zeros(100, )
+            for word in sentence:
+                try:
+                    word_embedding += model.wv[word]
+                except:
+                    continue
+            word_embedding_corpus.append(word_embedding)
+    word_embedding_corpus = np.array(word_embedding_corpus)
+
+    CLUSTER_MODEL_PATH = '../sample/doc_cluster' if USE_SAMPLE else '../data/doc_cluster'
+    cluster_nums = 20
+    if os.path.exists(CLUSTER_MODEL_PATH + '_kmeans.pkl'):
+        text_data['text_cluster_label'] = cluster_model_predict(CLUSTER_MODEL_PATH,word_embedding_corpus)
+    else:
+        text_data['text_cluster_label'] = train_cluster_model(CLUSTER_MODEL_PATH,word_embedding_corpus,cluster_nums)
+
 
     text_data.drop(['cover_words'], axis=1, inplace=True)
 
@@ -171,8 +178,10 @@ if __name__ == '__main__':
             else:
                 return 0
 
-    text_data['predict_label'] = text_data['cover_words_4_predict'].apply(word_classify)
+    text_data['text_class_label'] = text_data['cover_words_4_predict'].apply(word_classify)
     text_data.drop(['cover_words_4_predict'],axis=1,inplace =True)
+
+    text_data['have_text_cate'] = text_data['cover_length'].apply(lambda x: x>0)
 
     TEXT_FEATURE_FILE = 'text_feature'
     TEXT_FEATURE_FILE = TEXT_FEATURE_FILE + '_sample' + '.' + fmt if USE_SAMPLE else TEXT_FEATURE_FILE + '.' + fmt
