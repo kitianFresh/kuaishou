@@ -62,7 +62,7 @@ if __name__ == '__main__':
     users['click_ratio'] = user_item_train['click'].groupby(user_item_train['user_id']).transform('mean')
     users['like_ratio'] = user_item_train['like'].groupby(user_item_train['user_id']).transform('mean')
     users['follow_ratio'] = user_item_train['follow'].groupby(user_item_train['user_id']).transform('mean')
-    users['playing_ratio'] = (users['playing_sum'] / users['duration_sum'])
+    users['playing_ratio'] = users['playing_sum'] / users['duration_sum']
     
     def browse_time_diff(group):
         m1, m2 = group.min(), group.max()
@@ -78,8 +78,9 @@ if __name__ == '__main__':
     users['playing_freq'] = users['playing_sum'] / users['browse_time_diff']
     
     # 用户点击视频中对人脸和颜值以及年龄的偏好，以后考虑离散化
-    favor_cols = ['face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'man_avg_age', 'woman_avg_age', 'man_avg_attr', 'woman_avg_attr', 'cover_length']
+    favor_cols = ['face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'man_avg_age', 'woman_avg_age', 'man_avg_attr', 'woman_avg_attr', 'cover_length', 'playing_time', 'duration_time']
     favors = user_item_train.loc[user_item_train['click']==1, favor_cols+['user_id']]
+    # 以下特征的统计，都可以看做和click_num 做过交叉
     favors['face_favor'] = favors['face_num'].groupby(favors['user_id']).transform('mean')
     favors['man_favor'] = favors['man_num'].groupby(favors['user_id']).transform('mean')
     favors['woman_favor'] = favors['woman_num'].groupby(favors['user_id']).transform('mean')
@@ -89,6 +90,11 @@ if __name__ == '__main__':
     favors['woman_age_favor'] = favors['woman_avg_age'].groupby(favors['user_id']).transform('mean')
     favors['man_yen_value_favor'] = favors['man_avg_attr'].groupby(favors['user_id']).transform('mean')
     favors['woman_yen_value_favor'] = favors['woman_avg_attr'].groupby(favors['user_id']).transform('mean')
+    favors['playing_favor'] = favors['playing_time'].groupby(favors['user_id']).transform('mean') # 点击数目和播放时间的交叉统计, 播放时间的偏爱
+    favors['duration_favor'] = favors['duration_time'].groupby(favors['user_id']).transform('mean') # 点击数目和视频时长的交叉统计，对视频时长的偏爱，但是用户点击之前其实并不知道时长，这种特征不一定有效
+    favors['playing_duration_ratio'] = favors['playing_time'] / favors['duration_time']
+    favors['playing_duration_favor'] = favors['playing_duration_ratio'].groupby(favors['user_id']).transform('mean') # 视频播放时长、视频时长、click_num 三者交叉. 这个特征可以解释为
+    
     
     def face_counts(group):
         have_faces = group > 0
@@ -104,7 +110,7 @@ if __name__ == '__main__':
     favors['cover_length_favor'] = favors['cover_length'].groupby(favors['user_id']).transform('mean')
     
     favors.drop_duplicates(['user_id'], inplace=True)
-    favors.drop(favor_cols, axis=1, inplace=True)
+    favors.drop(favor_cols+['playing_duration_ratio'], axis=1, inplace=True)
     favors.reset_index(drop=True, inplace=True)
     
     users = pd.merge(users, favors,

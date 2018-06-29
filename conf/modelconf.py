@@ -24,7 +24,7 @@ logging.getLogger('').addHandler(console)
 
 # feature config
 # 'hour_click_ratio', 'period_click_ratio', 'click_ratio'
-user_action_features = ['click_ratio', 'browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum','duration_sum', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq', 'playing_freq']
+user_action_features = ['click_ratio', 'browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum','duration_sum', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq', 'playing_freq', 'playing_favor', 'duration_favor', 'playing_duration_favor']
     
 face_features = ['face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age', 'woman_avg_age', 'human_avg_age',  'man_avg_attr', 'woman_avg_attr', 'human_avg_attr', 'woman_num_ratio', 'man_num_ratio']
     
@@ -39,7 +39,7 @@ time_features = ['time', 'duration_time']
 # time_features = ['time_cate', 'duration_time_cate']
 
 
-text_features = ['cover_length', 'avg_tfidf', 'key_words_num','predict_label','cluster_label']
+text_features = ['cover_length', 'avg_tfidf', 'key_words_num']
 
 #'clicked_ratio', 'have_face_cate'
 photo_features = ['exposure_num', 'have_face_cate', 'have_text_cate'] + face_features + text_features
@@ -59,14 +59,14 @@ norm_features = ['browse_num', 'click_num', 'like_num', 'follow_num', 'playing_s
                  'non_face_click_favor', 'cover_length_favor', 'exposure_num', 'face_num', 'man_num', 'woman_num',
                  'man_scale', 'woman_scale', 'human_scale', 'man_avg_age', 'woman_avg_age', 'human_avg_age',
                  'man_avg_attr', 'woman_avg_attr', 'human_avg_attr', 'cover_length', 'avg_tfidf', 'key_words_num',
-                 'time', 'duration_time', 'period_click_ratio']
+                 'time', 'duration_time', 'period_click_ratio','playing_favor', 'duration_favor', 'playing_duration_favor']
 
 uint64_cols = ['user_id', 'photo_id', 'time']
 uint32_cols = ['playing_sum', 'browse_time_diff', 'duration_sum', 'key_words_num']
 uint16_cols = ['browse_num', 'exposure_num', 'click_num', 'duration_time', 'like_num', 'follow_num', 'clicked_num']
 uint8_cols = ['cover_length', 'man_num', 'woman_num', 'face_num', 'time_cate', 'duration_time_cate']
 bool_cols = ['have_face_cate', 'have_text_cate', 'click']
-float32_cols = ['period_click_ratio', 'clicked_ratio','non_face_click_favor', 'face_click_favor', 'man_favor', 'woman_avg_age', 'playing_freq', 'woman_age_favor', 'woman_yen_value_favor', 'human_scale', 'woman_favor', 'click_freq', 'woman_cv_favor', 'man_age_favor', 'man_yen_value_favor', 'follow_ratio', 'man_scale', 'browse_freq', 'man_avg_age', 'man_cv_favor', 'man_avg_attr', 'playing_ratio', 'woman_scale', 'click_ratio', 'human_avg_age', 'woman_avg_attr', 'like_ratio', 'cover_length_favor', 'human_avg_attr', 'avg_tfidf', 'hour_click_ratio', 'woman_num_ratio', 'man_num_ratio']
+float32_cols = ['period_click_ratio', 'clicked_ratio','non_face_click_favor', 'face_click_favor', 'man_favor', 'woman_avg_age', 'playing_freq', 'woman_age_favor', 'woman_yen_value_favor', 'human_scale', 'woman_favor', 'click_freq', 'woman_cv_favor', 'man_age_favor', 'man_yen_value_favor', 'follow_ratio', 'man_scale', 'browse_freq', 'man_avg_age', 'man_cv_favor', 'man_avg_attr', 'playing_ratio', 'woman_scale', 'click_ratio', 'human_avg_age', 'woman_avg_attr', 'like_ratio', 'cover_length_favor', 'human_avg_attr', 'avg_tfidf', 'hour_click_ratio', 'woman_num_ratio', 'man_num_ratio', 'playing_favor', 'duration_favor', 'playing_duration_favor']
 float64_cols = []
 
 uint32_cate_cols = []
