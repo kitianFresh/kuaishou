@@ -6,21 +6,18 @@
 """
 
 import sys
-from sklearn.cluster import KMeans
-from sklearn.externals import joblib
+from common import cluster
+
 
 sys.path.append('..')
 
 
-def train_cluster_model(cluster_model_path,data):
-    model = KMeans(n_clusters=20, verbose=True, n_jobs=8)
-    model.fit(data)
-    joblib.dump(model, cluster_model_path)
-    return model
+def train_cluster_model(cluster_model_path,data,cluster_nums):
+    print('start training {} class kmeans'.format(cluster_nums))
+    clustered = cluster.train(data,cluster_nums,cluster_model_path)
+    print('training finished')
+    return clustered
 
-def load_cluster_model(cluster_model_path):
-    model = joblib.load(cluster_model_path)
-    return model
 
-def cluster_model_predict(model,data):
-    return model.predict(data)
+def cluster_model_predict(model_path,data):
+    return cluster.predict(data,model_path)
