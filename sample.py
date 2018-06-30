@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import functools
 
+random.seed(a=777, version=2)
 
 def user_sample(group, prop):
     n = group.shape[0]
@@ -78,3 +79,4 @@ print('text_test sampled')
 sample_text_train = photo_sample(text_train, sample_photo_ids_train)
 sample_text_train.to_csv('./sample/train_text.txt', sep='\t', index=False, header=False)
 print('text_train sampled')
+

@@ -6,3 +6,5 @@ sklearn
 xgboost
 lightgbm
 seaborn
+future
+pqkmeans
