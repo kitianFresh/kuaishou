@@ -8,7 +8,8 @@ sys.path.append("..")
 
 import pandas as pd
 
-from sklearn.model_selection import cross_val_score, train_test_split, StratifiedKFold
+from sklearn.model_selection import cross_val_score, train_test_split, StratifiedKFold, GridSearchCV
+from sklearn.metrics import classification_report
 from catboost import CatBoostClassifier
 
 from conf.modelconf import time_features, photo_features, user_features, y_label, features_to_train
@@ -111,9 +112,15 @@ if __name__ == '__main__':
     print(y_val.mean(), y_val.std())
 
     start_time_1 = time.clock()
-    model.clf = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU')
+    params = {'depth': [4, 7, 10],
+              'learning_rate': [0.03, 0.1, 0.15],
+              'l2_leaf_reg': [1, 4, 9],
+              'iterations': [300,500,800]}
+    cb = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU')
+    cb_model = GridSearchCV(cb, params, scoring="roc_auc", cv=3)
+    model.clf = cb_model
     model.clf.fit(X_train, y_train.ravel())
-
+    print(model.clf.best_params_)
     # # KFold cross validation
     # def cross_validate(*args, **kwargs):
     #     cv = StratifiedKFold(n_splits=3, random_state=0, shuffle=False)

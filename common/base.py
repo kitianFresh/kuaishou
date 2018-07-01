@@ -13,7 +13,7 @@ import logging
 import pandas as pd
 import numpy as np
 from sklearn.externals import joblib
-from sklearn.metrics import recall_score, roc_auc_score, precision_score, accuracy_score
+from sklearn.metrics import recall_score, roc_auc_score, precision_score, accuracy_score, classification_report
 
 
 from conf.modelconf import feature_dtype_map
@@ -262,6 +262,7 @@ class ModelMixin(object):
         self.roc_auc = roc_auc_score(y_test, y_score[:,1], sample_weight=None)
         # Plot ROC curve
         logging.info('{} ROC curve (area = {})'.format(self.model_name, self.roc_auc))
+        classification_report(y_hat, y_test)
 
     def compute_features_distribution(self, features_to_train=[]):
         '''
