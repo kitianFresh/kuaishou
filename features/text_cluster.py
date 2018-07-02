@@ -6,10 +6,9 @@
 """
 
 import sys
+sys.path.append('..')
 from common import cluster
 
-
-sys.path.append('..')
 
 
 def train_cluster_model(cluster_model_path,data,cluster_nums):
