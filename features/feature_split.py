@@ -62,6 +62,10 @@ if __name__ == '__main__':
     USER_FEATURE_FILE = USER_FEATURE_FILE + '_sample' + '.' + fmt if USE_SAMPLE else USER_FEATURE_FILE +  '.' + fmt
     users = read_data(os.path.join(feature_store_path, USER_FEATURE_FILE), fmt)
 
+    VISUAL_FEATURE_FILE = 'visual_feature'
+    VISUAL_FEATURE_FILE = VISUAL_FEATURE_FILE + '_sample' + '.' + fmt if USE_SAMPLE else VISUAL_FEATURE_FILE + '.' + fmt
+    visual = read_data(os.path.join(feature_store_path,VISUAL_FEATURE_FILE),fmt)
+
     user_item_train = pd.merge(user_item_train, users,
                           how='inner',
                           on=['user_id'])
@@ -70,6 +74,9 @@ if __name__ == '__main__':
                               how='left',
                               on=['photo_id'])
 
+    user_item_train = pd.merge(user_item_train,visual,
+                               how='left',on=['user_id','photo_id'])
+
     user_item_test = pd.merge(user_item_test, users,
                              how='inner',
                              on=['user_id'])
@@ -77,6 +84,10 @@ if __name__ == '__main__':
     user_item_test = pd.merge(user_item_test, photo_data,
                           how='left',
                           on=['photo_id'])
+
+    user_item_test = pd.merge(user_item_test,visual,
+                              how='left',
+                              on=['user_id','photo_id'])
 
 
     print(user_item_train.columns)
