@@ -28,6 +28,8 @@ parser.add_argument('-a', '--all', help='use one ensemble table all, or merge by
 parser.add_argument('-r', '--down-sampling', help='down sampling rate, default 1. no sampling', default=1.)
 parser.add_argument('-k', '--topk-features', help='top k features to use again to train model', default=100)
 parser.add_argument('-n', '--num-workers', help='num used to merge columns', default=cpu_count())
+parser.add_argument('-c', '--config-file', help='model config file', default='')
+
 
 
 args = parser.parse_args()
@@ -115,14 +117,34 @@ if __name__ == '__main__':
     print(y_val.mean(), y_val.std())
 
     start_time_1 = time.clock()
-    params = {'depth': [4, 7, 10],
-              'learning_rate': [0.03, 0.1, 0.15],
-              'l2_leaf_reg': [1, 4, 9],
-              'iterations': [300,500,800]}
-    cb = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU')
-    cb_model = GridSearchCV(cb, params, scoring="roc_auc", cv=3, n_jobs=-1)
-    model.clf = cb_model
-    model.clf.fit(X_train, y_train.ravel())
+    '''
+    ('user_id', 15140)
+    ('photo_id', 4278686)
+    ('browse_num', 3741)
+    ('click_num', 1067)
+    ('like_num', 139)
+    ('follow_num', 54)
+    ('playing_sum', 6794)
+    ('duration_sum', 12945)
+    ('browse_time_diff', 13162)
+    ('exposure_num', 1401)
+    ('face_num', 19)
+    ('man_num', 17)
+    ('woman_num', 19)
+    ('cover_length', 159)
+    ('key_words_num', 143)
+    ('time', 1470800)
+    ('duration_time', 946)
+    '''
+    cat_feature_inds = []
+    descreate_max_num = 20
+    for i, c in enumerate(train_data[features_to_train].columns):
+        num_uniques = train_data[features_to_train][c].nunique()
+        if num_uniques < descreate_max_num:
+            cat_feature_inds.append(i)
+
+    model.clf = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU')
+    model.clf.fit(X_train, y_train.ravel(), cat_features=cat_feature_inds)
     print(model.clf.best_params_)
     # # KFold cross validation
     # def cross_validate(*args, **kwargs):
