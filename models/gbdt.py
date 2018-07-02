@@ -1,4 +1,4 @@
-#coding:utf8
+# coding:utf8
 
 # must have one line in python3 between encoding and first import statement
 
@@ -6,6 +6,7 @@ import os
 import argparse
 import sys
 import time
+
 sys.path.append("..")
 from multiprocessing import cpu_count
 
@@ -13,29 +14,28 @@ import numpy as np
 from sklearn.model_selection import cross_val_score, train_test_split, StratifiedKFold, RandomizedSearchCV
 from evolutionary_search import EvolutionaryAlgorithmSearchCV
 
-from lightgbm import LGBMClassifier
-
+from sklearn.ensemble import GradientBoostingClassifier
 # from conf.modelconf import user_action_features, face_features, user_face_favor_features, id_features, time_features, photo_features, user_features, y_label, features_to_train
 
 from common.utils import FeatureMerger, read_data, store_data, load_config_from_pyfile
 from common.base import Classifier
 
-
-        
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
-parser.add_argument('-v', '--version', help='model version, there will be a version control and a json description file for this model', required=True)
-parser.add_argument('-d', '--description', help='description for a model, a json description file attached to a model', required=True)
-parser.add_argument('-a', '--all', help='use one ensemble table all, or merge by columns',action='store_true')
+parser.add_argument('-v', '--version',
+                    help='model version, there will be a version control and a json description file for this model',
+                    required=True)
+parser.add_argument('-d', '--description', help='description for a model, a json description file attached to a model',
+                    required=True)
+parser.add_argument('-a', '--all', help='use one ensemble table all, or merge by columns', action='store_true')
 parser.add_argument('-n', '--num-workers', help='num used to merge columns', default=cpu_count())
 parser.add_argument('-c', '--config-file', help='model config file', default='')
 
 args = parser.parse_args()
 
-
 if __name__ == '__main__':
-    
+
     USE_SAMPLE = args.sample
     fmt = args.format if args.format else 'csv'
     version = args.version
@@ -48,16 +48,17 @@ if __name__ == '__main__':
     photo_features = config.photo_features
     time_features = config.time_features
     y_label = config.y_label
-    
-    model_name = 'lgbm'
+
+    model_name = 'gbdt'
 
     model_store_path = './sample/' if USE_SAMPLE else './data'
-    
+
     feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
 
     col_feature_store_path = '../sample/features/columns' if USE_SAMPLE else '../data/features/columns'
 
-    model = Classifier(None,dir=model_store_path, name=model_name,version=version, description=desc, features_to_train=features_to_train)
+    model = Classifier(None, dir=model_store_path, name=model_name, version=version, description=desc,
+                       features_to_train=features_to_train)
 
     if all_one:
         ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
@@ -69,8 +70,10 @@ if __name__ == '__main__':
         ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
     else:
         feature_to_use = user_features + photo_features + time_features
-        fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=num_workers)
-        fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=num_workers)
+        fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use + y_label, fmt=fmt, data_type='train',
+                                   pool_type='process', num_workers=num_workers)
+        fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test',
+                                  pool_type='process', num_workers=num_workers)
         ensemble_train = fm_trainer.merge()
         ensemble_test = fm_tester.merge()
 
@@ -79,9 +82,9 @@ if __name__ == '__main__':
 
     all_features = list(ensemble_train.columns.values)
     print("all original features")
-    print(all_features) 
+    print(all_features)
     y = ensemble_train[y_label].values
-    
+
     # less features to avoid overfit
     # features_to_train = ['exposure_num', 'click_ratio', 'cover_length_favor', 'woman_yen_value_favor', 'woman_cv_favor', 'cover_length', 'browse_num', 'man_age_favor', 'woman_age_favor', 'time', 'woman_scale', 'duration_time', 'woman_favor', 'playing_ratio', 'face_click_favor', 'click_num', 'man_cv_favor', 'man_scale', 'playing_sum', 'man_yen_value_favor', 'man_avg_age', 'playing_freq', 'woman_avg_attr', 'human_scale', 'browse_freq', 'non_face_click_favor', 'click_freq', 'woman_avg_age', 'human_avg_attr', 'duration_sum', 'man_favor', 'human_avg_age', 'follow_ratio', 'man_avg_attr']
 
@@ -96,7 +99,6 @@ if __name__ == '__main__':
     # 决策树模型不需要归一化，本身就是范围划分
 
     print('Training model %s......' % model_name)
-
 
     ensemble_train = ensemble_train.sort_values('time')
     train_num = ensemble_train.shape[0]
@@ -135,17 +137,17 @@ if __name__ == '__main__':
               'num_leaves': (12, 16, 36, 48, 54, 60, 80, 100)
               }
 
-    model.clf = EvolutionaryAlgorithmSearchCV(estimator=LGBMClassifier(**ind_params),
-                                         params=params,
-                                         scoring="roc_auc",
-                                         cv=3,
-                                         verbose=1,
-                                         population_size=50,
-                                         gene_mutation_prob=0.10,
-                                         gene_crossover_prob=0.5,
-                                         tournament_size=5,
-                                         generations_number=100,
-                                         n_jobs=cpu_count())
+    model.clf = EvolutionaryAlgorithmSearchCV(estimator=GradientBoostingClassifier(**ind_params),
+                                              params=params,
+                                              scoring="roc_auc",
+                                              cv=3,
+                                              verbose=1,
+                                              population_size=50,
+                                              gene_mutation_prob=0.10,
+                                              gene_crossover_prob=0.5,
+                                              tournament_size=5,
+                                              generations_number=100,
+                                              n_jobs=cpu_count())
     # 在训练集上训练
     model.clf.fit(X_train, y_train.ravel())
 

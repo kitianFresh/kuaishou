@@ -292,38 +292,53 @@ class ModelMixin(object):
     def save(self):
         joblib.dump(self.clf, self.model_file)
         logging.info('Model %s saved in %s' % (self.model_name, self.model_file))
-        model_metainfo = {
-            'sub_file': self.sub_file,
-            'model_file': self.model_file,
-            'model_name': self.model_name,
-            'version': self.version,
-            'description': self.description,
-            'features_distribution': self.features_distribution,
-            'sorted_important_features': self.sorted_important_features,
-            'features_to_train': self.features_to_train,
-            'accuracy': self.accuracy,
-            'precision': self.precision,
-            'recall': self.recall,
-            'roc_auc': self.roc_auc,
-            'down_sample_rate': self.down_sample_rate,
-        }
+        try:
+            best_estimator = self.clf.best_estimator_
+            # 输出最优训练器的精度
+            best_score = self.best_score_
+            best_param = self.best_param_
+            logging.info('best score: %s' % self.clf.best_score_)
+            logging.info('best param: %s' % self.clf.best_params_)
+            model_metainfo = {
+                'sub_file': self.sub_file,
+                'model_file': self.model_file,
+                'model_name': self.model_name,
+                'version': self.version,
+                'description': self.description,
+                'features_distribution': self.features_distribution,
+                'sorted_important_features': self.sorted_important_features,
+                'features_to_train': self.features_to_train,
+                'accuracy': self.accuracy,
+                'precision': self.precision,
+                'recall': self.recall,
+                'roc_auc': self.roc_auc,
+                'down_sample_rate': self.down_sample_rate,
+                'best_score': best_score,
+                'best_param': best_param,
+            }
 
-        # for python 2 and python 3 compatible, python 3 has a bug for this. https://stackoverflow.com/questions/11942364/typeerror-integer-is-not-json-serializable-when-serializing-json-in-python
-        def default(o):
-            if isinstance(o, np.uint64) or isinstance(o, np.uint32) or isinstance(o, np.uint16) or isinstance(o, np.uint8) \
-                    or isinstance(o, np.int64) or isinstance(o, np.int32) or isinstance(o, np.int16) or isinstance(o, np.int8):
-                return int(o)
-            raise TypeError
-        # ensure_ascii=False 保证输出的不是 unicode 编码形式，而是真正的中文文本
-        # from __future__ import unicode_literals
-        with io.open(self.meta_info_file, mode='w', encoding='utf8') as outfile:
-            metadata = json.dumps(model_metainfo, ensure_ascii=False, indent=4, default=default)
-            # metadata is str in python2 which is actually bytearray, but in python3 all str is unicode. for compatibilty
-            if sys.version_info < (3,):
-                outfile.write(metadata.decode('utf8'))
-            else:
-                outfile.write(metadata)
-            logging.info('Model %s meta info saved in %s' % (self.model_name, self.meta_info_file))
+            # for python 2 and python 3 compatible, python 3 has a bug for this. https://stackoverflow.com/questions/11942364/typeerror-integer-is-not-json-serializable-when-serializing-json-in-python
+            def default(o):
+                if isinstance(o, np.uint64) or isinstance(o, np.uint32) or isinstance(o, np.uint16) or isinstance(o,
+                                                                                                                  np.uint8) \
+                        or isinstance(o, np.int64) or isinstance(o, np.int32) or isinstance(o, np.int16) or isinstance(
+                    o, np.int8):
+                    return int(o)
+                raise TypeError
+
+            # ensure_ascii=False 保证输出的不是 unicode 编码形式，而是真正的中文文本
+            # from __future__ import unicode_literals
+            with io.open(self.meta_info_file, mode='w', encoding='utf8') as outfile:
+                metadata = json.dumps(model_metainfo, ensure_ascii=False, indent=4, default=default)
+                # metadata is str in python2 which is actually bytearray, but in python3 all str is unicode. for compatibilty
+                if sys.version_info < (3,):
+                    outfile.write(metadata.decode('utf8'))
+                else:
+                    outfile.write(metadata)
+                logging.info('Model %s meta info saved in %s' % (self.model_name, self.meta_info_file))
+
+        except AttributeError as e:
+            logging.warning(str(e))
 
     def submit(self, ensemble_online, sparse_matrix=None, calibration_weight=None):
         submission = pd.DataFrame()

@@ -5,6 +5,7 @@ import time
 import functools
 import logging
 import argparse
+import types
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
 import numpy as np
@@ -12,6 +13,25 @@ import pandas as pd
 import scipy.special as special
 
 from conf.modelconf import feature_dtype_map
+
+def load_config_from_pyfile(filename):
+    """Updates the values in the config from a Python file.  This function
+    behaves as if the file was imported as module with the
+    :meth:`from_object` function.
+    :param filename: the filename of the config.  This can either be an
+                     absolute filename or a filename relative to the
+                     root path.
+
+    """
+    d = types.ModuleType('config')
+    d.__file__ = filename
+    try:
+        with open(filename, mode='rb') as config_file:
+            exec (compile(config_file.read(), filename, 'exec'), d.__dict__)
+    except IOError as e:
+        e.strerror = 'Unable to load configuration file (%s)' % e.strerror
+        raise
+    return d
 
 
 # 无法使用多进程，不采样的数据集df太大了，多进程pickle不了, 还是只能使用共享内存的方案，这样得自己写了，暂不考虑

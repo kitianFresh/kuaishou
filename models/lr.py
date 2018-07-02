@@ -5,6 +5,7 @@ import argparse
 import time
 import sys
 sys.path.append("..")
+from multiprocessing import cpu_count
 
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
@@ -23,6 +24,7 @@ parser.add_argument('-f', '--format', help='store pandas feature format, csv, pk
 parser.add_argument('-v', '--version', help='model version, there will be a version control and a json description file for this model', required=True)
 parser.add_argument('-d', '--description', help='description for a model, a json description file attached to a model', required=True)
 parser.add_argument('-a', '--all', help='use one ensemble table all, or merge by columns',action='store_true')
+parser.add_argument('-n', '--num-workers', help='num used to merge columns', default=cpu_count())
 
 args = parser.parse_args()
 
@@ -35,6 +37,9 @@ if __name__ == '__main__':
     version = args.version
     desc = args.description
     all_one = args.all
+    num_workers = args.num_workers
+
+
     model_name = 'lr'
 
     feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
@@ -59,8 +64,8 @@ if __name__ == '__main__':
         print('Reading data in %s seconds' % str(time.clock() - start))
     else:
         feature_to_use = user_features + photo_features + time_features
-        fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=8)
-        fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=8)
+        fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=num_workers)
+        fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=num_workers)
         ensemble_train = fm_trainer.merge()
         ensemble_test = fm_tester.merge()
 

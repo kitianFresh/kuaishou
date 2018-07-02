@@ -5,6 +5,7 @@ import argparse
 import sys
 import time
 sys.path.append("..")
+from multiprocessing import cpu_count
 
 import pandas as pd
 
@@ -26,6 +27,7 @@ parser.add_argument('-g', '--gpu-mode', help='use gpu mode or not', action="stor
 parser.add_argument('-a', '--all', help='use one ensemble table all, or merge by columns',action='store_true')
 parser.add_argument('-r', '--down-sampling', help='down sampling rate, default 1. no sampling', default=1.)
 parser.add_argument('-k', '--topk-features', help='top k features to use again to train model', default=100)
+parser.add_argument('-n', '--num-workers', help='num used to merge columns', default=cpu_count())
 
 
 args = parser.parse_args()
@@ -40,6 +42,7 @@ if __name__ == '__main__':
     all_one = args.all
     down_sample_rate = float(args.down_sampling)
     k = int(args.topk_features)
+    num_workers = args.num_workers
     
     model_name = 'catboost'
 
@@ -62,8 +65,8 @@ if __name__ == '__main__':
         ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
     else:
         feature_to_use = user_features + photo_features + time_features
-        fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=8)
-        fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=8)
+        fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=num_workers)
+        fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=num_workers)
         ensemble_train = fm_trainer.merge()
         ensemble_test = fm_tester.merge()
 
@@ -117,7 +120,7 @@ if __name__ == '__main__':
               'l2_leaf_reg': [1, 4, 9],
               'iterations': [300,500,800]}
     cb = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU')
-    cb_model = GridSearchCV(cb, params, scoring="roc_auc", cv=3)
+    cb_model = GridSearchCV(cb, params, scoring="roc_auc", cv=3, n_jobs=-1)
     model.clf = cb_model
     model.clf.fit(X_train, y_train.ravel())
     print(model.clf.best_params_)
@@ -135,6 +138,9 @@ if __name__ == '__main__':
         model.compute_metrics(X_val, y_val.ravel())
 
     model.compute_features_distribution()
+
+
+
     if k < len(model.sorted_important_features):
         golden_features_tree = model.sorted_important_features[:k]
         print("Top %d strongly features %s" % (k, golden_features_tree))

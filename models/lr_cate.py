@@ -4,8 +4,8 @@ import os
 import time
 import argparse
 import sys
-
 sys.path.append("..")
+from multiprocessing import cpu_count
 
 import pandas as pd
 from sklearn import preprocessing
@@ -28,6 +28,8 @@ parser.add_argument('-v', '--version',
                     required=True)
 parser.add_argument('-d', '--description', help='description for a model, a json description file attached to a model',
                     required=True)
+parser.add_argument('-n', '--num-workers', help='num used to merge columns', default=cpu_count())
+
 
 args = parser.parse_args()
 
@@ -37,6 +39,7 @@ if __name__ == '__main__':
     fmt = args.format if args.format else 'csv'
     version = args.version
     desc = args.description
+    num_workers = args.num_workers
 
     model_name = 'lr-cate'
     feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
@@ -63,9 +66,9 @@ if __name__ == '__main__':
                        description=desc, features_to_train=features_to_train)
 
     fm_trainer = FeatureMerger(col_feature_store_path, features_to_train + y_label, fmt=fmt, data_type='train',
-                               pool_type='process', num_workers=8)
+                               pool_type='process', num_workers=num_workers)
     fm_tester = FeatureMerger(col_feature_store_path, features_to_train, fmt=fmt, data_type='test', pool_type='process',
-                              num_workers=8)
+                              num_workers=num_workers)
     ensemble_train = fm_trainer.merge()
     ensemble_test = fm_tester.merge()
 
