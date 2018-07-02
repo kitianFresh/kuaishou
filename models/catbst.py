@@ -145,7 +145,6 @@ if __name__ == '__main__':
 
     model.clf = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU')
     model.clf.fit(X_train, y_train.ravel(), cat_features=cat_feature_inds)
-    print(model.clf.best_params_)
     # # KFold cross validation
     # def cross_validate(*args, **kwargs):
     #     cv = StratifiedKFold(n_splits=3, random_state=0, shuffle=False)
