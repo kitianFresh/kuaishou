@@ -20,7 +20,7 @@ def data_transform_store(visual_path,matrix_store_path,photo_id_path):
     print('start transform single file to matrix')
     for index,name in enumerate(os.listdir(visual_path)):
         vector_path = os.path.join(visual_path,name)
-        photo_id.append(name)
+        photo_id.append(int(name))
         if index == 0:
             vector = np.load(vector_path)
         else:
@@ -40,7 +40,7 @@ def sample_data_transform_store(visual_path,matrix_store_path,photo_id_path):
     for index ,vector_path in enumerate(vector_file):
         vector_path = vector_path.replace('\n','')
         photo_id = vector_path.split('/')[-1]
-        photo_ids.append(photo_id)
+        photo_ids.append(int(photo_id))
         if index == 0:
             vector = np.load(vector_path)
         else:
