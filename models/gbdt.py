@@ -127,14 +127,13 @@ if __name__ == '__main__':
 
     ind_params = {
         'seed': 32,
-        'n_estimators': 200,
+        'n_estimators': 60,
         'learning_rate': 0.1,
         'nthread': 1
     }
-    params = {'max_depth': (4, 6, 8),
+    params = {'max_depth': (3, 5, 7, 9, 11),
               'subsample': (0.75, 0.8, 0.9, 1.0),
-              'colsample_bytree': (0.75, 0.8, 0.9, 1.0),
-              'num_leaves': (12, 16, 36, 48, 54, 60, 80, 100)
+              'min_samples_split': (1000, 3000, 5000, 7000),
               }
 
     model.clf = EvolutionaryAlgorithmSearchCV(estimator=GradientBoostingClassifier(**ind_params),
