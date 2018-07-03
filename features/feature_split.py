@@ -64,31 +64,35 @@ if __name__ == '__main__':
 
     VISUAL_FEATURE_FILE = 'visual_feature'
     VISUAL_FEATURE_FILE = VISUAL_FEATURE_FILE + '_sample' + '.' + fmt if USE_SAMPLE else VISUAL_FEATURE_FILE + '.' + fmt
-    visual = read_data(os.path.join(feature_store_path,VISUAL_FEATURE_FILE),fmt)
+    path = os.path.join(feature_store_path, VISUAL_FEATURE_FILE)
+    if os.path.exists(path):
+        visual = read_data(os.path.join(feature_store_path, VISUAL_FEATURE_FILE), fmt)
+    else:
+        logging.warning('%s not exist, ignore.' % path)
+        visual = None
 
     user_item_train = pd.merge(user_item_train, users,
-                          how='inner',
-                          on=['user_id'])
+                               how='inner',
+                               on=['user_id'])
 
     user_item_train = pd.merge(user_item_train, photo_data,
-                              how='left',
-                              on=['photo_id'])
-
-    user_item_train = pd.merge(user_item_train,visual,
-                               how='left',on=['user_id','photo_id'])
+                               how='left',
+                               on=['photo_id'])
+    if visual is not None:
+        user_item_train = pd.merge(user_item_train, visual,
+                                   how='left', on=['user_id', 'photo_id'])
 
     user_item_test = pd.merge(user_item_test, users,
-                             how='inner',
-                             on=['user_id'])
+                              how='inner',
+                              on=['user_id'])
 
     user_item_test = pd.merge(user_item_test, photo_data,
-                          how='left',
-                          on=['photo_id'])
-
-    user_item_test = pd.merge(user_item_test,visual,
                               how='left',
-                              on=['user_id','photo_id'])
-
+                              on=['photo_id'])
+    if visual is not None:
+        user_item_test = pd.merge(user_item_test, visual,
+                                  how='left',
+                                  on=['user_id', 'photo_id'])
 
     print(user_item_train.columns)
     user_item_train.fillna(0, inplace=True)
