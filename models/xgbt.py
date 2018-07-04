@@ -14,8 +14,7 @@ import numpy as np
 from sklearn.model_selection import cross_val_score, train_test_split, StratifiedKFold, RandomizedSearchCV
 from evolutionary_search import EvolutionaryAlgorithmSearchCV
 
-from lightgbm import LGBMClassifier
-
+from xgboost import XGBClassifier
 # from conf.modelconf import user_action_features, face_features, user_face_favor_features, id_features, time_features, photo_features, user_features, y_label, features_to_train
 
 from common.utils import FeatureMerger, read_data, store_data, load_config_from_pyfile
@@ -138,7 +137,7 @@ if __name__ == '__main__':
               'gamma': [i / 10 for i in range(0, 5)]
               }
 
-    clf2 = EvolutionaryAlgorithmSearchCV(estimator=xgb.XGBClassifier(**ind_params),
+    clf2 = EvolutionaryAlgorithmSearchCV(estimator=XGBClassifier(**ind_params),
                                          params=params,
                                          scoring="roc_auc",
                                          cv=3,

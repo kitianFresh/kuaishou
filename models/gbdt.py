@@ -11,7 +11,7 @@ sys.path.append("..")
 from multiprocessing import cpu_count
 
 import numpy as np
-from sklearn.model_selection import cross_val_score, train_test_split, StratifiedKFold, RandomizedSearchCV
+from sklearn.model_selection import cross_val_score, train_test_split, StratifiedKFold, RandomizedSearchCV, GridSearchCV
 from evolutionary_search import EvolutionaryAlgorithmSearchCV
 
 from sklearn.ensemble import GradientBoostingClassifier
@@ -43,6 +43,7 @@ if __name__ == '__main__':
     all_one = args.all
     num_workers = args.num_workers
     config = load_config_from_pyfile(args.config_file)
+    print(dir(config))
     features_to_train = config.features_to_train
     user_features = config.user_features
     photo_features = config.photo_features
@@ -70,10 +71,8 @@ if __name__ == '__main__':
         ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
     else:
         feature_to_use = user_features + photo_features + time_features
-        fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use + y_label, fmt=fmt, data_type='train',
-                                   pool_type='process', num_workers=num_workers)
-        fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test',
-                                  pool_type='process', num_workers=num_workers)
+        fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use + y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=num_workers)
+        fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=num_workers)
         ensemble_train = fm_trainer.merge()
         ensemble_test = fm_tester.merge()
 
@@ -125,28 +124,34 @@ if __name__ == '__main__':
     # n_jobs = -1，使用所有的CPU进行训练，默认为1，使用1个CPU
     # model.clf = RandomizedSearchCV(LGBMClassifier(), param_dist, cv=3, scoring='roc_auc', n_iter=300, n_jobs=-1)
 
-    ind_params = {
-        'seed': 32,
-        'n_estimators': 60,
-        'learning_rate': 0.1,
-        'nthread': 1
-    }
-    params = {'max_depth': (3, 5, 7, 9, 11),
-              'subsample': (0.75, 0.8, 0.9, 1.0),
-              'min_samples_split': (1000, 3000, 5000, 7000),
-              }
 
-    model.clf = EvolutionaryAlgorithmSearchCV(estimator=GradientBoostingClassifier(**ind_params),
-                                              params=params,
-                                              scoring="roc_auc",
-                                              cv=3,
-                                              verbose=1,
-                                              population_size=50,
-                                              gene_mutation_prob=0.10,
-                                              gene_crossover_prob=0.5,
-                                              tournament_size=5,
-                                              generations_number=100,
-                                              n_jobs=cpu_count())
+    param_test1 = {'n_estimators': range(20, 81, 10)}
+    gsearch1 = GridSearchCV(
+        estimator=GradientBoostingClassifier(learning_rate=0.1, min_samples_split=1000, min_samples_leaf=500, max_depth=8,
+                                             max_features='sqrt', subsample=0.8, random_state=10),
+        param_grid=param_test1, scoring='roc_auc', n_jobs=4, iid=False, cv=3)
+    # ind_params = {
+    #     'seed': 32,
+    #     'n_estimators': 60,
+    #     'learning_rate': 0.1,
+    #     'nthread': 1
+    # }
+    # params = {'max_depth': (3, 5, 7, 9, 11),
+    #           'subsample': (0.75, 0.8, 0.9, 1.0),
+    #           'min_samples_split': (1000, 3000, 5000, 7000),
+    #           }
+    #
+    # model.clf = EvolutionaryAlgorithmSearchCV(estimator=GradientBoostingClassifier(**ind_params),
+    #                                           params=params,
+    #                                           scoring="roc_auc",
+    #                                           cv=3,
+    #                                           verbose=1,
+    #                                           population_size=50,
+    #                                           gene_mutation_prob=0.10,
+    #                                           gene_crossover_prob=0.5,
+    #                                           tournament_size=5,
+    #                                           generations_number=100,
+    #                                           n_jobs=cpu_count())
     # 在训练集上训练
     model.clf.fit(X_train, y_train.ravel())
 

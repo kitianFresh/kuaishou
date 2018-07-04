@@ -297,8 +297,8 @@ class ModelMixin(object):
         try:
             best_estimator = self.clf.best_estimator_
             # 输出最优训练器的精度
-            best_score = self.best_score_
-            best_param = self.best_param_
+            best_param = self.clf.best_param_
+            best_score = self.clf.best_score_
             logging.info('best score: %s' % self.clf.best_score_)
             logging.info('best param: %s' % self.clf.best_params_)
         except AttributeError as e:
