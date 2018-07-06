@@ -121,7 +121,7 @@ if __name__ == '__main__':
     # print(y_train.mean(), y_train.std())
     # print(y_val.mean(), y_val.std())
 
-    print('开始CV 5折训练...')
+    print('开始CV 3折训练...')
     cat_feature_inds = []
     descreate_max_num = 20
     for i, c in enumerate(ensemble_train[features_to_train].columns):
@@ -159,7 +159,6 @@ if __name__ == '__main__':
                 X_val = X[val_index]
                 y_train = y[train_index]
                 y_val = y[val_index]
-                print(cat_features)
                 cat_model.fit(X_train, y_train.ravel(), cat_features=cat_features)
                 self.cats_preds[:X_train.shape[0], i] = cat_model.predict_proba(X_train)[:, 1]
                 self.cats_preds[X_train.shape[0]:, i] = cat_model.predict_proba(X_val)[:, 1]

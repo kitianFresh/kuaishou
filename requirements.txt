@@ -1,6 +1,7 @@
 numpy
 matplotlib
 matplotlib-venn
+CMake
 pandas
 sklearn
 xgboost
@@ -9,3 +10,4 @@ seaborn
 future
 pqkmeans
 bloscpack
+catboost
