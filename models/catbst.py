@@ -29,6 +29,7 @@ parser.add_argument('-r', '--down-sampling', help='down sampling rate, default 1
 parser.add_argument('-k', '--topk-features', help='top k features to use again to train model', default=100)
 parser.add_argument('-n', '--num-workers', help='num used to merge columns', default=cpu_count())
 parser.add_argument('-c', '--config-file', help='model config file', default='')
+parser.add_argument('-l', '--descreate-max-num', help='catboost model category feature descreate_max_num, max=48', default=30)
 
 
 
@@ -137,14 +138,14 @@ if __name__ == '__main__':
     ('duration_time', 946)
     '''
     cat_feature_inds = []
-    descreate_max_num = 20
+    descreate_max_num = args.descreate_max_num
     for i, c in enumerate(train_data[features_to_train].columns):
         num_uniques = train_data[features_to_train][c].nunique()
         if num_uniques < descreate_max_num:
             cat_feature_inds.append(i)
 
-    model.clf = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU')
-    model.clf.fit(X_train, y_train.ravel(), cat_features=cat_feature_inds)
+    model.clf = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU', eval_metric='logloss')
+    model.clf.fit(X_train, y_train.ravel(), cat_features=cat_feature_inds, eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())])
     # # KFold cross validation
     # def cross_validate(*args, **kwargs):
     #     cv = StratifiedKFold(n_splits=3, random_state=0, shuffle=False)
