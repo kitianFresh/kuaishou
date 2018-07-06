@@ -2,6 +2,7 @@ numpy
 matplotlib
 matplotlib-venn
 CMake
+Cython
 pandas
 sklearn
 xgboost
@@ -11,3 +12,4 @@ future
 pqkmeans
 bloscpack
 catboost
+fasttext
