@@ -28,8 +28,8 @@ if __name__ == '__main__':
     TRAIN_USER_INTERACT = '../sample/train_interaction.txt' if USE_SAMPLE else '../data/train_interaction.txt'
     TEST_USER_INTERACT = '../sample/test_interaction.txt' if USE_SAMPLE else '../data/test_interaction.txt'
 
-    TRAIN_VISUAL_DIR = '../sample/preliminary_visual_train' if USE_SAMPLE else '../data/preliminary_visual_train'
-    TEST_VISUAL_DIR = '../sample/preliminary_visual_test' if USE_SAMPLE else '../data/preliminary_visual_test'
+    TRAIN_VISUAL_DIR = '../sample/visual_train' if USE_SAMPLE else '../data/visual_train'
+    TEST_VISUAL_DIR = '../sample/visual_test' if USE_SAMPLE else '../data/visual_test'
 
     TRAIN_VISUAL_MATRIX = '../sample/visual_train_matrix.blp' if USE_SAMPLE else '../data/visual_train_matrix.blp'
     TEST_VISUAL_MATRIX = '../sample/visual_test_matrix.blp' if USE_SAMPLE else '../data/visual_test_matrix.blp'
