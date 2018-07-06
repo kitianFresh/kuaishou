@@ -80,20 +80,22 @@ sample_text_train = photo_sample(text_train, sample_photo_ids_train)
 sample_text_train.to_csv('./sample/train_text.txt', sep='\t', index=False, header=False)
 print('text_train sampled')
 
+visual_train_path = './data/visual_train'
+visual_test_path = './data/visual_test'
 
 sample_visual_train_path = './sample/visual_train'
 sample_visual_test_path = './sample/visual_test'
 
 sample_visual_train = open(sample_visual_train_path,'w')
 for photo_id in sample_photo_ids_train:
-    sample_visual_train.write(sample_visual_train_path + '/' + str(photo_id))
+    sample_visual_train.write(visual_train_path + '/' + str(photo_id))
     sample_visual_train.write('\n')
 sample_visual_train.close()
 print('visual_train sampled')
 
 sample_visual_test = open(sample_visual_test_path,'w')
 for photo_id in sample_photo_ids_test:
-    sample_visual_test.write(sample_visual_test_path + '/' + str(photo_id))
+    sample_visual_test.write(visual_test_path + '/' + str(photo_id))
     sample_visual_test.write('\n')
 sample_visual_test.close()
 print('visual_test sampled')
