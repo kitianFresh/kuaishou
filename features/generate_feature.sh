@@ -24,6 +24,7 @@ echo SAMPLE          = "${SAMPLE}"
 if [[ ${SAMPLE} == '1' ]];
 then
     python face_feature_extract.py -s
+    python text_classify.py -s
     python text_feature_extract.py -s
     python photo_feature_extract.py -s
     python user_feature_extract.py -s
@@ -31,6 +32,7 @@ then
     python feature_discretization.py -s
 else
     python face_feature_extract.py
+    python text_classify.py
     python text_feature_extract.py
     python photo_feature_extract.py
     python user_feature_extract.py

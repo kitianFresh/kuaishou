@@ -100,9 +100,11 @@ if __name__ == '__main__':
 
     ensemble_train = ensemble_train.sort_values('time')
     train_num = ensemble_train.shape[0]
-    train_data = ensemble_train.iloc[:int(train_num * 0.7)].copy()
-    val_data = ensemble_train.iloc[int(train_num * 0.7):].copy()
-
+    train_data = ensemble_train.iloc[:int(train_num * 0.7)]
+    val_data = ensemble_train.iloc[int(train_num * 0.7):]
+    import gc
+    del ensemble_train
+    gc.collect()
     print(train_data.shape)
     print(val_data.shape)
     val_photo_ids = list(set(val_data['photo_id'].unique()) - set(train_data['photo_id'].unique()))
@@ -113,7 +115,9 @@ if __name__ == '__main__':
 
     print(y_train.mean(), y_train.std())
     print(y_val.mean(), y_val.std())
-
+    del train_data
+    del val_data
+    gc.collect()
     start_time_1 = time.clock()
 
     # RandomizedSearchCV参数说明，clf1设置训练的学习器
@@ -123,32 +127,16 @@ if __name__ == '__main__':
     # n_jobs = -1，使用所有的CPU进行训练，默认为1，使用1个CPU
     # model.clf = RandomizedSearchCV(LGBMClassifier(), param_dist, cv=3, scoring='roc_auc', n_iter=300, n_jobs=-1)
 
-    ind_params = {
-        'seed': 32,
-        'n_estimators': 200,
-        'learning_rate': 0.1,
-        'nthread': 1
-    }
-    params = {'max_depth': (4, 6, 8),
-              'subsample': (0.75, 0.8, 0.9, 1.0),
-              'colsample_bytree': (0.75, 0.8, 0.9, 1.0),
-              'num_leaves': (12, 16, 36, 48, 54, 60, 80, 100)
-              }
-
-    model.clf = EvolutionaryAlgorithmSearchCV(estimator=LGBMClassifier(**ind_params),
-                                         params=params,
-                                         scoring="roc_auc",
-                                         cv=3,
-                                         verbose=1,
-                                         population_size=50,
-                                         gene_mutation_prob=0.10,
-                                         gene_crossover_prob=0.5,
-                                         tournament_size=5,
-                                         generations_number=100,
-                                         n_jobs=cpu_count())
-    # 在训练集上训练
-    model.clf.fit(X_train, y_train.ravel())
-
+    model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=127,
+                                max_depth=8, learning_rate=0.1,
+                                n_estimators=1000,objective='binary',
+                                min_split_gain=0.0, min_child_weight=0.001,
+                                min_child_samples=20, subsample=0.8,
+                                subsample_freq=0, colsample_bytree=0.8,
+                                reg_alpha=0.0, reg_lambda=0.0,
+                                random_state=2018, n_jobs=-1,
+                                silent=False)
+    model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())], eval_metric='auc')
     # KFold cross validation
     # def cross_validate(*args, **kwargs):
     #     cv = StratifiedKFold(n_splits=3, random_state=0, shuffle=False)
