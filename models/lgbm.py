@@ -30,6 +30,7 @@ parser.add_argument('-d', '--description', help='description for a model, a json
 parser.add_argument('-a', '--all', help='use one ensemble table all, or merge by columns',action='store_true')
 parser.add_argument('-n', '--num-workers', help='num used to merge columns', default=cpu_count())
 parser.add_argument('-c', '--config-file', help='model config file', default='')
+parser.add_argument('-w', '--whole-data-train', help='use all data to train a model', action='store_true')
 
 args = parser.parse_args()
 
@@ -97,46 +98,61 @@ if __name__ == '__main__':
 
     print('Training model %s......' % model_name)
 
+    if args.whole_data_train:
+        X_train, y_train = ensemble_train[features_to_train].values, \
+                                         ensemble_train[y_label].values
 
-    ensemble_train = ensemble_train.sort_values('time')
-    train_num = ensemble_train.shape[0]
-    train_data = ensemble_train.iloc[:int(train_num * 0.7)]
-    val_data = ensemble_train.iloc[int(train_num * 0.7):]
-    import gc
-    del ensemble_train
-    gc.collect()
-    print(train_data.shape)
-    print(val_data.shape)
-    val_photo_ids = list(set(val_data['photo_id'].unique()) - set(train_data['photo_id'].unique()))
-    val_data = val_data.loc[val_data.photo_id.isin(val_photo_ids)]
-    print(val_data.shape)
-    X_train, X_val, y_train, y_val = train_data[features_to_train].values, val_data[features_to_train].values, \
-                                     train_data[y_label].values, val_data[y_label].values
+        print(y_train.mean(), y_train.std())
+        import gc
+        del ensemble_train
+        gc.collect()
+        start_time_1 = time.clock()
 
-    print(y_train.mean(), y_train.std())
-    print(y_val.mean(), y_val.std())
-    del train_data
-    del val_data
-    gc.collect()
-    start_time_1 = time.clock()
+        model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=127,
+                                    max_depth=8, learning_rate=0.1,
+                                    n_estimators=1000,objective='binary',
+                                    min_split_gain=0.0, min_child_weight=0.001,
+                                    min_child_samples=20, subsample=0.8,
+                                    subsample_freq=0, colsample_bytree=0.8,
+                                    reg_alpha=0.0, reg_lambda=0.0,
+                                    random_state=2018, n_jobs=-1,
+                                    silent=False)
+        model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel())], eval_metric='auc')
+    
+    else:
+        ensemble_train = ensemble_train.sort_values('time')
+        train_num = ensemble_train.shape[0]
+        train_data = ensemble_train.iloc[:int(train_num * 0.7)]
+        val_data = ensemble_train.iloc[int(train_num * 0.7):]
+        import gc
+        del ensemble_train
+        gc.collect()
+        print(train_data.shape)
+        print(val_data.shape)
+        val_photo_ids = list(set(val_data['photo_id'].unique()) - set(train_data['photo_id'].unique()))
+        val_data = val_data.loc[val_data.photo_id.isin(val_photo_ids)]
+        print(val_data.shape)
+        X_train, X_val, y_train, y_val = train_data[features_to_train].values, val_data[features_to_train].values, \
+                                         train_data[y_label].values, val_data[y_label].values
 
-    # RandomizedSearchCV参数说明，clf1设置训练的学习器
-    # param_dist字典类型，放入参数搜索范围
-    # scoring = 'neg_log_loss'，精度评价方式设定为“neg_log_loss“
-    # n_iter=300，训练300次，数值越大，获得的参数精度越大，但是搜索时间越长
-    # n_jobs = -1，使用所有的CPU进行训练，默认为1，使用1个CPU
-    # model.clf = RandomizedSearchCV(LGBMClassifier(), param_dist, cv=3, scoring='roc_auc', n_iter=300, n_jobs=-1)
+        print(y_train.mean(), y_train.std())
+        print(y_val.mean(), y_val.std())
+        del train_data
+        del val_data
+        gc.collect()
+        start_time_1 = time.clock()
 
-    model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=127,
-                                max_depth=8, learning_rate=0.1,
-                                n_estimators=1000,objective='binary',
-                                min_split_gain=0.0, min_child_weight=0.001,
-                                min_child_samples=20, subsample=0.8,
-                                subsample_freq=0, colsample_bytree=0.8,
-                                reg_alpha=0.0, reg_lambda=0.0,
-                                random_state=2018, n_jobs=-1,
-                                silent=False)
-    model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())], eval_metric='auc')
+        model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=127,
+                                    max_depth=8, learning_rate=0.1,
+                                    n_estimators=1000,objective='binary',
+                                    min_split_gain=0.0, min_child_weight=0.001,
+                                    min_child_samples=20, subsample=0.8,
+                                    subsample_freq=0, colsample_bytree=0.8,
+                                    reg_alpha=0.0, reg_lambda=0.0,
+                                    random_state=2018, n_jobs=-1,
+                                    silent=False)
+        model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())], eval_metric='auc')
+    
     # KFold cross validation
     # def cross_validate(*args, **kwargs):
     #     cv = StratifiedKFold(n_splits=3, random_state=0, shuffle=False)
