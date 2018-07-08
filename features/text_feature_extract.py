@@ -164,7 +164,11 @@ if __name__ == '__main__':
 
     CLASSIFY_MODEL_PATH = '../sample/classify_model' if USE_SAMPLE else '../data/classify_model'
     if not os.path.exists(CLASSIFY_MODEL_PATH + '.bin'):
-        raise LookupError("classify model not found,please run text_classify.py")
+        print("classify model not found, run text_classify.py")
+        if USE_SAMPLE:
+            os.system("python text_classify.py -s")
+        else:
+            os.system("python text_classify.py")
     else:
         classifier = fasttext.load_model(CLASSIFY_MODEL_PATH + '.bin', label_prefix='__label__')
     def word_classify(words):

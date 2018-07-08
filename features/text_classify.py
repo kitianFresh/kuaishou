@@ -71,9 +71,9 @@ if __name__ == '__main__':
     CLASSIFY_TRAIN_DATA_PATH = '../sample/classify_train_data' if USE_SAMPLE else '../data/classify_train_data'
     CLASSIFY_TEST_DATA_PATH = '../sample/classify_test_data' if USE_SAMPLE else '../data/classify_test_data'
 
-    if not os.path.exists(CLASSIFY_TRAIN_DATA_PATH) and not  os.path.exists(CLASSIFY_TEST_DATA_PATH):
-        text_data_click['classify_text'] = map(lambda x, y: classify_data_generate(x, y), text_data_click['click'],
-                                               text_data_click['cover_words'])
+    if not os.path.exists(CLASSIFY_TRAIN_DATA_PATH) and not os.path.exists(CLASSIFY_TEST_DATA_PATH):
+        text_data_click['classify_text'] = pd.Series(map(lambda x, y: classify_data_generate(x, y), text_data_click['click'],
+                                                         text_data_click['cover_words']))
         text_data_click = text_data_click.sample(frac=1)
         size = text_data_click.shape[0]
         num = int(size * 0.8)
