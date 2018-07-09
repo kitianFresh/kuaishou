@@ -58,6 +58,7 @@ if __name__ == '__main__':
     model = Classifier(None,dir=model_store_path, name=model_name,version=version, description=desc, features_to_train=features_to_train)
 
 
+    start = time.time()
     if all_one:
         ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
         ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
@@ -73,6 +74,8 @@ if __name__ == '__main__':
         ensemble_train = fm_trainer.merge()
         ensemble_test = fm_tester.merge()
 
+    end = time.time()
+    print('data read in %s seconds' % str(end-start))
 
     print(ensemble_train.info())
     print(ensemble_test.info())
@@ -117,35 +120,16 @@ if __name__ == '__main__':
     print(y_train.mean(), y_train.std())
     print(y_val.mean(), y_val.std())
 
-    start_time_1 = time.clock()
-    '''
-    ('user_id', 15140)
-    ('photo_id', 4278686)
-    ('browse_num', 3741)
-    ('click_num', 1067)
-    ('like_num', 139)
-    ('follow_num', 54)
-    ('playing_sum', 6794)
-    ('duration_sum', 12945)
-    ('browse_time_diff', 13162)
-    ('exposure_num', 1401)
-    ('face_num', 19)
-    ('man_num', 17)
-    ('woman_num', 19)
-    ('cover_length', 159)
-    ('key_words_num', 143)
-    ('time', 1470800)
-    ('duration_time', 946)
-    '''
+
     cat_feature_inds = []
     descreate_max_num = args.descreate_max_num
     for i, c in enumerate(train_data[features_to_train].columns):
         num_uniques = train_data[features_to_train][c].nunique()
         if num_uniques < descreate_max_num:
             cat_feature_inds.append(i)
-
-    model.clf = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU', eval_metric='logloss')
-    model.clf.fit(X_train, y_train.ravel(), cat_features=cat_feature_inds, eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())])
+    start = time.time()
+    model.clf = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU')
+    model.clf.fit(X_train, y_train.ravel(), cat_features=cat_feature_inds, eval_set=(X_train, y_train.ravel()))
     # # KFold cross validation
     # def cross_validate(*args, **kwargs):
     #     cv = StratifiedKFold(n_splits=3, random_state=0, shuffle=False)
@@ -153,7 +137,7 @@ if __name__ == '__main__':
     #     return scores
     #
     # model.cross_validation(cross_validate)
-    print("Model trained in %s seconds" % (str(time.clock() - start_time_1)))
+    print("Model trained in %s seconds" % (str(time.time() - start)))
     if down_sample_rate < 1.:
         model.compute_metrics(X_val, y_val.ravel(), calibration_weight=down_sample_rate)
     else:

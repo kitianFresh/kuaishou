@@ -34,6 +34,9 @@ parser.add_argument('-a', '--all', help='use one ensemble table all, or merge by
 parser.add_argument('-n', '--num-workers', help='num used to merge columns', default=cpu_count())
 parser.add_argument('-c', '--config-file', help='model config file', default='')
 parser.add_argument('-g', '--gpu-mode', help='use gpu mode or not', action="store_true")
+parser.add_argument('-l', '--descreate-max-num', help='catboost model category feature descreate_max_num, max=48', default=30)
+
+
 
 
 args = parser.parse_args()
@@ -65,6 +68,7 @@ if __name__ == '__main__':
     model = Classifier(None, dir=model_store_path, name=model_name, version=version, description=desc,
                        features_to_train=features_to_train)
 
+    start = time.time()
     if all_one:
         ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
         ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
@@ -81,6 +85,9 @@ if __name__ == '__main__':
                                   pool_type='process', num_workers=num_workers)
         ensemble_train = fm_trainer.merge()
         ensemble_test = fm_tester.merge()
+
+    end = time.time()
+    print('data read in %s seconds' % str(end - start))
 
     print(ensemble_train.info())
     print(ensemble_test.info())
@@ -101,29 +108,11 @@ if __name__ == '__main__':
     # 这样划分出来的数据，训练集和验证集点击率分布不台符合
     # train_data, val_data, y_train, y_val = train_test_split(ensemble_train[id_features+features_to_train+y_label], ensemble_train[y_label], test_size=0.3, random_state=0)
 
-    # 决策树模型不需要归一化，本身就是范围划分
-
     print('Training model %s......' % model_name)
 
-    # ensemble_train = ensemble_train.sort_values('time')
-    # train_num = ensemble_train.shape[0]
-    # train_data = ensemble_train.iloc[:int(train_num * 0.7)].copy()
-    # val_data = ensemble_train.iloc[int(train_num * 0.7):].copy()
-    #
-    # print(train_data.shape)
-    # print(val_data.shape)
-    # val_photo_ids = list(set(val_data['photo_id'].unique()) - set(train_data['photo_id'].unique()))
-    # val_data = val_data.loc[val_data.photo_id.isin(val_photo_ids)]
-    # print(val_data.shape)
-    # X_train, X_val, y_train, y_val = train_data[features_to_train].values, val_data[features_to_train].values, \
-    #                                  train_data[y_label].values, val_data[y_label].values
-    #
-    # print(y_train.mean(), y_train.std())
-    # print(y_val.mean(), y_val.std())
-
-    print('开始CV 3折训练...')
+    print('开始CV 5折训练...')
     cat_feature_inds = []
-    descreate_max_num = 20
+    descreate_max_num = args.descreate_max_num
     for i, c in enumerate(ensemble_train[features_to_train].columns):
         if not str(ensemble_train[features_to_train][c].dtype).startswith('uint'): continue
         num_uniques = ensemble_train[features_to_train][c].nunique()
@@ -136,7 +125,7 @@ if __name__ == '__main__':
 
         def __init__(self, n, kf=None):
             self.n = n
-            self.kf = KFold(n_splits=3, shuffle=True, random_state=descreate_max_num * 26 + 1) if kf is None else kf
+            self.kf = KFold(n_splits=n, shuffle=True, random_state=descreate_max_num * 26 + 1) if kf is None else kf
             self.cats = []
 
         def fit(self, X, y, cat_features=cat_feature_inds):
@@ -159,7 +148,7 @@ if __name__ == '__main__':
                 X_val = X[val_index]
                 y_train = y[train_index]
                 y_val = y[val_index]
-                cat_model.fit(X_train, y_train.ravel(), cat_features=cat_features)
+                cat_model.fit(X_train, y_train.ravel(), cat_features=cat_features, eval_set=(X_train, y_train.ravel()))
                 self.cats_preds[:X_train.shape[0], i] = cat_model.predict_proba(X_train)[:, 1]
                 self.cats_preds[X_train.shape[0]:, i] = cat_model.predict_proba(X_val)[:, 1]
                 print('Indivisual catboost model {} train auc: {:15}'.format(i, roc_auc_score(y_train, cat_model.predict_proba(X_train)[:,1])))
@@ -179,7 +168,8 @@ if __name__ == '__main__':
             preds = np.zeros((data.shape[0], self.n))
             for i, cat_model in enumerate(self.cats):
                 preds[:, i] = cat_model.predict(data, prediction_type, ntree_start, ntree_end, thread_count, verbose)
-            return np.mean(preds, axis=1)
+            from scipy import stats
+            return stats.mode(preds, axis=1)[0]
 
 
     model.clf = CatBoostBaggingClassfier(3)
