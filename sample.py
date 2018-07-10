@@ -1,9 +1,20 @@
 import random
 import pandas as pd
-import numpy as np
 import functools
+import argparse
+import sys
 
-random.seed(a=777)
+sys.path.append("..")
+from multiprocessing import cpu_count
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-s', '--seed', help='sample random seed, default 777', default=777)
+parser.add_argument('-p', '--prop', help='sample propotion, default 0.15', default=0.15)
+args = parser.parse_args()
+
+
+random.seed(a=args.seed)
 
 def user_sample(group, prop):
     n = group.shape[0]
@@ -46,13 +57,13 @@ text_test = pd.read_csv('./data/test_text.txt',
                        header=None,
                        names=['photo_id', 'cover_words'])
 
-user_sample = functools.partial(user_sample, prop=0.15)
+user_sample = functools.partial(user_sample, prop=args.prop)
 sample_user_item_test = user_item_test.groupby(['user_id']).apply(user_sample)
 sample_user_item_test.reset_index(drop=True, inplace=True)
 sample_user_item_test.to_csv('./sample/test_interaction.txt', sep='\t', index=False, header=False)
 print('user_item_test sampled')
 
-user_sample = functools.partial(user_sample, prop=0.15)
+user_sample = functools.partial(user_sample, prop=args.prop)
 sample_user_item_train = user_item_train.groupby(['user_id']).apply(user_sample)
 sample_user_item_train.reset_index(drop=True, inplace=True)
 sample_user_item_train.to_csv('./sample/train_interaction.txt', sep='\t', index=False, header=False)
