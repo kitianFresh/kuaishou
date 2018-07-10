@@ -5,6 +5,7 @@ import argparse
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from multiprocessing import cpu_count
 sys.path.append("..")
     
 import pandas as pd
@@ -17,7 +18,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-p', '--pool-type', help='pool type, threads or process, here use process for more performance')
-parser.add_argument('-n', '--num-workers', help='workers num in pool')
+parser.add_argument('-n', '--num-workers', help='workers num in pool', default=cpu_count())
 parser.add_argument('-c', '--column-split', help='column to split', action='append')
 parser.add_argument('-t', '--table', help='original table used to split')
 
