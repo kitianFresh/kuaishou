@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 
 from common.utils import read_data, store_data
+from conf.modelconf import *
 
 def add_face_feature(face_data):
     face_data['faces'] = face_data['faces'].apply(eval)
@@ -29,18 +30,23 @@ def add_face_feature(face_data):
 
 
 parser = argparse.ArgumentParser()
-# parser.add_argument('-s', '--sample',type=str2bool, help='use sample data or full data', required=True)
-parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
+parser.add_argument('-o', '--online', help='online feature extract', action="store_true")
+parser.add_argument('-k', '--offline-kfold', help='offline kth fold feature extract, extract kth fold', default=1)
 args = parser.parse_args()
 
 if __name__ == '__main__':
     
-    USE_SAMPLE = args.sample
     fmt = args.format if args.format else 'csv'
-    
-    TRAIN_FACE = '../sample/train_face.txt' if USE_SAMPLE else '../data/train_face.txt'
-    TEST_FACE = '../sample/test_face.txt' if USE_SAMPLE else '../data/test_face.txt'
+    kfold = int(args.offline_kfold)
+    if args.online:
+        TRAIN_FACE, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('train_face.txt', args.online)
+        TEST_FACE, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('test_face.txt', args.online)
+    else:
+        TRAIN_FACE, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('train_face' + str(kfold) + '.txt', args.online)
+        TEST_FACE, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('test_face' + str(kfold) + '.txt', args.online)
+
+
     face_train = pd.read_csv(TRAIN_FACE, 
                             sep='\t', 
                             header=None, 
@@ -60,9 +66,11 @@ if __name__ == '__main__':
     face_data.drop(['faces'],axis=1,inplace=True)
     face_data.fillna(0, inplace=True)
 
-    FACE_FEATURE_FILE = 'face_feature'
-    FACE_FEATURE_FILE = FACE_FEATURE_FILE + '_sample' + '.' + fmt if USE_SAMPLE else FACE_FEATURE_FILE + '.' + fmt
-    feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
-    if not os.path.exists(feature_store_path):
-        os.mkdir(feature_store_path)    
-    store_data(face_data, os.path.join(feature_store_path, FACE_FEATURE_FILE), fmt)
+    if args.online:
+        FACE_FEATURE_FILE = 'face_feature' + '.' + fmt
+    else:
+        FACE_FEATURE_FILE = 'face_feature' + str(kfold) + '.' + fmt
+
+    if not os.path.exists(feature_store_dir):
+        os.mkdir(feature_store_dir)
+    store_data(face_data, os.path.join(feature_store_dir, FACE_FEATURE_FILE), fmt)

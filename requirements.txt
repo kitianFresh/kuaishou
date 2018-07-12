@@ -4,6 +4,7 @@ matplotlib
 matplotlib-venn
 seaborn
 sklearn
+sklearn-deap
 CMake
 Cython
 bloscpack

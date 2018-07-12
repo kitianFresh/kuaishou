@@ -11,24 +11,31 @@ from common import utils
 from common.utils import *
 from conf.modelconf import *
 
+from conf.modelconf import *
+
 parser = argparse.ArgumentParser()
-parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
+parser.add_argument('-o', '--online', help='online feature extract', action="store_true")
+parser.add_argument('-k', '--offline-kfold', help='offline kth fold feature extract, extract kth fold', default=1)
 args = parser.parse_args()
 
 if __name__ == '__main__':
-    
-    USE_SAMPLE = args.sample
-    fmt = args.format if args.format else 'csv'
-    feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
-    
-    ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
-    ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
-    ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
 
-    ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
-    ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
-    ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
+    fmt = args.format if args.format else 'csv'
+    kfold = int(args.offline_kfold)
+    if args.online:
+        TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('train_interaction.txt')
+        ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train' + '.' + fmt
+        ALL_FEATURE_TEST_FILE = 'ensemble_feature_test' + '.' + fmt
+
+    else:
+        TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
+        'train_interaction' + str(kfold) + '.txt', online=False)
+        ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train' + str(kfold) + '.' + fmt
+        ALL_FEATURE_TEST_FILE = 'ensemble_feature_test' + str(kfold) + '.' + fmt
+
+    ensemble_train = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TRAIN_FILE), fmt)
+    ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
 
     print(ensemble_train.info())
     print(ensemble_test.info())
@@ -62,19 +69,20 @@ if __name__ == '__main__':
     cate_train = user_item_cate.iloc[:num_train, :]
     cate_train[y_label[0]] = y
     cate_test = user_item_cate.iloc[num_train:, :]
+    # for offline
+    if not args.online:
+        cate_test[y_label[0]] = ensemble_test[y_label].values
     print(cate_train.info())
     print(cate_train.head())
     print(cate_test.info())
     print(cate_test.head())
     
-    feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
-    if not os.path.exists(feature_store_path):
-        os.mkdir(feature_store_path)    
+    if args.online:
+        CATE_TRAIN_FILE = 'ensemble_cate_feature_train' + '.' + fmt
+        CATE_TEST_FILE = 'ensemble_cate_feature_test' + '.' + fmt
+    else:
+        CATE_TRAIN_FILE = 'ensemble_cate_feature_train' + str(kfold) + '.' + fmt
+        CATE_TEST_FILE = 'ensemble_cate_feature_test' + str(kfold) + '.' + fmt
 
-    CATE_TRAIN_FILE = 'ensemble_cate_feature_train'
-    CATE_TRAIN_FILE = CATE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else CATE_TRAIN_FILE + '.' + fmt
-    store_data(cate_train, os.path.join(feature_store_path, CATE_TRAIN_FILE), fmt)
-
-    CATE_TEST_FILE = 'ensemble_cate_feature_test'
-    CATE_TEST_FILE = CATE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else CATE_TEST_FILE + '.' + fmt
-    store_data(cate_test, os.path.join(feature_store_path, CATE_TEST_FILE), fmt)
+    store_data(cate_train, os.path.join(feature_store_dir, CATE_TRAIN_FILE), fmt)
+    store_data(cate_test, os.path.join(feature_store_dir, CATE_TEST_FILE), fmt)

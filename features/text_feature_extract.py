@@ -13,21 +13,43 @@ import fasttext
 from common.utils import read_data, store_data
 from text_cluster import train_cluster_model,cluster_model_predict
 from word_embedding import load_model,train_word2vec
+from conf.modelconf import *
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
+parser.add_argument('-o', '--online', help='online feature extract', action="store_true")
+parser.add_argument('-k', '--offline-kfold', help='offline kth fold feature extract, extract kth fold', default=1)
 args = parser.parse_args()
 
 if __name__ == '__main__':
 
-    USE_SAMPLE = args.sample
     fmt = args.format if args.format else 'csv'
+    kfold = int(args.offline_kfold)
+    if args.online:
+        TRAIN_TEXT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('train_text.txt',
+                                                                                              args.online)
+        TEST_TEXT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('test_text.txt',
+                                                                                             args.online)
+        TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
+            'train_interaction.txt')
 
-    TRAIN_TEXT = '../sample/train_text.txt' if USE_SAMPLE else '../data/train_text.txt'
-    TEST_TEXT = '../sample/test_text.txt' if USE_SAMPLE else '../data/test_text.txt'
+    else:
+        TRAIN_TEXT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
+            'train_text' + str(kfold) + '.txt', online=False)
+        TEST_TEXT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
+            'test_text' + str(kfold) + '.txt', online=False)
 
-    TRAIN_USER_INTERACT = '../sample/train_interaction.txt' if USE_SAMPLE else '../data/train_interaction.txt'
+        TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
+        'train_interaction' + str(kfold) + '.txt', online=False)
+
+    # trained once, use anywhere, shared for all online or offline folds
+    DICTIONARY_PATH = os.path.join(data_dir, 'dictionary.txt')
+    TFIDF_MODEL_PATH = os.path.join(data_dir, 'tfidf_model.model')
+    WORD2VEC_MODEL_PATH = os.path.join(data_dir, 'word2vec.model')
+    CLUSTER_MODEL_PATH = os.path.join(data_dir, 'doc_cluster')
+    CLASSIFY_MODEL_PATH = os.path.join(data_dir, 'classify_model')
+
+
     user_interact_train = pd.read_csv(TRAIN_USER_INTERACT,
                                       sep='\t',
                                       usecols=[1,2],
@@ -77,7 +99,6 @@ if __name__ == '__main__':
         corpus.append(cover_words)
 
     # 词典
-    DICTIONARY_PATH = '../sample/dictionary.txt' if USE_SAMPLE else '../data/dictionary.txt'
     if not os.path.exists(DICTIONARY_PATH):
         dictionary = corpora.Dictionary(corpus)
         dictionary.save(DICTIONARY_PATH)
@@ -87,7 +108,6 @@ if __name__ == '__main__':
     corpus_index = [dictionary.doc2bow(text) for text in corpus]
 
     # tfidf模型
-    TFIDF_MODEL_PATH = '../sample/tfidf_model.model' if USE_SAMPLE else '../data/tfidf_model.model'
     if not os.path.exists(TFIDF_MODEL_PATH):
         tfidf_model = models.TfidfModel(corpus_index)
         tfidf_model.save(TFIDF_MODEL_PATH)
@@ -128,7 +148,6 @@ if __name__ == '__main__':
     text_data['avg_tfidf'] = avg_tfidf
 
 
-    WORD2VEC_MODEL_PATH = '../sample/word2vec.model' if USE_SAMPLE else '../data/word2vec.model'
     word_embedding_corpus = []
     if os.path.exists(WORD2VEC_MODEL_PATH):
         model = load_model(WORD2VEC_MODEL_PATH)
@@ -152,7 +171,6 @@ if __name__ == '__main__':
             word_embedding_corpus.append(word_embedding)
     word_embedding_corpus = np.array(word_embedding_corpus)
 
-    CLUSTER_MODEL_PATH = '../sample/doc_cluster' if USE_SAMPLE else '../data/doc_cluster'
     cluster_nums = 20
     if os.path.exists(CLUSTER_MODEL_PATH + '_kmeans.pkl'):
         text_data['text_cluster_label'] = cluster_model_predict(CLUSTER_MODEL_PATH,word_embedding_corpus)
@@ -162,13 +180,9 @@ if __name__ == '__main__':
 
     text_data.drop(['cover_words'], axis=1, inplace=True)
 
-    CLASSIFY_MODEL_PATH = '../sample/classify_model' if USE_SAMPLE else '../data/classify_model'
     if not os.path.exists(CLASSIFY_MODEL_PATH + '.bin'):
         print("classify model not found, run text_classify.py")
-        if USE_SAMPLE:
-            os.system("python text_classify.py -s")
-        else:
-            os.system("python text_classify.py")
+        os.system("python text_classify.py")
     else:
         classifier = fasttext.load_model(CLASSIFY_MODEL_PATH + '.bin', label_prefix='__label__')
     def word_classify(words):
@@ -185,11 +199,14 @@ if __name__ == '__main__':
     text_data['text_class_label'] = text_data['cover_words_4_predict'].apply(word_classify)
     text_data.drop(['cover_words_4_predict'],axis=1,inplace =True)
 
-    text_data['have_text_cate'] = text_data['cover_length'].apply(lambda x: x>0)
+    text_data['have_text_cate'] = text_data['cover_length'].apply(lambda x: x > 0).astype('bool')
 
-    TEXT_FEATURE_FILE = 'text_feature'
-    TEXT_FEATURE_FILE = TEXT_FEATURE_FILE + '_sample' + '.' + fmt if USE_SAMPLE else TEXT_FEATURE_FILE + '.' + fmt
-    feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
-    if not os.path.exists(feature_store_path):
-        os.mkdir(feature_store_path)
-    store_data(text_data, os.path.join(feature_store_path, TEXT_FEATURE_FILE), fmt)
+    if args.online:
+        TEXT_FEATURE_FILE = 'text_feature' + '.' + fmt
+    else:
+        TEXT_FEATURE_FILE = 'text_feature' + str(kfold) + '.' + fmt
+
+    print(text_data.info())
+    if not os.path.exists(feature_store_dir):
+        os.mkdir(feature_store_dir)
+    store_data(text_data, os.path.join(feature_store_dir, TEXT_FEATURE_FILE), fmt)

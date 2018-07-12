@@ -1,6 +1,7 @@
 #coding:utf8    
 
 import logging
+import numpy as np
 
 logging.basicConfig(level=logging.DEBUG,
                 format='%(asctime)s %(filename)s[line:%(lineno)d] [%(levelname)s] %(message)s',
@@ -94,21 +95,46 @@ uint8_cate_cols = ['browse_num_cate', 'click_num_cate', 'like_num_cate', 'follow
 #                     'man_num_cate', 'woman_num_cate', 'cover_length_cate', 'key_words_num_cate']
 
 feature_dtype_map = {}
+feature_dtype_converters = {}
 for name in uint64_cols:
-    feature_dtype_map.update({name: 'uint64'})
+    feature_dtype_map.update({name: np.uint64})
 for name in uint32_cols:
-    feature_dtype_map.update({name: 'uint32'})
+    feature_dtype_map.update({name: np.uint32})
 for name in uint16_cols:
-    feature_dtype_map.update({name: 'uint16'})
+    feature_dtype_map.update({name: np.uint16})
 for name in (uint8_cols + uint8_cate_cols):
-    feature_dtype_map.update({name: 'uint8'})
+    feature_dtype_map.update({name: np.uint8})
 for name in bool_cols:
-    feature_dtype_map.update({name: 'bool'})
+    feature_dtype_map.update({name: np.bool_})
 for name in float32_cols:
-    feature_dtype_map.update({name: 'float32'})
+    feature_dtype_map.update({name: np.float32})
 for name in float64_cols:
-    feature_dtype_map.update({name: 'float64'})
+    feature_dtype_map.update({name: np.float64})
 
 # BayesianSmoothing parameters, this already trained
 alpha = 2.5171267342473382
 beta = 7.087836849232511
+
+# data path config
+import os
+def get_root():
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+USE_SAMPLE = True
+
+data_dir = os.path.join(get_root(), 'sample') if USE_SAMPLE else os.path.join(get_root(), 'data')
+online_data_dir = os.path.join(data_dir, 'online')
+offline_data_dir = os.path.join(data_dir, 'offline')
+
+def get_data_file(name, online=True):
+    if online:
+        DATA = os.path.join(online_data_dir, name)
+        feature_store_dir = os.path.join(online_data_dir, 'feature')
+        col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
+        return DATA, online_data_dir, feature_store_dir, col_feature_store_dir
+
+    else:
+        DATA = os.path.join(offline_data_dir, name)
+        feature_store_dir = os.path.join(offline_data_dir, 'feature')
+        col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
+        return DATA, offline_data_dir, feature_store_dir, col_feature_store_dir

@@ -9,19 +9,41 @@ import argparse
 import sys
 import pandas as pd
 import fasttext
-
 sys.path.append('..')
+from conf.modelconf import *
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
+parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
+parser.add_argument('-o', '--online', help='online feature extract', action="store_true")
+parser.add_argument('-k', '--offline-kfold', help='offline kth fold feature extract, extract kth fold')
 args = parser.parse_args()
 
 if __name__ == '__main__':
-    USE_SAMPLE = args.sample
-    TRAIN_TEXT = '../sample/train_text.txt' if USE_SAMPLE else '../data/train_text.txt'
-    TEST_TEXT = '../sample/test_text.txt' if USE_SAMPLE else '../data/test_text.txt'
 
-    TRAIN_USER_INTERACT = '../sample/train_interaction.txt' if USE_SAMPLE else '../data/train_interaction.txt'
+    fmt = args.format if args.format else 'csv'
+    kfold = int(args.offline_kfold)
+    if args.online:
+        TRAIN_TEXT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('train_text.txt',
+                                                                                              args.online)
+        TEST_TEXT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('test_text.txt',
+                                                                                             args.online)
+        TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
+            'train_interaction.txt')
+
+    else:
+        TRAIN_TEXT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
+            'train_text' + str(kfold) + '.txt', online=False)
+        TEST_TEXT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
+            'test_text' + str(kfold) + '.txt', online=False)
+
+        TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
+        'train_interaction' + str(kfold) + '.txt', online=False)
+
+    # trained once, use anywhere, shared for all online or offline folds
+    CLASSIFY_MODEL_PATH = os.path.join(data_dir, 'classify_model')
+    CLASSIFY_TRAIN_DATA_PATH = os.path.join(data_dir, 'classify_train_data')
+    CLASSIFY_TEST_DATA_PATH = os.path.join(data_dir, 'classify_test_data')
+
     user_interact_train = pd.read_csv(TRAIN_USER_INTERACT,
                                       sep='\t',
                                       usecols=[1,2],
@@ -67,10 +89,6 @@ if __name__ == '__main__':
             return ''
 
 
-
-    CLASSIFY_TRAIN_DATA_PATH = '../sample/classify_train_data' if USE_SAMPLE else '../data/classify_train_data'
-    CLASSIFY_TEST_DATA_PATH = '../sample/classify_test_data' if USE_SAMPLE else '../data/classify_test_data'
-
     if not os.path.exists(CLASSIFY_TRAIN_DATA_PATH) and not os.path.exists(CLASSIFY_TEST_DATA_PATH):
         text_data_click['classify_text'] = pd.Series(map(lambda x, y: classify_data_generate(x, y), text_data_click['click'],
                                                          text_data_click['cover_words']))
@@ -89,8 +107,6 @@ if __name__ == '__main__':
             if sentence != '':
                 classift_test_data_file.write(sentence)
                 classift_test_data_file.write('\n')
-
-    CLASSIFY_MODEL_PATH = '../sample/classify_model' if USE_SAMPLE else '../data/classify_model'
 
     if not os.path.exists(CLASSIFY_MODEL_PATH + '.bin'):
         classifier = fasttext.supervised(CLASSIFY_TRAIN_DATA_PATH, CLASSIFY_MODEL_PATH, label_prefix='__label__')

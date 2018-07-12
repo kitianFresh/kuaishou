@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import scipy.special as special
 
-from conf.modelconf import feature_dtype_map
+from conf.modelconf import feature_dtype_map, feature_dtype_converters
 
 def load_config_from_pyfile(filename):
     """Updates the values in the config from a Python file.  This function
@@ -121,6 +121,7 @@ def read_data(path, fmt):
 def store_data(df, path, fmt, sep='\t', index=False):
     if fmt == 'csv':
         df.to_csv(path, sep=sep, index=index)
+        logging.info('to csv %s' % path)
     elif fmt == 'pkl':
         df.to_pickle(path)
     elif fmt == 'h5':
