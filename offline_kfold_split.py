@@ -6,7 +6,8 @@ import sys
 
 sys.path.append("..")
 from conf.modelconf import *
-
+import matplotlib
+matplotlib.use('Agg')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-k', '--kfold', help='split data by kfold for offline validation, this split make sure offline data has the same distribution with online, it will be used for kfold feature statistics to avoid data leakage', default=3)

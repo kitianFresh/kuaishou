@@ -20,6 +20,7 @@ from lightgbm import LGBMClassifier
 from common.utils import FeatureMerger, read_data, store_data, load_config_from_pyfile
 from common.base import Classifier
 from conf.modelconf import *
+
         
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
@@ -28,14 +29,12 @@ parser.add_argument('-d', '--description', help='description for a model, a json
 parser.add_argument('-a', '--all', help='use one ensemble table all, or merge by columns',action='store_true')
 parser.add_argument('-n', '--num-workers', help='num used to merge columns', default=cpu_count())
 parser.add_argument('-c', '--config-file', help='model config file', default='')
-parser.add_argument('-w', '--whole-data-train', help='use all data to train a model', action='store_true')
 
 args = parser.parse_args()
 
 
 if __name__ == '__main__':
     
-    USE_SAMPLE = args.sample
     fmt = args.format if args.format else 'csv'
     version = args.version
     desc = args.description
@@ -50,21 +49,20 @@ if __name__ == '__main__':
     
     model_name = 'lgbm'
 
+    model_store_path = './sample/' if USE_SAMPLE else './data'
 
-    feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
-
-    col_feature_store_path = '../sample/features/columns' if USE_SAMPLE else '../data/features/columns'
+    feature_store_dir = os.path.join(offline_data_dir, 'feature')
+    col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
 
     model = Classifier(None,dir=model_store_path, name=model_name,version=version, description=desc, features_to_train=features_to_train)
 
-    if all_one:
-        ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
-        ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
-        ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
 
-        ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
-        ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
-        ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
+    if all_one:
+        ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train' + '.' + fmt
+        ensemble_train = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TRAIN_FILE), fmt)
+
+        ALL_FEATURE_TEST_FILE = 'ensemble_feature_test' + '.' + fmt
+        ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
     else:
         feature_to_use = user_features + photo_features + time_features
         fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=num_workers)
@@ -95,67 +93,25 @@ if __name__ == '__main__':
 
     print('Training model %s......' % model_name)
 
-    if args.whole_data_train:
-        X_train, y_train = ensemble_train[features_to_train].values, \
-                                         ensemble_train[y_label].values
+    X_train, y_train = ensemble_train[features_to_train].values, \
+                                     ensemble_train[y_label].values
 
-        print(y_train.mean(), y_train.std())
-        import gc
-        del ensemble_train
-        gc.collect()
-        start_time_1 = time.clock()
+    print(y_train.mean(), y_train.std())
+    import gc
+    del ensemble_train
+    gc.collect()
+    start_time_1 = time.clock()
 
-        model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=127,
-                                    max_depth=8, learning_rate=0.1,
-                                    n_estimators=1000,objective='binary',
-                                    min_split_gain=0.0, min_child_weight=0.001,
-                                    min_child_samples=20, subsample=0.8,
-                                    subsample_freq=0, colsample_bytree=0.8,
-                                    reg_alpha=0.0, reg_lambda=0.0,
-                                    random_state=2018, n_jobs=-1,
-                                    silent=False)
-        model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel())], eval_metric='auc')
-    
-    else:
-        ensemble_train = ensemble_train.sort_values('time')
-        train_num = ensemble_train.shape[0]
-        train_data = ensemble_train.iloc[:int(train_num * 0.7)]
-        val_data = ensemble_train.iloc[int(train_num * 0.7):]
-        import gc
-        del ensemble_train
-        gc.collect()
-        print(train_data.shape)
-        print(val_data.shape)
-        val_photo_ids = list(set(val_data['photo_id'].unique()) - set(train_data['photo_id'].unique()))
-        val_data = val_data.loc[val_data.photo_id.isin(val_photo_ids)]
-        print(val_data.shape)
-        X_train, X_val, y_train, y_val = train_data[features_to_train].values, val_data[features_to_train].values, \
-                                         train_data[y_label].values, val_data[y_label].values
-
-        print(y_train.mean(), y_train.std())
-        print(y_val.mean(), y_val.std())
-        del train_data
-        del val_data
-        gc.collect()
-        start_time_1 = time.clock()
-
-        model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=127,
-                                    max_depth=8, learning_rate=0.1,
-                                    n_estimators=1000,objective='binary',
-                                    min_split_gain=0.0, min_child_weight=0.001,
-                                    min_child_samples=20, subsample=0.8,
-                                    subsample_freq=0, colsample_bytree=0.8,
-                                    reg_alpha=0.0, reg_lambda=0.0,
-                                    random_state=2018, n_jobs=-1,
-                                    silent=False)
-        model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())], eval_metric='auc')
-    
-    # KFold cross validation
-    # def cross_validate(*args, **kwargs):
-    #     cv = StratifiedKFold(n_splits=3, random_state=0, shuffle=False)
-    #     scores = cross_val_score(model.clf, X, y.ravel(), cv=cv, scoring='roc_auc')
-    #     return scores
-    # model.cross_validation(cross_validate)
+    model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=127,
+                                max_depth=5, learning_rate=0.01,
+                                n_estimators=500,objective='binary',
+                                min_split_gain=0.0, min_child_weight=0.001,
+                                min_child_samples=200, subsample=0.8,
+                                subsample_freq=0, colsample_bytree=0.8,
+                                reg_alpha=0.0, reg_lambda=0.0,
+                                random_state=2018, n_jobs=-1,
+                                silent=False)
+    model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel())], eval_metric='auc')
     print("Model trained in %s seconds" % (str(time.clock() - start_time_1)))
 
     # 首先声明两者所要实现的功能是一致的（将多维数组降位一维），两者的区别在于返回拷贝（copy）还是返回视图（view），numpy.flatten()返回一份拷贝，对拷贝所做的修改不会影响（reflects）原始矩阵，而numpy.ravel()返回的是视图（view)，会影响（reflects）原始矩阵。
