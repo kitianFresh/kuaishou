@@ -81,11 +81,35 @@ for i in range(kfold):
     val_photo_ids = list(set(kfold_user_item_val['photo_id'].unique()) - set(kfold_user_item_train['photo_id'].unique()))
     print(len(kfold_users))
     print(len(val_photo_ids))
+    print(len(set(kfold_user_item_val['photo_id'].unique())))
+    print('train click mean: %s' % user_item_train['click'].mean())
     kfolds.append((kfold_users, set(val_photo_ids)))
-
+    print('val click mean before remove intersection: %s' % kfold_user_item_val['click'].mean())
     kfold_user_item_val = kfold_user_item_val.loc[kfold_user_item_val.photo_id.isin(val_photo_ids)]
+    print('val click mean after remove intersection: %s' % kfold_user_item_val['click'].mean())
+    pos_kfold_user_item_val = kfold_user_item_val[kfold_user_item_val['click']==1]
+    neg_kfold_user_item_val =  kfold_user_item_val[kfold_user_item_val['click']==0]
+    # negative_sample_ratio = (1-ctr_o)*c_s/(ctr_o * u_s)
+    ctr_o = user_item_train['click'].mean()
+    c_s = pos_kfold_user_item_val.shape[0]
+    u_s = neg_kfold_user_item_val.shape[0]
+    print(ctr_o, c_s, u_s)
+    negative_sample_ratio = (1 - ctr_o) * c_s / (ctr_o * u_s)
+    print(negative_sample_ratio)
+    def negative_sample(group):
+        n = group.shape[0]
+        m = int(negative_sample_ratio * n)
+        m = n if m == 0 else m
+        group = group.iloc[random.sample(range(n), m)]
+        return group
+    neg_kfold_user_item_val = neg_kfold_user_item_val.groupby(['user_id']).apply(negative_sample)
+    kfold_user_item_val = pd.concat([pos_kfold_user_item_val, neg_kfold_user_item_val]).reset_index(drop=True)
+    val_photo_ids = set(kfold_user_item_val['photo_id'].unique())
     kfold_user_item_train = user_item_train.loc[~user_item_train.photo_id.isin(val_photo_ids)]
+    print('val click mean after neg sample: %s' % kfold_user_item_val['click'].mean())
+    print('train click mean after neg sample: %s' % kfold_user_item_train['click'].mean())
 
+                        
     kfold_user_item_val.to_csv(os.path.join(offline_data_dir, 'test_interaction' + str(i) + '.txt'), sep='\t', index=False, header=False)
     print(kfold_user_item_val.info())
     print('The %dth fold test_interaction extracted' % i)
