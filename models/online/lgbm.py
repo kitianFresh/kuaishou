@@ -29,6 +29,7 @@ parser.add_argument('-d', '--description', help='description for a model, a json
 parser.add_argument('-a', '--all', help='use one ensemble table all, or merge by columns',action='store_true')
 parser.add_argument('-n', '--num-workers', help='num used to merge columns', default=cpu_count())
 parser.add_argument('-c', '--config-file', help='model config file', default='')
+parser.add_argument('-g', '--gpu-mode', help='use gpu mode or not', action="store_true")
 
 args = parser.parse_args()
 
@@ -109,7 +110,7 @@ if __name__ == '__main__':
                                 min_child_samples=200, subsample=0.8,
                                 subsample_freq=0, colsample_bytree=0.8,
                                 reg_alpha=0.0, reg_lambda=0.0,
-                                random_state=2018, n_jobs=-1,
+                                random_state=2018, n_jobs=-1, device='gpu' if args.gpu_mode else 'cpu',
                                 silent=False)
     model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel())], eval_metric='auc')
     print("Model trained in %s seconds" % (str(time.clock() - start_time_1)))
