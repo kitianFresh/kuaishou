@@ -10,7 +10,7 @@ sys.path.append("../..")
 from multiprocessing import cpu_count
 
 import numpy as np
-from sklearn.model_selection import cross_val_score, train_test_split, StratifiedKFold, RandomizedSearchCV
+from sklearn.model_selection import cross_val_score, train_test_split, StratifiedKFold, RandomizedSearchCV, GridSearchCV
 from evolutionary_search import EvolutionaryAlgorithmSearchCV
 
 from lightgbm import LGBMClassifier
@@ -103,7 +103,12 @@ if __name__ == '__main__':
     del ensemble_train
     gc.collect()
     start_time_1 = time.time()
+    p_test3 = {'learning_rate':[0.15,0.1,0.05,0.01,0.005,0.001], 'n_estimators':[100,250,500,750,1000,1250,1500,1750]}
 
+    tuning = GridSearchCV(estimator=LGBMClassifier(random_state=2018),
+            param_grid = p_test3, scoring='roc_auc',n_jobs=4,iid=False, cv=3)
+    tuning.fit(X_train,y_train, eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())], eval_metric='auc')
+    print(tuning.grid_scores_, tuning.best_params_, tuning.best_score_)
     model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=127,
                                 max_depth=8, learning_rate=0.1,
                                 n_estimators=1000,objective='binary',
