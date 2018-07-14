@@ -50,10 +50,9 @@ if __name__ == '__main__':
     model_name = 'catboost'
 
     model_store_path = './sample/' if USE_SAMPLE else './data'
-    
-    feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
 
-    col_feature_store_path = '../sample/features/columns' if USE_SAMPLE else '../data/features/columns'
+    feature_store_dir = os.path.join(offline_data_dir, 'feature')
+    col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
 
     model = Classifier(None,dir=model_store_path, name=model_name,version=version, description=desc, features_to_train=features_to_train)
 
@@ -110,8 +109,8 @@ if __name__ == '__main__':
 
     cat_feature_inds = []
     descreate_max_num = args.descreate_max_num
-    for i, c in enumerate(train_data[features_to_train].columns):
-        num_uniques = train_data[features_to_train][c].nunique()
+    for i, c in enumerate(ensemble_train[features_to_train].columns):
+        num_uniques = ensemble_train[features_to_train][c].nunique()
         if num_uniques < descreate_max_num:
             print(c, num_uniques, descreate_max_num)
             cat_feature_inds.append(i)
