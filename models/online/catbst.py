@@ -109,7 +109,9 @@ if __name__ == '__main__':
             print(i, c, num_uniques, descreate_max_num)
             cat_feature_inds.append(i)
     start = time.time()
-    model.clf = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU')
+    model.clf = CatBoostClassifier(iterations=3000, task_type='GPU' if gpu_mode else 'CPU', gpu_cat_features_storage='CpuPinnedMemory', pinned_memory_size=2147483648, logging_level='Debug')
+    #model.clf = CatBoostClassifier(iterations=3000, task_type='GPU' if gpu_mode else 'CPU', gpu_cat_features_storage='CpuPinnedMemory', pinned_memory_size=2147483648)
+
     model.clf.fit(X_train, y_train.ravel(), cat_features=cat_feature_inds, eval_set=(X_train, y_train.ravel()))
     # # KFold cross validation
     # def cross_validate(*args, **kwargs):
