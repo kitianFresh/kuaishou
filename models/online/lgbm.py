@@ -6,7 +6,7 @@ import os
 import argparse
 import sys
 import time
-sys.path.append("..")
+sys.path.append("../../")
 from multiprocessing import cpu_count
 
 import numpy as np
@@ -14,8 +14,6 @@ from sklearn.model_selection import cross_val_score, train_test_split, Stratifie
 from evolutionary_search import EvolutionaryAlgorithmSearchCV
 
 from lightgbm import LGBMClassifier
-
-# from conf.modelconf import user_action_features, face_features, user_face_favor_features, id_features, time_features, photo_features, user_features, y_label, features_to_train
 
 from common.utils import FeatureMerger, read_data, store_data, load_config_from_pyfile
 from common.base import Classifier
@@ -66,8 +64,8 @@ if __name__ == '__main__':
         ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
     else:
         feature_to_use = user_features + photo_features + time_features
-        fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=num_workers)
-        fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=num_workers)
+        fm_trainer = FeatureMerger(col_feature_store_dir, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=num_workers)
+        fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=num_workers)
         ensemble_train = fm_trainer.merge()
         ensemble_test = fm_tester.merge()
 
@@ -89,8 +87,6 @@ if __name__ == '__main__':
     # ensemble_train = shuffle(ensemble_train)
     # 这样划分出来的数据，训练集和验证集点击率分布不台符合
     # train_data, val_data, y_train, y_val = train_test_split(ensemble_train[id_features+features_to_train+y_label], ensemble_train[y_label], test_size=0.3, random_state=0)
-
-    # 决策树模型不需要归一化，本身就是范围划分
 
     print('Training model %s......' % model_name)
 
@@ -116,7 +112,7 @@ if __name__ == '__main__':
     print("Model trained in %s seconds" % (str(time.clock() - start_time_1)))
 
     # 首先声明两者所要实现的功能是一致的（将多维数组降位一维），两者的区别在于返回拷贝（copy）还是返回视图（view），numpy.flatten()返回一份拷贝，对拷贝所做的修改不会影响（reflects）原始矩阵，而numpy.ravel()返回的是视图（view)，会影响（reflects）原始矩阵。
-    model.compute_metrics(X_val, y_val.ravel())
+    model.compute_metrics(X_train, y_train.ravel())
     model.compute_features_distribution()
     model.save()
     model.submit(ensemble_test)

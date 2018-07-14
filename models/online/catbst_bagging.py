@@ -7,7 +7,7 @@ import argparse
 import sys
 import time
 
-sys.path.append("..")
+sys.path.append("../../")
 from multiprocessing import cpu_count
 
 import numpy as np
@@ -17,13 +17,12 @@ from sklearn.metrics import roc_auc_score
 
 from catboost import CatBoostClassifier
 
-# from conf.modelconf import user_action_features, face_features, user_face_favor_features, id_features, time_features, photo_features, user_features, y_label, features_to_train
+from conf.modelconf import *
 
 from common.utils import FeatureMerger, read_data, store_data, load_config_from_pyfile
 from common.base import Classifier
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-v', '--version',
                     help='model version, there will be a version control and a json description file for this model',
@@ -35,6 +34,7 @@ parser.add_argument('-n', '--num-workers', help='num used to merge columns', def
 parser.add_argument('-c', '--config-file', help='model config file', default='')
 parser.add_argument('-g', '--gpu-mode', help='use gpu mode or not', action="store_true")
 parser.add_argument('-l', '--descreate-max-num', help='catboost model category feature descreate_max_num, max=48', default=30)
+parser.add_argument('-b', '--bagging-num', help='catboost bagging base estimator num', default=5)
 
 
 
@@ -43,7 +43,6 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
 
-    USE_SAMPLE = args.sample
     fmt = args.format if args.format else 'csv'
     gpu_mode = args.gpu_mode
     version = args.version
@@ -61,9 +60,8 @@ if __name__ == '__main__':
 
     model_store_path = './sample/' if USE_SAMPLE else './data'
 
-    feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
-
-    col_feature_store_path = '../sample/features/columns' if USE_SAMPLE else '../data/features/columns'
+    feature_store_dir = os.path.join(offline_data_dir, 'feature')
+    col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
 
     model = Classifier(None, dir=model_store_path, name=model_name, version=version, description=desc,
                        features_to_train=features_to_train)
@@ -72,16 +70,16 @@ if __name__ == '__main__':
     if all_one:
         ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
         ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
-        ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
+        ensemble_train = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TRAIN_FILE), fmt)
 
         ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
         ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
-        ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
+        ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
     else:
         feature_to_use = user_features + photo_features + time_features
-        fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use + y_label, fmt=fmt, data_type='train',
+        fm_trainer = FeatureMerger(col_feature_store_dir, feature_to_use + y_label, fmt=fmt, data_type='train',
                                    pool_type='process', num_workers=num_workers)
-        fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test',
+        fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use, fmt=fmt, data_type='test',
                                   pool_type='process', num_workers=num_workers)
         ensemble_train = fm_trainer.merge()
         ensemble_test = fm_tester.merge()
@@ -110,11 +108,10 @@ if __name__ == '__main__':
 
     print('Training model %s......' % model_name)
 
-    print('开始CV 5折训练...')
+    print('开始CV %s 折训练...' % int(args.bagging_num))
     cat_feature_inds = []
-    descreate_max_num = args.descreate_max_num
+    descreate_max_num = int(args.descreate_max_num)
     for i, c in enumerate(ensemble_train[features_to_train].columns):
-        if not str(ensemble_train[features_to_train][c].dtype).startswith('uint'): continue
         num_uniques = ensemble_train[features_to_train][c].nunique()
         if num_uniques < descreate_max_num:
             print(i, c, num_uniques, descreate_max_num)
@@ -172,7 +169,7 @@ if __name__ == '__main__':
             return stats.mode(preds, axis=1)[0]
 
 
-    model.clf = CatBoostBaggingClassfier(3)
+    model.clf = CatBoostBaggingClassfier(int(args.bagging_num))
     model.clf.fit(ensemble_train[features_to_train].values, ensemble_train[y_label].values, cat_features=cat_feature_inds)
     # 首先声明两者所要实现的功能是一致的（将多维数组降位一维），两者的区别在于返回拷贝（copy）还是返回视图（view），numpy.flatten()返回一份拷贝，对拷贝所做的修改不会影响（reflects）原始矩阵，而numpy.ravel()返回的是视图（view)，会影响（reflects）原始矩阵。
     model.compute_metrics(ensemble_train[features_to_train].values, ensemble_train[y_label].values)

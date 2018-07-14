@@ -8,18 +8,14 @@ sys.path.append("..")
 from multiprocessing import cpu_count
 
 import pandas as pd
-
-from sklearn.model_selection import cross_val_score, train_test_split, StratifiedKFold, GridSearchCV
-from sklearn.metrics import classification_report
 from catboost import CatBoostClassifier
 
-from conf.modelconf import time_features, photo_features, user_features, y_label, features_to_train
+from conf.modelconf import *
 from common.utils import FeatureMerger, read_data, store_data
 from common.base import Classifier
 
         
 parser = argparse.ArgumentParser()
-parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-v', '--version', help='model version, there will be a version control and a json description file for this model', required=True)
 parser.add_argument('-d', '--description', help='description for a model, a json description file attached to a model', required=True)
@@ -37,7 +33,6 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
     
-    USE_SAMPLE = args.sample
     gpu_mode = args.gpu_mode
     fmt = args.format if args.format else 'csv'
     version = args.version
@@ -51,10 +46,9 @@ if __name__ == '__main__':
 
     model_store_path = './sample/' if USE_SAMPLE else './data'
     
-    feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
-
-    col_feature_store_path = '../sample/features/columns' if USE_SAMPLE else '../data/features/columns'
-
+    feature_store_dir = os.path.join(offline_data_dir, 'feature')
+    col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
+    
     model = Classifier(None,dir=model_store_path, name=model_name,version=version, description=desc, features_to_train=features_to_train)
 
 
@@ -62,15 +56,15 @@ if __name__ == '__main__':
     if all_one:
         ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
         ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
-        ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
+        ensemble_train = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TRAIN_FILE), fmt)
 
         ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
         ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
-        ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
+        ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
     else:
         feature_to_use = user_features + photo_features + time_features
-        fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=num_workers)
-        fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=num_workers)
+        fm_trainer = FeatureMerger(col_feature_store_dir, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=num_workers)
+        fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=num_workers)
         ensemble_train = fm_trainer.merge()
         ensemble_test = fm_tester.merge()
 
@@ -104,28 +98,17 @@ if __name__ == '__main__':
 
     print('Training model %s......' % model_name)
 
-    ensemble_train = ensemble_train.sort_values('time')
-    train_num = ensemble_train.shape[0]
-    train_data = ensemble_train.iloc[:int(train_num * 0.7)].copy()
-    val_data = ensemble_train.iloc[int(train_num * 0.7):].copy()
-
-    print(train_data.shape)
-    print(val_data.shape)
-    val_photo_ids = list(set(val_data['photo_id'].unique()) - set(train_data['photo_id'].unique()))
-    val_data = val_data.loc[val_data.photo_id.isin(val_photo_ids)]
-    print(val_data.shape)
-    X_train, X_val, y_train, y_val = train_data[features_to_train].values, val_data[features_to_train].values, \
-                                     train_data[y_label].values, val_data[y_label].values
+    X_train, y_train = ensemble_train[features_to_train].values, ensemble_train[y_label].values
 
     print(y_train.mean(), y_train.std())
-    print(y_val.mean(), y_val.std())
 
 
     cat_feature_inds = []
-    descreate_max_num = args.descreate_max_num
-    for i, c in enumerate(train_data[features_to_train].columns):
-        num_uniques = train_data[features_to_train][c].nunique()
+    descreate_max_num = int(args.descreate_max_num)
+    for i, c in enumerate(ensemble_train[features_to_train].columns):
+        num_uniques = ensemble_train[features_to_train][c].nunique()
         if num_uniques < descreate_max_num:
+            print(i, c, num_uniques, descreate_max_num)
             cat_feature_inds.append(i)
     start = time.time()
     model.clf = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU')
@@ -139,9 +122,9 @@ if __name__ == '__main__':
     # model.cross_validation(cross_validate)
     print("Model trained in %s seconds" % (str(time.time() - start)))
     if down_sample_rate < 1.:
-        model.compute_metrics(X_val, y_val.ravel(), calibration_weight=down_sample_rate)
+        model.compute_metrics(X_train, y_train.ravel(), calibration_weight=down_sample_rate)
     else:
-        model.compute_metrics(X_val, y_val.ravel())
+        model.compute_metrics(X_train, y_train.ravel())
 
     model.compute_features_distribution()
 
@@ -156,14 +139,13 @@ if __name__ == '__main__':
         # "There is {} strongly correlated values with click:\n{}".format(len(golden_features_corr), golden_features_corr))
 
         golden_features = golden_features_tree
-        X_train, X_val, y_train, y_val = train_data[golden_features].values, val_data[golden_features].values, \
-                                         train_data[y_label].values, val_data[y_label].values
+        X_train, y_train = ensemble_train[golden_features].values, ensemble_train[y_label].values
 
         model.clf.fit(X_train, y_train.ravel())
         if down_sample_rate < 1.:
-            model.compute_metrics(X_val, y_val.ravel(), calibration_weight=down_sample_rate)
+            model.compute_metrics(X_train, y_train.ravel(), calibration_weight=down_sample_rate)
         else:
-            model.compute_metrics(X_val, y_val.ravel())
+            model.compute_metrics(X_train, y_train.ravel())
 
         model.compute_features_distribution(golden_features)
 

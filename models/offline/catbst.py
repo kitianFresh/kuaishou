@@ -19,7 +19,6 @@ from common.base import Classifier
 
         
 parser = argparse.ArgumentParser()
-parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-v', '--version', help='model version, there will be a version control and a json description file for this model', required=True)
 parser.add_argument('-d', '--description', help='description for a model, a json description file attached to a model', required=True)
@@ -108,7 +107,7 @@ if __name__ == '__main__':
 
 
     cat_feature_inds = []
-    descreate_max_num = args.descreate_max_num
+    descreate_max_num = int(args.descreate_max_num)
     for i, c in enumerate(ensemble_train[features_to_train].columns):
         num_uniques = ensemble_train[features_to_train][c].nunique()
         if num_uniques < descreate_max_num:
@@ -137,14 +136,13 @@ if __name__ == '__main__':
         # "There is {} strongly correlated values with click:\n{}".format(len(golden_features_corr), golden_features_corr))
 
         golden_features = golden_features_tree
-        X_train, X_val, y_train, y_val = train_data[golden_features].values, val_data[golden_features].values, \
-                                         train_data[y_label].values, val_data[y_label].values
+        X_train, y_train = ensemble_train[golden_features].values, ensemble_train[y_label].values
 
         model.clf.fit(X_train, y_train.ravel())
         if down_sample_rate < 1.:
-            model.compute_metrics(X_val, y_val.ravel(), calibration_weight=down_sample_rate)
+            model.compute_metrics(X_train, y_train.ravel(), calibration_weight=down_sample_rate)
         else:
-            model.compute_metrics(X_val, y_val.ravel())
+            model.compute_metrics(X_train, y_train.ravel())
 
         model.compute_features_distribution(golden_features)
 
