@@ -4,7 +4,7 @@ import os
 import argparse
 import sys
 import time
-sys.path.append("..")
+sys.path.append("../../")
 from multiprocessing import cpu_count
 
 import pandas as pd
@@ -13,7 +13,7 @@ from sklearn.model_selection import cross_val_score, train_test_split, Stratifie
 from sklearn.metrics import classification_report
 from catboost import CatBoostClassifier
 
-from conf.modelconf import time_features, photo_features, user_features, y_label, features_to_train
+from conf.modelconf import *
 from common.utils import FeatureMerger, read_data, store_data
 from common.base import Classifier
 
