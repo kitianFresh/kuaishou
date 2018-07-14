@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
     model_store_path = './sample/' if USE_SAMPLE else './data'
 
-    feature_store_dir = os.path.join(offline_data_dir, 'feature')
+    feature_store_dir = os.path.join(offline_data_dir, 'features')
     col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
 
     model = Classifier(None, dir=model_store_path, name=model_name, version=version, description=desc,

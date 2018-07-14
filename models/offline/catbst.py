@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
     model_store_path = './sample/' if USE_SAMPLE else './data'
 
-    feature_store_dir = os.path.join(offline_data_dir, 'feature')
+    feature_store_dir = os.path.join(offline_data_dir, 'features')
     col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
 
     model = Classifier(None,dir=model_store_path, name=model_name,version=version, description=desc, features_to_train=features_to_train)
@@ -114,7 +114,9 @@ if __name__ == '__main__':
             cat_feature_inds.append(i)
     start = time.time()
     model.clf = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU', gpu_cat_features_storage='CpuPinnedMemory', pinned_memory_size=2147483648, logging_level='Debug')
-    model.clf.fit(X_train, y_train.ravel(), cat_features=cat_feature_inds, eval_set=(X_train, y_train.ravel()))
+    #model.clf = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU', gpu_cat_features_storage='CpuPinnedMemory', pinned_memory_size=2147483648)
+
+    model.clf.fit(X_train, y_train.ravel(), cat_features=cat_feature_inds, eval_set=(X_val, y_val.ravel()))
     
     print("Model trained in %s seconds" % (str(time.time() - start)))
     if down_sample_rate < 1.:
