@@ -68,12 +68,10 @@ if __name__ == '__main__':
 
     start = time.time()
     if all_one:
-        ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
-        ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
+        ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train' + '.' + fmt
         ensemble_train = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TRAIN_FILE), fmt)
 
-        ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
-        ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
+        ALL_FEATURE_TEST_FILE = 'ensemble_feature_test' + '.' + fmt
         ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
     else:
         feature_to_use = user_features + photo_features + time_features
