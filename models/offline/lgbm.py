@@ -6,7 +6,7 @@ import os
 import argparse
 import sys
 import time
-sys.path.append("../..")
+sys.path.append("../../")
 from multiprocessing import cpu_count
 
 import numpy as np
