@@ -36,7 +36,6 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
     
-    USE_SAMPLE = args.sample
     gpu_mode = args.gpu_mode
     fmt = args.format if args.format else 'csv'
     version = args.version

@@ -23,7 +23,6 @@ from common.utils import FeatureMerger, read_data, store_data, load_config_from_
 from common.base import Classifier
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-v', '--version',
                     help='model version, there will be a version control and a json description file for this model',
@@ -45,7 +44,6 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
 
-    USE_SAMPLE = args.sample
     fmt = args.format if args.format else 'csv'
     gpu_mode = args.gpu_mode
     version = args.version
