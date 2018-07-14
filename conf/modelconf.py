@@ -40,8 +40,8 @@ time_features = ['time', 'duration_time']
 # time_features = ['time_cate', 'duration_time_cate']
 
 
-# text_features = ['cover_length', 'avg_tfidf', 'key_words_num','text_class_label','text_cluster_label']
-text_features = ['cover_length', 'avg_tfidf', 'key_words_num']
+text_features = ['cover_length', 'avg_tfidf', 'key_words_num','text_class_label','text_cluster_label']
+#text_features = ['cover_length', 'avg_tfidf', 'key_words_num']
 
 visual_features = ['photo_cluster_label']
 
@@ -129,12 +129,12 @@ offline_data_dir = os.path.join(data_dir, 'offline')
 def get_data_file(name, online=True):
     if online:
         DATA = os.path.join(online_data_dir, name)
-        feature_store_dir = os.path.join(online_data_dir, 'feature')
+        feature_store_dir = os.path.join(online_data_dir, 'features')
         col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
         return DATA, online_data_dir, feature_store_dir, col_feature_store_dir
 
     else:
         DATA = os.path.join(offline_data_dir, name)
-        feature_store_dir = os.path.join(offline_data_dir, 'feature')
+        feature_store_dir = os.path.join(offline_data_dir, 'features')
         col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
         return DATA, offline_data_dir, feature_store_dir, col_feature_store_dir

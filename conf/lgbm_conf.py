@@ -5,9 +5,9 @@
 # model config
 
 # feature config
-# 'hour_click_ratio', 'period_click_ratio', 'click_ratio'， 'playing_duration_favor'
+# 'hour_click_ratio', 'period_click_ratio', 'click_ratio'， 'playing_duration_favor', 'browse_time_diff,
 user_action_features = ['click_ratio', 'browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum',
-                        'duration_sum', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq',
+                        'duration_sum', 'like_ratio', 'follow_ratio', 'playing_ratio', 'click_freq',
                         'browse_freq', 'playing_freq', 'duration_favor']
 
 face_features = ['face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age',
@@ -25,8 +25,8 @@ time_features = ['time', 'duration_time']
 # time_features = ['time_cate', 'duration_time_cate']
 
 
-# text_features = ['cover_length', 'avg_tfidf', 'key_words_num','text_class_label','text_cluster_label']
-text_features = ['cover_length', 'avg_tfidf', 'key_words_num']
+text_features = ['cover_length', 'avg_tfidf', 'key_words_num','text_class_label','text_cluster_label']
+# text_features = ['cover_length', 'avg_tfidf', 'key_words_num']
 
 visual_features = ['photo_cluster_label']
 

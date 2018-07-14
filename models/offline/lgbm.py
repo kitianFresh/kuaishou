@@ -107,8 +107,8 @@ if __name__ == '__main__':
     start_time_1 = time.time()
 
     model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=127,
-                                max_depth=8, learning_rate=0.1,
-                                n_estimators=1000,objective='binary',
+                                max_depth=8, learning_rate=0.05,
+                                n_estimators=3000,objective='binary',
                                 min_split_gain=0.0, min_child_weight=0.001,
                                 min_child_samples=20, subsample=0.8,
                                 subsample_freq=0, colsample_bytree=0.8,
