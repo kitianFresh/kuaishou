@@ -107,14 +107,15 @@ if __name__ == '__main__':
 
     cat_feature_inds = []
     descreate_max_num = int(args.descreate_max_num)
+    descreate_max_num = 48 if descreate_max_num > 48 else descreate_max_num
     for i, c in enumerate(ensemble_train[features_to_train].columns):
         num_uniques = ensemble_train[features_to_train][c].nunique()
         if num_uniques < descreate_max_num:
             print(c, num_uniques, descreate_max_num)
             cat_feature_inds.append(i)
     start = time.time()
-    model.clf = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU', gpu_cat_features_storage='CpuPinnedMemory', pinned_memory_size=2147483648, logging_level='Debug')
-    #model.clf = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU', gpu_cat_features_storage='CpuPinnedMemory', pinned_memory_size=2147483648)
+    model.clf = CatBoostClassifier(iterations=descreate_max_num * 50, task_type='GPU' if gpu_mode else 'CPU', gpu_cat_features_storage='CpuPinnedMemory', pinned_memory_size=2147483648, logging_level='Debug')
+    #model.clf = CatBoostClassifier(iterations=descreate_max_num * 50, task_type='GPU' if gpu_mode else 'CPU', gpu_cat_features_storage='CpuPinnedMemory', pinned_memory_size=2147483648)
 
     model.clf.fit(X_train, y_train.ravel(), cat_features=cat_feature_inds, eval_set=(X_val, y_val.ravel()))
     

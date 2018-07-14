@@ -103,6 +103,7 @@ if __name__ == '__main__':
 
     cat_feature_inds = []
     descreate_max_num = int(args.descreate_max_num)
+    descreate_max_num = 48 if descreate_max_num > 48 else descreate_max_num
     for i, c in enumerate(ensemble_train[features_to_train].columns):
         num_uniques = ensemble_train[features_to_train][c].nunique()
         if num_uniques < descreate_max_num:
