@@ -14,7 +14,7 @@ from conf.modelconf import *
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-o', '--online', help='online feature extract', action="store_true")
-parser.add_argument('-k', '--offline-kfold', help='offline kth fold feature extract, extract kth fold', default=1)
+parser.add_argument('-k', '--offline-kfold', help='offline kth fold feature extract, extract kth fold', default=0)
 args = parser.parse_args()
 
 if __name__ == '__main__':

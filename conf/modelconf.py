@@ -69,7 +69,7 @@ uint64_cols = ['user_id', 'photo_id', 'time']
 uint32_cols = ['playing_sum', 'duration_sum', 'key_words_num']
 uint16_cols = ['browse_num', 'exposure_num', 'click_num', 'duration_time', 'like_num', 'follow_num', 'clicked_num']
 uint8_cols = ['cover_length', 'man_num', 'woman_num', 'face_num', 'time_cate', 'duration_time_cate']
-bool_cols = ['have_face_cate', 'have_text_cate', 'click']
+bool_cols = ['have_face_cate', 'have_text_cate', 'click', 'text_class_label', 'text_cluster_label']
 float32_cols = ['period_click_ratio', 'clicked_ratio','non_face_click_favor', 'face_click_favor',
                 'man_favor', 'woman_avg_age', 'playing_freq', 'woman_age_favor', 'woman_yen_value_favor',
                 'human_scale', 'woman_favor', 'click_freq', 'woman_cv_favor', 'man_age_favor', 'man_yen_value_favor',
