@@ -121,7 +121,7 @@ if __name__ == '__main__':
                                    pinned_memory_size=1073741824 * 8,
                                    used_ram_limit='200gb',
                                    boosting_type="Plain",
-                                   simple_ctr='Borderes:PriorEstimation=BetaPrior:Prior=0.2',
+                                   simple_ctr='Borders:PriorEstimation=BetaPrior:Prior=0.2',
                                    save_snapshot=True,
                                    snapshot_file=os.path.join(model_store_path, model_name + '-' + version + '.bak'),
                                    logging_level='Debug')
