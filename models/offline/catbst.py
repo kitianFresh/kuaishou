@@ -108,11 +108,12 @@ if __name__ == '__main__':
     cat_feature_inds = []
     descreate_max_num = int(args.descreate_max_num)
     descreate_max_num = 48 if descreate_max_num > 48 else descreate_max_num
-    for i, c in enumerate(ensemble_train[features_to_train].columns):
-        num_uniques = ensemble_train[features_to_train][c].nunique()
-        if num_uniques < descreate_max_num:
-            print(c, num_uniques, descreate_max_num)
-            cat_feature_inds.append(i)
+    # for i, c in enumerate(ensemble_train[features_to_train].columns):
+    #     num_uniques = ensemble_train[features_to_train][c].nunique()
+    #     if num_uniques < descreate_max_num:
+    #         print(c, num_uniques, descreate_max_num)
+    #         cat_feature_inds.append(i)
+    cat_feature_inds = [27,28,29,30,31,46,47]
     start = time.time()
     model.clf = CatBoostClassifier(iterations=1500,
                                    task_type='GPU' if gpu_mode else 'CPU',
