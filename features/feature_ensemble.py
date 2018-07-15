@@ -112,6 +112,10 @@ if __name__ == '__main__':
         ALL_FEATURE_TEST_FILE = 'ensemble_feature_test' + str(kfold) + '.' + fmt
 
 
+    for feature, dtype in feature_dtype_map.items():
+        ensemble_train[feature] = ensemble_train[feature].astype(dtype)
+        if feature in ensemble_test.columns:
+            ensemble_test[feature] = ensemble_test[feature].astype(dtype)
     print(ensemble_train.info())
     print(ensemble_test.info())
     
