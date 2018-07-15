@@ -119,6 +119,8 @@ if __name__ == '__main__':
                                    gpu_cat_features_storage='CpuPinnedMemory',
                                    pinned_memory_size=1073741824 * 8,
                                    used_ram_limit='200gb',
+                                   boosting_type="Plain",
+                                   simple_ctr='PBorderes:PriorEstimation=BetaPrior:Prior=0.2',
                                    save_snapshot=True,
                                    snapshot_file=os.path.join(model_store_path, model_name + '-' + version + '.bak'),
                                    logging_level='Debug')
