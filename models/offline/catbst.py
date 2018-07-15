@@ -114,7 +114,7 @@ if __name__ == '__main__':
             print(c, num_uniques, descreate_max_num)
             cat_feature_inds.append(i)
     start = time.time()
-    model.clf = CatBoostClassifier(iterations=3000,
+    model.clf = CatBoostClassifier(iterations=1500,
                                    task_type='GPU' if gpu_mode else 'CPU',
                                    gpu_cat_features_storage='CpuPinnedMemory',
                                    pinned_memory_size=1073741824 * 8,
@@ -150,9 +150,9 @@ if __name__ == '__main__':
 
         model.clf.fit(X_train, y_train.ravel())
         if down_sample_rate < 1.:
-            model.compute_metrics(X_train, y_train.ravel(), calibration_weight=down_sample_rate)
+            model.compute_metrics(X_val, y_val.ravel(), calibration_weight=down_sample_rate)
         else:
-            model.compute_metrics(X_train, y_train.ravel())
+            model.compute_metrics(X_val, y_val.ravel())
 
         model.compute_features_distribution(golden_features)
 
