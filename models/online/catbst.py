@@ -117,7 +117,7 @@ if __name__ == '__main__':
                                    used_ram_limit='200gb',
                                    # max_ctr_complexity=1,
                                    boosting_type="Plain",
-                                   simple_ctr='PBorderes:PriorEstimation=BetaPrior:Prior=0.2',
+                                   simple_ctr='Borderes:PriorEstimation=BetaPrior:Prior=0.2',
                                    save_snapshot=True,
                                    snapshot_file=os.path.join(model_store_path, model_name + '-' + version + '.bak'),
                                    logging_level='Debug')
