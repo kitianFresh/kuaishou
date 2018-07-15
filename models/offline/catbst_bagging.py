@@ -169,4 +169,3 @@ if __name__ == '__main__':
     model.compute_metrics(ensemble_test[features_to_train].values, ensemble_test[y_label].values)
     model.compute_features_distribution()
     model.save()
-    model.submit(ensemble_test)
