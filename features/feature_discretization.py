@@ -66,9 +66,9 @@ if __name__ == '__main__':
     user_item_cate[cates] = user_item_cate[cates].astype('uint8')
     user_item_cate = pd.concat([ensemble_data[id_features], user_item_cate], axis=1)
     
-    cate_train = user_item_cate.iloc[:num_train, :]
+    cate_train = user_item_cate.iloc[:num_train, :].copy()
     cate_train[y_label[0]] = y
-    cate_test = user_item_cate.iloc[num_train:, :]
+    cate_test = user_item_cate.iloc[num_train:, :].copy()
     # for offline
     if not args.online:
         cate_test[y_label[0]] = ensemble_test[y_label].values

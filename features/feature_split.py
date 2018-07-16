@@ -71,10 +71,6 @@ if __name__ == '__main__':
                                      names=['user_id', 'photo_id', 'click', 'like', 'follow', 'time', 'playing_time',
                                             'duration_time'])
 
-    user_item_train = pd.merge(user_item_train, photo_data,
-                               how='left',
-                               on=['photo_id'])
-
     photo_data = read_data(os.path.join(feature_store_dir, PHOTO_FEATURE_FILE), fmt)
     users = read_data(os.path.join(feature_store_dir, USER_FEATURE_FILE), fmt)
 
@@ -118,13 +114,7 @@ if __name__ == '__main__':
     ensemble_test = user_item_test[input_features]
 
 
-    print(input_features)
-    for feat in input_features + y_label:
-        ensemble_train[feat] = ensemble_train[feat].astype(feature_dtype_map.get(feat))
     print(ensemble_train.info())
-
-    for feat in input_features:
-        ensemble_test[feat] = ensemble_test[feat].astype(feature_dtype_map.get(feat))
     print(ensemble_test.info())
 #     fmt = 'h5'
 
