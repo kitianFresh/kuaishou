@@ -48,7 +48,7 @@ if __name__ == '__main__':
     ensemble_train = ensemble_train[id_features + features_to_train]
     ensemble_test = ensemble_test[id_features + features_to_train]
     num_train, num_test = ensemble_train.shape[0], ensemble_test.shape[0]
-    ensemble_data = pd.concat([ensemble_train, ensemble_test])
+    ensemble_data = pd.concat([ensemble_train[id_features + features_to_train], ensemble_test[id_features + features_to_train]])
 
     category_features = time_features + user_features + photo_features
     user_item_cate = pd.DataFrame()
@@ -66,9 +66,9 @@ if __name__ == '__main__':
     user_item_cate[cates] = user_item_cate[cates].astype('uint8')
     user_item_cate = pd.concat([ensemble_data[id_features], user_item_cate], axis=1)
     
-    cate_train = user_item_cate.iloc[:num_train, :].copy()
+    cate_train = user_item_cate.iloc[:num_train, :]
     cate_train[y_label[0]] = y
-    cate_test = user_item_cate.iloc[num_train:, :].copy()
+    cate_test = user_item_cate.iloc[num_train:, :]
     # for offline
     if not args.online:
         cate_test[y_label[0]] = ensemble_test[y_label].values
