@@ -45,8 +45,6 @@ if __name__ == '__main__':
     print(all_features)
     y = ensemble_train[y_label].values
     
-    ensemble_train = ensemble_train[id_features + features_to_train]
-    ensemble_test = ensemble_test[id_features + features_to_train]
     num_train, num_test = ensemble_train.shape[0], ensemble_test.shape[0]
     ensemble_data = pd.concat([ensemble_train[id_features + features_to_train], ensemble_test[id_features + features_to_train]])
 
