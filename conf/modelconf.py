@@ -76,7 +76,7 @@ float32_cols = ['period_click_ratio', 'clicked_ratio','non_face_click_favor', 'f
                 'follow_ratio', 'man_scale', 'browse_freq', 'man_avg_age', 'man_cv_favor', 'man_avg_attr',
                 'playing_ratio', 'woman_scale', 'click_ratio', 'human_avg_age', 'woman_avg_attr', 'like_ratio',
                 'cover_length_favor', 'human_avg_attr', 'avg_tfidf', 'hour_click_ratio', 'woman_num_ratio',
-                'man_num_ratio', 'playing_favor', 'duration_favor', 'playing_duration_favor','browse_time_diff']
+                'man_num_ratio', 'playing_favor', 'duration_favor', 'playing_duration_favor','browse_time_diff', 'face_favor']
 float64_cols = []
 
 uint32_cate_cols = []
