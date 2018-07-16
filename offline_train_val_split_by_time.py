@@ -12,7 +12,7 @@ matplotlib.use('Agg')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--seed', help='sample random seed, default 777', default=777)
-parser.add_argument('-p', '--prop', help='sample propotion, default 0.15', default=0.15)
+parser.add_argument('-p', '--prop', help='sample propotion, default 0.15', default=0.33)
 args = parser.parse_args()
 
 random.seed(a=int(args.seed))
@@ -78,13 +78,18 @@ kfold_user_item_val.reset_index(drop=True, inplace=True)
 kfold_users = kfold_user_item_val['user_id'].unique()
 kfold_user_item_train = user_item_train.append(kfold_user_item_val).drop_duplicates(keep=False).reset_index(drop=True)
 val_photo_ids = list(set(kfold_user_item_val['photo_id'].unique()) - set(kfold_user_item_train['photo_id'].unique()))
-print(len(kfold_users))
-print(len(val_photo_ids))
-print(len(set(kfold_user_item_val['photo_id'].unique())))
+train_photo_ids = kfold_user_item_train['photo_id'].unique()
+print("train shape: %s" % kfold_user_item_train.shape)
+print("valid shape: %s" % kfold_user_item_val.shape)
+print("common users: %s" % len(kfold_users))
+print("valid photos before remove intersection: %s" % len(set(kfold_user_item_val['photo_id'].unique())))
+print("valid photos after remove train/val intersection: %s" % len(val_photo_ids))
 print('train click mean: %s' % user_item_train['click'].mean())
 print('val click mean before remove intersection: %s' % kfold_user_item_val['click'].mean())
 kfold_user_item_val = kfold_user_item_val.loc[kfold_user_item_val.photo_id.isin(val_photo_ids)]
 print('val click mean after remove intersection: %s' % kfold_user_item_val['click'].mean())
+print("train shape after validation remove intersection: %s" % kfold_user_item_train.shape)
+print("valid shape after validation remove intersection: %s" % kfold_user_item_val.shape)
 pos_kfold_user_item_val = kfold_user_item_val[kfold_user_item_val['click']==1]
 neg_kfold_user_item_val =  kfold_user_item_val[kfold_user_item_val['click']==0]
 # negative_sample_ratio = (1-ctr_o)*c_s/(ctr_o * u_s)
@@ -105,7 +110,8 @@ kfold_user_item_val = pd.concat([pos_kfold_user_item_val, neg_kfold_user_item_va
 val_photo_ids = set(kfold_user_item_val['photo_id'].unique())
 print('val click mean after neg sample: %s' % kfold_user_item_val['click'].mean())
 print('train click mean after neg sample: %s' % kfold_user_item_train['click'].mean())
-
+print("train shape after validation neg sample: %s" % kfold_user_item_train.shape)
+print("valid shape after validation neg sample: %s" % kfold_user_item_val.shape)
 
 kfold_user_item_val.to_csv(os.path.join(offline_data_dir, 'test_interaction' + str(i) + '.txt'), sep='\t', index=False, header=False)
 print(kfold_user_item_val.info())
@@ -114,7 +120,7 @@ kfold_user_item_train.to_csv(os.path.join(offline_data_dir, 'train_interaction' 
 print(kfold_user_item_train.info())
 print('The %dth fold train_interaction extracted' % i)
 
-train_photo_ids = set(kfold_user_item_train['photo_id'].unique()) - set(val_photo_ids)
+#train_photo_ids = set(kfold_user_item_train['photo_id'].unique()) - set(val_photo_ids)
 
 kfold_face_val = photo_sample(face_train, val_photo_ids)
 kfold_face_train = photo_sample(face_train, train_photo_ids)

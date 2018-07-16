@@ -199,7 +199,9 @@ if __name__ == '__main__':
     text_data['text_class_label'] = text_data['cover_words_4_predict'].apply(word_classify)
     text_data.drop(['cover_words_4_predict'],axis=1,inplace =True)
 
-    text_data['have_text_cate'] = text_data['cover_length'].apply(lambda x: x > 0).astype('bool')
+    text_data['have_text_cate'] = text_data['cover_length'].apply(lambda x: x > 0).astype(feature_dtype_map['have_text_cate'])
+    text_data['text_class_label'] = text_data['text_class_label'].astype(feature_dtype_map['text_class_label'])
+    text_data['text_cluster_label'] = text_data['text_cluster_label'].astype(feature_dtype_map['text_cluster_label'])
 
     if args.online:
         TEXT_FEATURE_FILE = 'text_feature' + '.' + fmt

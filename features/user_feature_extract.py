@@ -103,7 +103,7 @@ if __name__ == '__main__':
     def face_counts(group):
         have_faces = group > 0
         return 1. * np.sum(have_faces) / group.size
- 
+
     def non_face_counts(group):
         have_faces = group == 0
         return 1. * np.sum(have_faces) / group.size
@@ -139,6 +139,7 @@ if __name__ == '__main__':
         USER_FEATURE_FILE = 'user_feature' + '.' + fmt
     else:
         USER_FEATURE_FILE = 'user_feature' + str(kfold) + '.' + fmt
+
 
     if not os.path.exists(feature_store_dir):
         os.mkdir(feature_store_dir)

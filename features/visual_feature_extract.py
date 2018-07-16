@@ -13,6 +13,7 @@ sys.path.append('..')
 from photo_cluster import load_data,sample_data_transform_store,data_transform_store,train_cluster_model,cluster_model_predict
 import numpy as np
 from common.utils import store_data
+from conf.modelconf import *
 import pandas as pd
 
 parser = argparse.ArgumentParser()
@@ -85,7 +86,7 @@ if __name__ == '__main__':
         visual_feature = train_cluster_model(matrix,photo_id,VISUAL_CLUSTER_MODEL,cluster_nums)
 
     visual_feature = pd.merge(user_item_data,visual_feature,how='left',on=['photo_id'])
-
+    visual_feature['photo_cluster_label'] = visual_feature['photo_cluster_label'].astype(feature_dtype_map['photo_cluster_label'])
     feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
     if not os.path.exists(feature_store_path):
         os.mkdir(feature_store_path)
