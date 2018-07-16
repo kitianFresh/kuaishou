@@ -12,7 +12,7 @@ matplotlib.use('Agg')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--seed', help='sample random seed, default 777', default=777)
-parser.add_argument('-p', '--prop', help='sample propotion, default 0.15', default=0.33)
+parser.add_argument('-p', '--prop', help='sample propotion, default 0.33', default=0.33)
 args = parser.parse_args()
 
 random.seed(a=int(args.seed))
