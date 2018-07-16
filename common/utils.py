@@ -122,7 +122,7 @@ def store_data(df, path, fmt, sep='\t', index=False):
     if fmt == 'csv':
         for col, dtype in feature_dtype_map.items():
             if col in df.columns:
-                df.loc[col] = df[col].astype(dtype)
+                df[col] = df[col].astype(dtype)
         logging.info("---------------storing data %s----------------" % path)
         logging.info(df.info())
         df.to_csv(path, sep=sep, index=index)

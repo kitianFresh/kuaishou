@@ -62,6 +62,6 @@ if __name__ == '__main__':
     X_train = ensemble_train[features_to_train].values
     y_train = ensemble_train[y_label].values
     X_test = ensemble_test[features_to_train].values
-    y_test = ensemble_test[y_label]
+    y_test = ensemble_test[y_label].values
     dump_svmlight_file(X_train, y_train.ravel(), os.path.join(feature_store_dir, TRAIN_FILE))
     dump_svmlight_file(X_test, y_test.ravel(), os.path.join(feature_store_dir, TEST_FILE))
