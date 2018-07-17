@@ -38,16 +38,3 @@ y_label = ['click']
 
 features_to_train = user_features + photo_features + time_features
 # features_to_train = list(set(features_to_train) - set(['clicked_ratio']))
-
-cate_features_to_train = []
-
-norm_features = ['browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum', 'duration_sum', 'click_ratio',
-                 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq',
-                 'playing_freq', 'man_favor', 'woman_favor', 'man_cv_favor', 'woman_cv_favor', 'man_age_favor',
-                 'woman_age_favor', 'man_yen_value_favor', 'woman_yen_value_favor', 'face_click_favor',
-                 'non_face_click_favor', 'cover_length_favor', 'exposure_num', 'face_num', 'man_num', 'woman_num',
-                 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age', 'woman_avg_age', 'human_avg_age',
-                 'man_avg_attr', 'woman_avg_attr', 'human_avg_attr', 'cover_length', 'avg_tfidf', 'key_words_num',
-                 'time', 'duration_time', 'period_click_ratio', 'playing_favor', 'duration_favor',
-                 'playing_duration_favor']
-

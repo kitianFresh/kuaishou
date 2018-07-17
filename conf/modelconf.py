@@ -126,15 +126,29 @@ data_dir = os.path.join(get_root(), 'sample') if USE_SAMPLE else os.path.join(ge
 online_data_dir = os.path.join(data_dir, 'online')
 offline_data_dir = os.path.join(data_dir, 'offline')
 
+if not os.path.exists(online_data_dir):
+    os.makedirs(online_data_dir)
+if not os.path.exists(offline_data_dir):
+    os.makedirs(offline_data_dir)
+
 def get_data_file(name, online=True):
     if online:
         DATA = os.path.join(online_data_dir, name)
         feature_store_dir = os.path.join(online_data_dir, 'features')
         col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
+        if not os.path.exists(feature_store_dir):
+            os.makedirs(feature_store_dir)
+        if not os.path.exists(col_feature_store_dir):
+            os.makedirs(col_feature_store_dir)
         return DATA, online_data_dir, feature_store_dir, col_feature_store_dir
 
     else:
         DATA = os.path.join(offline_data_dir, name)
         feature_store_dir = os.path.join(offline_data_dir, 'features')
         col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
+        col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
+        if not os.path.exists(feature_store_dir):
+            os.makedirs(feature_store_dir)
+        if not os.path.exists(col_feature_store_dir):
+            os.makedirs(col_feature_store_dir)
         return DATA, offline_data_dir, feature_store_dir, col_feature_store_dir
