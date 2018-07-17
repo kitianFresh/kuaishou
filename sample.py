@@ -20,7 +20,7 @@ random.seed(a=int(args.seed))
 def user_sample(group, prop):
     n = group.shape[0]
     m = int(prop * n)
-    m = n if m == 0 else m
+    m = 1 if m == 0 else m
     group = group.iloc[random.sample(range(n), m)]
     return group
 
@@ -86,34 +86,39 @@ sample_user_item_test = user_item_test.groupby(['user_id']).apply(user_sample)
 sample_user_item_test.reset_index(drop=True, inplace=True)
 sample_user_item_test.to_csv('./sample/online/test_interaction.txt', sep='\t', index=False, header=False)
 print('sample_user_item_test sampled %d from %d user_item_test data' % (sample_user_item_test.shape[0], user_item_test.shape[0]))
-
+print(sample_user_item_test.info())
 user_sample = functools.partial(user_sample, prop=float(args.prop))
 sample_user_item_train = user_item_train.groupby(['user_id']).apply(user_sample)
 sample_user_item_train.reset_index(drop=True, inplace=True)
 sample_user_item_train.to_csv('./sample/online/train_interaction.txt', sep='\t', index=False, header=False)
 print('sample_user_item_train sampled %d from %d user_item_train data' % (sample_user_item_train.shape[0], user_item_train.shape[0]))
+print(sample_user_item_train.info())
 
 sample_photo_ids_test = set(sample_user_item_test['photo_id'].unique())
 sample_photo_ids_train = set(sample_user_item_train['photo_id'].unique())
-
-sample_face_train = photo_sample(face_train, sample_photo_ids_train)
-sample_face_train.to_csv('./sample/online/train_face.txt', sep='\t', index=False, header=False)
-print('sample_face_train sampled %d from %d face_train data' % (sample_face_train.shape[0], face_train.shape[0]))
-
+print('sample_photo_ids_test: %d' % len(sample_photo_ids_test))
+print('sample_photo_ids_train: %d' % len(sample_photo_ids_train))
 
 sample_face_test = photo_sample(face_test, sample_photo_ids_test)
 sample_face_test.to_csv('./sample/online/test_face.txt', sep='\t', index=False, header=False)
 print('sample_face_test sampled %d from %d face_test data' % (sample_face_test.shape[0], face_test.shape[0]))
+print(sample_face_test.info())
+
+sample_face_train = photo_sample(face_train, sample_photo_ids_train)
+sample_face_train.to_csv('./sample/online/train_face.txt', sep='\t', index=False, header=False)
+print('sample_face_train sampled %d from %d face_train data' % (sample_face_train.shape[0], face_train.shape[0]))
+print(sample_face_train.info())
 
 
 sample_text_test = photo_sample(text_test, sample_photo_ids_test)
 sample_text_test.to_csv('./sample/online/test_text.txt', sep='\t', index=False, header=False)
 print('sample_text_test sampled %d from %d text_test data' % (sample_text_test.shape[0], text_test.shape[0]))
-
+print(sample_text_test.info())
 
 sample_text_train = photo_sample(text_train, sample_photo_ids_train)
 sample_text_train.to_csv('./sample/online/train_text.txt', sep='\t', index=False, header=False)
 print('sample_text_train sampled %d from %d text_train data' % (sample_text_train.shape[0], text_train.shape[0]))
+print(sample_text_train.info())
 
 # visual_train_path = './data/visual_train'
 # visual_test_path = './data/visual_test'

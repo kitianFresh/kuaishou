@@ -41,11 +41,11 @@ else
         KFOLD=1
     fi
     echo KFOLD = "${KFOLD}"
-    python3 face_feature_extract.py -k ${KFOLD}
-    python3 text_classify.py -k ${KFOLD}
-    python3 text_feature_extract.py -k ${KFOLD}
-    python3 photo_feature_extract.py -k ${KFOLD}
-    python3 user_feature_extract.py -k ${KFOLD}
-    python3 feature_ensemble.py -k ${KFOLD}
-    python3 feature_discretization.py -k ${KFOLD}
+    python face_feature_extract.py -k ${KFOLD}
+    python text_classify.py -k ${KFOLD}
+    python text_feature_extract.py -k ${KFOLD}
+    python photo_feature_extract.py -k ${KFOLD}
+    python user_feature_extract.py -k ${KFOLD}
+    python feature_ensemble.py -k ${KFOLD}
+    python feature_discretization.py -k ${KFOLD}
 fi

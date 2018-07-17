@@ -134,7 +134,18 @@ if __name__ == '__main__':
     users['click_ratio'] = ctr
     
     print(users.info())
-    
+    def int2bin(x):
+        res = []
+        for i in '{0:016b}'.format(x):
+            res.append(i)
+        return '|'.join(res)
+    users['temp_id'] = users['user_id'].apply(int2bin)
+    ids = users['temp_id'].str.split('|', expand=True)  # 多名字分列
+    users.pop('temp_id')
+    ids.columns = ['uid0', 'uid1', 'uid2', 'uid3', 'uid4', 'uid5', 'uid6', 'uid7', 'uid8', 'uid9', 'uid10', 'uid11', 'uid12', 'uid13', 'uid14', 'uid15']
+    ids[ids.columns] = ids[ids.columns].astype('uint8')
+    users = users.join(ids)
+    # users = pd.concat([users, ids], axis=1)
     if args.online:
         USER_FEATURE_FILE = 'user_feature' + '.' + fmt
     else:

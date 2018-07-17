@@ -46,7 +46,8 @@ if __name__ == '__main__':
         TRAIN_FACE, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('train_face' + str(kfold) + '.txt', args.online)
         TEST_FACE, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('test_face' + str(kfold) + '.txt', args.online)
 
-
+    print(TRAIN_FACE)
+    print(TEST_FACE)
     face_train = pd.read_csv(TRAIN_FACE, 
                             sep='\t', 
                             header=None, 

@@ -107,7 +107,7 @@ if __name__ == '__main__':
     start_time_1 = time.time()
 
     model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=127,
-                                max_depth=8, learning_rate=0.05,
+                                max_depth=8, learning_rate=0.005,
                                 n_estimators=3000,objective='binary',
                                 min_split_gain=0.0, min_child_weight=0.001,
                                 min_child_samples=20, subsample=0.8,
@@ -115,7 +115,7 @@ if __name__ == '__main__':
                                 reg_alpha=0.0, reg_lambda=0.0,
                                 random_state=2018, n_jobs=-1, device='gpu' if args.gpu_mode else 'cpu',
                                 silent=False)
-    model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())], eval_metric='auc')
+    model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())], eval_metric='auc', early_stopping_rounds=100)
 
     print("Model trained in %s seconds" % (str(time.time() - start_time_1)))
 

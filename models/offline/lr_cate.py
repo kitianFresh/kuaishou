@@ -105,6 +105,34 @@ if __name__ == '__main__':
     val_data = val_data.loc[val_data.photo_id.isin(val_photo_ids)]
     y_val = val_data[y_label].values
     print(val_data.shape)
+    # coding=utf-8
+    # @author: bryan
+    from sklearn.preprocessing import LabelEncoder
+    from sklearn.preprocessing import OneHotEncoder
+    from scipy import sparse
+
+    for feature in cate_feature + con_feature:
+        data[feature] = LabelEncoder().fit_transform(data[feature].values)
+    enc = OneHotEncoder()
+    train_x = train[numeric_feature]
+    test_x = test[numeric_feature]
+    for feature in cate_feature + con_feature:
+        enc.fit(data[feature].values.reshape(-1, 1))
+        train_a = enc.transform(train[feature].values.reshape(-1, 1))
+        test_a = enc.transform(test[feature].values.reshape(-1, 1))
+        train_x = sparse.hstack((train_x, train_a))
+        test_x = sparse.hstack((test_x, test_a))
+
+    # 文本one hot
+    from sklearn.feature_extraction.text import CountVectorizer
+
+    # 每行用空格join起来
+    data['corpus'] = data['corpus'].apply(lambda x: ' '.join(x.split(';')))
+    # 如果corpus里面是数字，可能会提示empty vocabulary; perhaps the documents only contain stop words
+    # 改成这样就行了CountVectorizer(token_pattern='(?u)\\b\\w+\\b')
+    property_feature = CountVectorizer().fit_transform(data['corpus'])
+    train_x = sparse.hstack((train_property_feature, train_x))
+
 
     num_train, num_val, num_test = train_data.shape[0], val_data.shape[0], ensemble_test.shape[0]
     ensemble_data = pd.concat([train_data[features_to_train], val_data[features_to_train], ensemble_test[features_to_train]])

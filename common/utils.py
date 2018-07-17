@@ -6,6 +6,9 @@ import functools
 import logging
 import argparse
 import types
+import io
+import json
+import sys
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
 import numpy as np
@@ -13,6 +16,27 @@ import pandas as pd
 import scipy.special as special
 
 from conf.modelconf import feature_dtype_map, feature_dtype_converters
+
+
+def dump_json_file(data, file, ensure_ascii=False, ident=4):
+    # for python 2 and python 3 compatible, python 3 has a bug for this. https://stackoverflow.com/questions/11942364/typeerror-integer-is-not-json-serializable-when-serializing-json-in-python
+    def default(o):
+        if isinstance(o, np.uint64) or isinstance(o, np.uint32) or isinstance(o, np.uint16) or isinstance(o,
+                                                                                                          np.uint8) \
+                or isinstance(o, np.int64) or isinstance(o, np.int32) or isinstance(o, np.int16) or isinstance(
+            o, np.int8):
+            return int(o)
+        raise TypeError
+
+    # ensure_ascii=False 保证输出的不是 unicode 编码形式，而是真正的中文文本
+    # from __future__ import unicode_literals
+    with io.open(file, mode='w', encoding='utf8') as outfile:
+        metadata = json.dumps(data, ensure_ascii=ensure_ascii, indent=ident, default=default)
+        # metadata is str in python2 which is actually bytearray, but in python3 all str is unicode. for compatibilty
+        if sys.version_info < (3,):
+            outfile.write(metadata.decode('utf8'))
+        else:
+            outfile.write(metadata)
 
 def load_config_from_pyfile(filename):
     """Updates the values in the config from a Python file.  This function
