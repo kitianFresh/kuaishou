@@ -50,20 +50,36 @@ if __name__ == '__main__':
                                  sep='\t', 
                                  header=None, 
                                  names=['user_id', 'photo_id', 'time', 'duration_time'])
-    user_item_data = pd.concat([user_item_train[['user_id', 'photo_id', 'time', 'duration_time']], user_item_test])
-    num_train, num_test = user_item_train.shape[0], user_item_test.shape[0]
-    
+
+    user_item_train = pd.merge(user_item_train, face_data,
+                          how="left",
+                          on=['photo_id'])
+
+    user_item_train = pd.merge(user_item_train, text_data,
+                          how="left",
+                          on=['photo_id'])
+
+    user_item_test = pd.merge(user_item_test, face_data,
+                               how="left",
+                               on=['photo_id'])
+
+    user_item_test = pd.merge(user_item_test, text_data,
+                               how="left",
+                               on=['photo_id'])
+
+    print(user_item_train.info())
+    print(user_item_test.info())
     items = pd.DataFrame()
-    common = ['photo_id']
+    common = ['text_cluster_label']
     items[common] = user_item_train[common]
 
-    items['exposure_num'] = user_item_train['photo_id'].groupby(user_item_train['photo_id']).transform('count')
-    items['clicked_num'] = user_item_train['click'].groupby(user_item_train['photo_id']).transform('sum')
-    items['clicked_ratio'] = items['clicked_num'] / items['exposure_num']
-    items.drop_duplicates(['photo_id'], inplace=True)
+    items['text_cluster_exposure_num'] = user_item_train['photo_id'].groupby(user_item_train['text_cluster_label']).transform('count')
+    items['text_cluster_clicked_num'] = user_item_train['click'].groupby(user_item_train['text_cluster_label']).transform('sum')
+    items['text_clicked_ratio'] = items['text_cluster_clicked_num'] / items['text_cluster_exposure_num']
+    items.drop_duplicates(['text_cluster_label'], inplace=True)
     
     # 对物品店击率做贝叶斯平滑
-    I, C = items['exposure_num'].values, items['clicked_num'].values
+    I, C = items['text_cluster_exposure_num'].values, items['text_cluster_clicked_num'].values
     #bs.update(I, C, 10000, 0.0000000001)
     #print(bs.alpha, bs.beta)
     #alpha_item, beta_item = bs.alpha, bs.beta
@@ -71,31 +87,27 @@ if __name__ == '__main__':
     ctr = []
     for i in range(len(I)):
         ctr.append((C[i]+alpha_item)/(I[i]+alpha_item+beta_item))
-    items['clicked_ratio'] = ctr
-    items.drop(['exposure_num', 'clicked_num'], axis=1, inplace=True)
-    
+    items['text_clicked_ratio'] = ctr
+    items.drop(['text_cluster_exposure_num', 'text_cluster_clicked_num'], axis=1, inplace=True)
 
-    
-    photo_data = pd.DataFrame()
-    photo_data['photo_id'] = user_item_data['photo_id']
-    photo_data['exposure_num'] = user_item_data['photo_id'].groupby(user_item_data['photo_id']).transform('count') 
+
+    user_item_data = pd.concat([user_item_train,
+                                user_item_test])
+    num_train, num_test = user_item_train.shape[0], user_item_test.shape[0]
+
+    common = list(set(text_data.columns) | set(face_data.columns) - set(['user_id']))
+    photo_data = user_item_data[common].copy()
+    photo_data['exposure_num'] = user_item_data['photo_id'].groupby(user_item_data['photo_id']).transform('count')
+    photo_data['text_cluster_exposure_num'] = user_item_data['photo_id'].groupby(user_item_data['text_cluster_label']).transform('count')
     photo_data.drop_duplicates(inplace=True)
-    
-    photo_data = pd.merge(photo_data, items,
-                         how='left',
-                         on=['photo_id'])
-    
-    photo_data.clicked_ratio.fillna(alpha_item/(alpha_item+beta_item), inplace=True)
-    
-    photo_data = pd.merge(photo_data, face_data,
-                     how="left",
-                     on=['photo_id'])
-    
-    photo_data = pd.merge(photo_data, text_data,
-                     how="left",
-                     on=['photo_id'])
+    photo_data = pd.merge(photo_data, items, how='left', on=['text_cluster_label'])
 
-    photo_data.fillna(0, inplace=True)
+    # photo_data.clicked_ratio.fillna(alpha_item/(alpha_item+beta_item), inplace=True)
+    
+    print(photo_data.info())
+    print(np.sum(photo_data.isnull()))
+
+    photo_data.fillna(-1, inplace=True)
     photo_data['have_face_cate'] = photo_data['face_num'].apply(lambda x: x >= 1).astype(feature_dtype_map['have_face_cate'])
     photo_data['have_text_cate'] = photo_data['cover_length'].apply(lambda x: x > 0).astype(feature_dtype_map['have_text_cate'])
     photo_data['text_class_label'] = photo_data['text_class_label'].astype(feature_dtype_map['text_class_label'])

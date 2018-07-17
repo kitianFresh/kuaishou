@@ -15,7 +15,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.tree import ExtraTreeClassifier
 from sklearn import metrics
 from sklearn.model_selection import GridSearchCV
-from catboost import CatBoostClassifier
+from catboost import CatBoostClassifier, Pool
 from sklearn.externals import joblib
 from sklearn.preprocessing import OneHotEncoder
 from xgboost.sklearn import XGBClassifier
@@ -171,7 +171,7 @@ class gdbt_model(TuningModelMixin):
                  params_file,
                  logging_file,
                  n_jobs,
-                 cv=2, iid=False, early_stopping_rounds=60):
+                 cv=2, iid=False, early_stopping_rounds=100):
         self.X_train = X_train
         self.y_train = y_train
         self.X_test = X_test
@@ -345,7 +345,7 @@ class xgboost_model(TuningModelMixin):
                  learning_rate,
                  params_file,
                  logging_file,
-                 n_jobs, cv=2, iid=False, early_stopping_rounds=60):
+                 n_jobs, cv=2, iid=False, early_stopping_rounds=100):
         self.X_train = X_train
         self.X_test = X_test
         self.y_train = y_train
@@ -527,7 +527,7 @@ class lgbm_model(TuningModelMixin):
                  learning_rate,
                  params_file,
                  logging_file,
-                 n_jobs, cv=2, iid=False, early_stopping_rounds=60):
+                 n_jobs, cv=2, iid=False, early_stopping_rounds=100):
         self.X_train = X_train
         self.X_test = X_test
         self.y_train = y_train
@@ -703,7 +703,7 @@ class catboost_model(TuningModelMixin):
                  n_jobs,
                  cv=2,
                  iid=False,
-                 early_stopping_rounds=60,
+                 early_stopping_rounds=100,
                  task_type='GPU',
                  gpu_cat_features_storage='CpuPinnedMemory',
                  pinned_memory_size=1073741824 * 8,
@@ -744,18 +744,20 @@ class catboost_model(TuningModelMixin):
     def train(self,
             date):
         start0 = time.time()
-
+        # train_pool = Pool(self.X_train, self.y_train, cat_features=self.cat_feat_inds)
+        # validate_pool = Pool(self.X_test, self.y_test, cat_features=self.cat_feat_inds)
         fit_params = {
-            'early_stopping_rounds': self.early_stopping_rounds,
-            'eval_set': [[self.X_test, self.y_test]],
-            'cat_feat_inds': self.cat_feat_inds,
-            'eval_metric': 'auc'
+            'eval_set': (self.X_test, self.y_test),
+            'cat_features': self.cat_feat_inds,
         }
 
         param_test = {'iterations': self.iterations, 'depth': self.depth, 'learning_rate': self.learning_rate}
 
         gsearch = GridSearchCV(
             estimator=CatBoostClassifier(loss_function='Logloss',
+                                         eval_metric="AUC",
+                                         od_type='Iter',
+                                         od_wait=self.early_stopping_rounds,
                                          verbose=True,
                                          l2_leaf_reg=3,
                                          thread_count=self.n_jobs,
@@ -785,6 +787,9 @@ class catboost_model(TuningModelMixin):
         param_test = {'rsm': self.rsm}
         gsearch = GridSearchCV(
             estimator=CatBoostClassifier(loss_function='Logloss',
+                                         eval_metric='AUC',
+                                         od_type='Iter',
+                                         od_wait=self.early_stopping_rounds,
                                          verbose=True,
                                          l2_leaf_reg=3,
                                          iterations=best_iterations,

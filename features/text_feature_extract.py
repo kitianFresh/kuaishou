@@ -87,7 +87,7 @@ if __name__ == '__main__':
     text_data['cover_words'] = text_data['cover_words'].apply(words_to_list)
     text_data['cover_length'] = text_data['cover_words'].apply(lambda words: len(words))
 
-    text_data.fillna(0, inplace=True)
+    text_data.fillna(-1, inplace=True)
 
     text_click_data = pd.merge(user_interact_train,text_data,how='left',on=['photo_id'])
 

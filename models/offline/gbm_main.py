@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument("--n_jobs", help="job nums, default=cpu_count", default=cpu_count(), type=int)
     parser.add_argument('-l', '--descreate-max-num', help='catboost model category feature descreate_max_num, max=48',
                         default=30)
-    parser.add_argument('-m', '--model', help='model to tuning, support lgbm, xgboost, catboost', default=['lgbm', 'xgboost', 'catboost'], action='append')
+    parser.add_argument('-m', '--model', help='model to tuning, support lgbm, xgboost, catboost', action='append')
 
     return parser.parse_args()
 
@@ -120,7 +120,7 @@ def train(X_train, y_train, X_val, y_val,
                                    n_estimators=[100, 300, 500, 800, 1200, 1500, 2000],
                                    learning_rate=[0.001, 0.005, 0.01, 0.03, 0.05, 0.1],
                                    params_file=os.path.join(params_dir, "xgboost_params{}.json".format(date)),
-                                   logging_file=os.path.join(log_dir, "catboostTuning{}.log".format(date)),
+                                   logging_file=os.path.join(log_dir, "xgboostTuning{}.log".format(date)),
                                    n_jobs=n_jobs
                                   )
             model4.process()
@@ -206,7 +206,7 @@ def main(args):
     #         cat_feature_inds.append(i)
     cat_feature_inds = [27, 28, 29, 30, 31, 46, 47]
 
-    train(X_train, y_train, X_val, y_val,
+    train(X_train, y_train.ravel(), X_val, y_val.ravel(),
               date=datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S"),
               random_state=random_state,
               n_estimators=n_estimators,
