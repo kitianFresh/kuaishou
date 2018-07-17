@@ -19,6 +19,7 @@ import pandas as pd
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
+parser.add_argument('-o', '--online', help='use online data', action='store_true')
 args = parser.parse_args()
 
 
@@ -26,18 +27,23 @@ if __name__ == '__main__':
     USE_SAMPLE = args.sample
     fmt = args.format if args.format else 'csv'
 
-    TRAIN_USER_INTERACT = '../sample/train_interaction.txt' if USE_SAMPLE else '../data/train_interaction.txt'
-    TEST_USER_INTERACT = '../sample/test_interaction.txt' if USE_SAMPLE else '../data/test_interaction.txt'
+    if args.online:
+        data_file_pre = 'online/'
+    else:
+        data_file_pre = 'offline/'
 
-    TRAIN_VISUAL_DIR = '../sample/visual_train' if USE_SAMPLE else '../data/visual_train'
-    TEST_VISUAL_DIR = '../sample/visual_test' if USE_SAMPLE else '../data/visual_test'
+    TRAIN_USER_INTERACT = '../sample/'+data_file_pre+'train_interaction.txt' if USE_SAMPLE else '../data/'+data_file_pre+'train_interaction.txt'
+    TEST_USER_INTERACT = '../sample/'+data_file_pre+'test_interaction.txt' if USE_SAMPLE else '../data/'+data_file_pre+'test_interaction.txt'
 
-    TRAIN_VISUAL_MATRIX = '../sample/visual_train_matrix.blp' if USE_SAMPLE else '../data/visual_train_matrix.blp'
-    TEST_VISUAL_MATRIX = '../sample/visual_test_matrix.blp' if USE_SAMPLE else '../data/visual_test_matrix.blp'
+    TRAIN_VISUAL_DIR = '../sample/'+data_file_pre+'visual_train' if USE_SAMPLE else '../data/'+data_file_pre+'isual_train'
+    TEST_VISUAL_DIR = '../sample/'+data_file_pre+'visual_test' if USE_SAMPLE else '../data/'+data_file_pre+'visual_test'
+
+    TRAIN_VISUAL_MATRIX = '../sample/'+data_file_pre+'visual_train_matrix.blp' if USE_SAMPLE else '../data/'+data_file_pre+'visual_train_matrix.blp'
+    TEST_VISUAL_MATRIX = '../sample/'+data_file_pre+'visual_test_matrix.blp' if USE_SAMPLE else '../data/'+data_file_pre+'visual_test_matrix.blp'
 
 
-    TRAIN_VISUAL_PHOTO_ID = '../sample/visual_train_photo_id.blp' if USE_SAMPLE else '../data/visual_train_photo_id.blp'
-    TEST_VISUAL_PHOTO_ID = '../sample/visual_test_photo_id.blp' if USE_SAMPLE else '../data/visual_test_photo_id.blp'
+    TRAIN_VISUAL_PHOTO_ID = '../sample/'+data_file_pre+'visual_train_photo_id.blp' if USE_SAMPLE else '../data/'+data_file_pre+'visual_train_photo_id.blp'
+    TEST_VISUAL_PHOTO_ID = '../sample/'+data_file_pre+'visual_test_photo_id.blp' if USE_SAMPLE else '../data/'+data_file_pre+'visual_test_photo_id.blp'
 
     user_item_train = pd.read_csv(TRAIN_USER_INTERACT,
                                   sep='\t',
@@ -77,7 +83,7 @@ if __name__ == '__main__':
             matrix = np.vstack([train_matrix, test_matrix])
             photo_id = np.append(train_photo_id, test_photo_id)
 
-    VISUAL_CLUSTER_MODEL = '../sample/visual_cluster_model' if USE_SAMPLE else '../data/visual_cluster_model'
+    VISUAL_CLUSTER_MODEL = '../sample/'+data_file_pre+'visual_cluster_model' if USE_SAMPLE else '../data/'+data_file_pre+'visual_cluster_model'
     cluster_nums = 50
     visual_feature = None
     if os.path.exists(VISUAL_CLUSTER_MODEL + '_kmeans.pkl'):
@@ -87,7 +93,7 @@ if __name__ == '__main__':
 
     visual_feature = pd.merge(user_item_data,visual_feature,how='left',on=['photo_id'])
     visual_feature['photo_cluster_label'] = visual_feature['photo_cluster_label'].astype(feature_dtype_map['photo_cluster_label'])
-    feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
+    feature_store_path = '../sample/'+data_file_pre+'features' if USE_SAMPLE else '../data/'+data_file_pre+'features'
     if not os.path.exists(feature_store_path):
         os.mkdir(feature_store_path)
     VISUAL_FEATURE_FILE = 'visual_feature'
