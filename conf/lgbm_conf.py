@@ -18,9 +18,9 @@ user_face_favor_features = ['face_favor', 'man_favor', 'woman_favor', 'man_cv_fa
 
 user_text_favor_features = ['cover_length_favor']
 
-# id_features = ['user_id', 'photo_id']
-id_features = ['uid0', 'uid1', 'uid2', 'uid3', 'uid4', 'uid5', 'uid6', 'uid7', 'uid8', 'uid9', 'uid10', 'uid11',
-               'uid12', 'uid13', 'uid14', 'uid15']
+id_features = ['user_id', 'photo_id']
+expand_id_features = ['uid0', 'uid1', 'uid2', 'uid3', 'uid4', 'uid5', 'uid6', 'uid7', 'uid8', 'uid9', 'uid10', 'uid11',
+                      'uid12', 'uid13', 'uid14', 'uid15']
 time_features = ['time', 'duration_time']
 # time_features = ['time_cate', 'duration_time_cate']
 
