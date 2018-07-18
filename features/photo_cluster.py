@@ -15,9 +15,18 @@ import pandas as pd
 
 
 def data_transform_store(visual_path,matrix_store_path,photo_id_path):
-    vector = np.empty([1,2048])
-    photo_id = []
+    photo = np.load(visual_path)
+    keys = photo.keys()
+    vector = np.zeros([len(keys)-1, 2048])
+    photo_id = [0 for j in range(len(keys)-1)]
     print('start transform single file to matrix')
+    for i in range(len(keys)):
+        if i == 0:
+            continue
+        photo_id[i] = int(keys[i].split('/')[1])
+        vec = photo[keys[i]]
+        vector[i-1, :] = vec
+    '''
     for index,name in enumerate(os.listdir(visual_path)):
         vector_path = os.path.join(visual_path,name)
         photo_id.append(int(name))
@@ -26,6 +35,7 @@ def data_transform_store(visual_path,matrix_store_path,photo_id_path):
         else:
             vec = np.load(vector_path)
             vector = np.vstack([vector,vec])
+    '''
     photo_id = np.array(photo_id)
     print('start store visual matrix and photo id')
     bp.pack_ndarray_file(vector,matrix_store_path)
@@ -36,6 +46,7 @@ def sample_data_transform_store(visual_path,matrix_store_path,photo_id_path):
     vector = np.empty(([1,2048]))
     photo_ids = []
     print('start transform single file to matrix')
+
     vector_file = open(visual_path,'r')
     for index ,vector_path in enumerate(vector_file):
         vector_path = vector_path.replace('\n','')

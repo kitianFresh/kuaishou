@@ -35,8 +35,8 @@ if __name__ == '__main__':
     TRAIN_USER_INTERACT = '../sample/'+data_file_pre+'train_interaction.txt' if USE_SAMPLE else '../data/'+data_file_pre+'train_interaction.txt'
     TEST_USER_INTERACT = '../sample/'+data_file_pre+'test_interaction.txt' if USE_SAMPLE else '../data/'+data_file_pre+'test_interaction.txt'
 
-    TRAIN_VISUAL_DIR = '../sample/'+data_file_pre+'visual_train' if USE_SAMPLE else '../data/'+data_file_pre+'visual_train'
-    TEST_VISUAL_DIR = '../sample/'+data_file_pre+'visual_test' if USE_SAMPLE else '../data/'+data_file_pre+'visual_test'
+    TRAIN_VISUAL_DIR = '../sample/'+data_file_pre+'visual_train' if USE_SAMPLE else '../data/'+data_file_pre+'final_visual_train.zip'
+    TEST_VISUAL_DIR = '../sample/'+data_file_pre+'visual_test' if USE_SAMPLE else '../data/'+data_file_pre+'final_visual_test.zip'
 
     TRAIN_VISUAL_MATRIX = '../sample/'+data_file_pre+'visual_train_matrix.blp' if USE_SAMPLE else '../data/'+data_file_pre+'visual_train_matrix.blp'
     TEST_VISUAL_MATRIX = '../sample/'+data_file_pre+'visual_test_matrix.blp' if USE_SAMPLE else '../data/'+data_file_pre+'visual_test_matrix.blp'
