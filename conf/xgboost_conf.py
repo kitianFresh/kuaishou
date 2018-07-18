@@ -26,18 +26,16 @@ expand_id_features = ['uid0', 'uid1', 'uid2', 'uid3', 'uid4', 'uid5', 'uid6', 'u
 time_features = ['time', 'duration_time']
 # time_features = ['time_cate', 'duration_time_cate']
 
-
+# text_features = ['cover_length', 'avg_tfidf', 'key_words_num','text_class_label','text_cluster_label', 'text_cluster_exposure_num', 'text_clicked_ratio']
 text_features = ['cover_length', 'avg_tfidf', 'key_words_num', 'text_class_label', 'text_cluster_label']
 # text_features = ['cover_length', 'avg_tfidf', 'key_words_num']
 
 visual_features = ['photo_cluster_label', 'photo_class_label']
 
 # 'clicked_ratio', 'have_face_cate'
-photo_features = ['exposure_num', 'have_face_cate', 'have_text_cate', 'text_cluster_exposure_num',
-                  'text_clicked_ratio'] + face_features + text_features
+photo_features = ['exposure_num', 'have_face_cate', 'have_text_cate'] + face_features + text_features
 user_features = user_action_features + user_face_favor_features + user_text_favor_features
 
 y_label = ['click']
 
 features_to_train = user_features + photo_features + time_features + id_features
-# features_to_train = list(set(features_to_train) - set(['clicked_ratio']))
