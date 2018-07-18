@@ -18,8 +18,57 @@ from conf.modelconf import *
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-o', '--online', help='online feature extract', action="store_true")
-parser.add_argument('-k', '--offline-kfold', help='offline kth fold feature extract, extract kth fold', default=1)
+parser.add_argument('-k', '--offline-kfold', help='offline kth fold feature extract, extract kth fold', default=0)
 args = parser.parse_args()
+
+
+def gen_count_dict(data, labels, begin, end):
+    total_dict = {}
+    pos_dict = {}
+    for i, d in enumerate(data):
+        if i >= begin and i < end:
+            continue
+        for x in d:
+            if x not in total_dict:
+                total_dict[x] = 0.0
+            if x not in pos_dict:
+                pos_dict[x] = 0.0
+            total_dict[x] += 1
+            if labels[i] == True:
+                pos_dict[x] += 1
+    return total_dict, pos_dict
+
+def count_word_ctr(train, test, labels):
+    prior = alpha / (alpha + beta)
+    total_dict, pos_dict = gen_count_dict(train, labels, 1, 0)
+    train_res = []
+    for i, d in enumerate(train):
+        ctr_vec = []
+        for x in d:
+            if x not in total_dict:
+                ctr_vec.append(prior)
+            else:
+                ctr_vec.append(alpha + pos_dict[x]/ (alpha+beta+total_dict[x]))
+        if len(ctr_vec) == 0:
+            train_res.append(prior)
+        else:
+            train_res.append(max(ctr_vec))
+
+    test_res = []
+    for i, d in enumerate(test):
+        ctr_vec = []
+        for x in d:
+            if x not in total_dict:
+                ctr_vec.append(prior)
+            else:
+                ctr_vec.append(alpha + pos_dict[x]/ (alpha+beta+total_dict[x]))
+        if len(ctr_vec) == 0:
+            test_res.append(prior)
+        else:
+            test_res.append(max(ctr_vec))
+
+    return np.array(train_res), np.array(test_res)
+
 
 if __name__ == '__main__':
 
@@ -32,6 +81,8 @@ if __name__ == '__main__':
                                                                                              args.online)
         TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
             'train_interaction.txt')
+        TEST_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('test_interaction.txt')
+
 
     else:
         TRAIN_TEXT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
@@ -41,6 +92,8 @@ if __name__ == '__main__':
 
         TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
         'train_interaction' + str(kfold) + '.txt', online=False)
+        TEST_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
+        'test_interaction' + str(kfold) + '.txt', online=False)
 
     # trained once, use anywhere, shared for all online or offline folds
     DICTIONARY_PATH = os.path.join(data_dir, 'dictionary.txt')
@@ -49,15 +102,19 @@ if __name__ == '__main__':
     CLUSTER_MODEL_PATH = os.path.join(data_dir, 'doc_cluster')
     CLASSIFY_MODEL_PATH = os.path.join(data_dir, 'classify_model')
 
+    user_item_train = pd.read_csv(TRAIN_USER_INTERACT,
+                                  sep='\t',
+                                  usecols=[0, 1, 2],
+                                  header=None,
+                                  names=['user_id', 'photo_id', 'click'])
 
-    user_interact_train = pd.read_csv(TRAIN_USER_INTERACT,
-                                      sep='\t',
-                                      usecols=[1,2],
-                                      header=None,
-                                      names=['photo_id','click'])
+    print(user_item_train.info())
 
-    user_interact_train = user_interact_train[user_interact_train['click'] == 1]
-    user_interact_train.drop(['click'],axis=1,inplace=True)
+    user_item_test = pd.read_csv(TEST_USER_INTERACT,
+                                 sep='\t',
+                                 usecols=[0, 1],
+                                 header=None,
+                                 names=['user_id', 'photo_id'])
 
     text_train = pd.read_csv(TRAIN_TEXT,
                              sep='\t',
@@ -73,25 +130,38 @@ if __name__ == '__main__':
 
     print(text_test.info())
 
-    text_data = pd.concat([text_train, text_test])
-
-
     def words_to_list(words):
         if words == '0':
             return []
         else:
             return words.split(',')
 
+    text_train['cover_words_4_predict'] = text_train['cover_words']
+    text_train['cover_words'] = text_train['cover_words'].apply(words_to_list)
+    text_train['cover_length'] = text_train['cover_words'].apply(lambda words: len(words))
 
-    text_data['cover_words_4_predict'] = text_data['cover_words']
-    text_data['cover_words'] = text_data['cover_words'].apply(words_to_list)
-    text_data['cover_length'] = text_data['cover_words'].apply(lambda words: len(words))
+    text_test['cover_words_4_predict'] = text_test['cover_words']
+    text_test['cover_words'] = text_test['cover_words'].apply(words_to_list)
+    text_test['cover_length'] = text_test['cover_words'].apply(lambda words: len(words))
 
-    text_data.fillna(0, inplace=True)
+    p1 = set(text_train['photo_id'].unique())
+    p2 = set(user_item_train['photo_id'].unique())
+    print(len(p1), len(p2))
+    print(len(p1 & p2))
 
-    text_click_data = pd.merge(user_interact_train,text_data,how='left',on=['photo_id'])
+    text_train['max_word_ctr'], text_test['max_word_ctr'] = count_word_ctr(text_train['cover_words'].values,
+                                                                           text_test['cover_words'].values,
+                                                                           user_item_train['click'].values)
 
-    print (text_click_data.info())
+    print(text_train.info())
+    print(text_test.info())
+    print(np.sum(text_train.isnull()))
+    print(np.sum(text_test.isnull()))
+
+    text_data = pd.concat([text_train, text_test])
+
+
+
 
     # 原始语料库
     corpus = []
@@ -206,6 +276,7 @@ if __name__ == '__main__':
     text_data['have_text_cate'] = text_data['cover_length'].apply(lambda x: x > 0).astype(feature_dtype_map['have_text_cate'])
     text_data['text_class_label'] = text_data['text_class_label'].astype(feature_dtype_map['text_class_label'])
     text_data['text_cluster_label'] = text_data['text_cluster_label'].astype(feature_dtype_map['text_cluster_label'])
+
 
     if args.online:
         TEXT_FEATURE_FILE = 'text_feature' + '.' + fmt

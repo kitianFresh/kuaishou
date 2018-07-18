@@ -69,8 +69,9 @@ norm_features = ['browse_num', 'click_num', 'like_num', 'follow_num', 'playing_s
 uint64_cols = ['user_id', 'photo_id', 'time']
 int32_cols = ['playing_sum', 'duration_sum', 'key_words_num', 'text_cluster_exposure_num']
 int16_cols = ['cover_length', 'browse_num', 'exposure_num', 'click_num', 'duration_time', 'like_num', 'follow_num', 'clicked_num']
-int8_cols = ['man_num', 'woman_num', 'face_num', 'time_cate', 'duration_time_cate', 'text_cluster_label', 'photo_cluster_label'] + expand_id_features
-uint8_cols = ['have_face_cate', 'have_text_cate', 'click', 'text_class_label', 'photo_class_label']
+int8_cols = ['have_face_cate', 'have_text_cate', 'click', 'text_class_label', 'photo_class_label'] + \
+            ['man_num', 'woman_num', 'face_num', 'time_cate', 'duration_time_cate', 'text_cluster_label', 'photo_cluster_label'] + \
+            expand_id_features
 float32_cols = ['period_click_ratio', 'clicked_ratio','non_face_click_favor', 'face_click_favor',
                 'man_favor', 'woman_avg_age', 'playing_freq', 'woman_age_favor', 'woman_yen_value_favor',
                 'human_scale', 'woman_favor', 'click_freq', 'woman_cv_favor', 'man_age_favor', 'man_yen_value_favor',
@@ -105,8 +106,6 @@ for name in int16_cols:
     feature_dtype_map.update({name: np.int16})
 for name in (int8_cols + int8_cate_cols):
     feature_dtype_map.update({name: np.int8})
-for name in uint8_cols:
-    feature_dtype_map.update({name: np.uint8})
 for name in float32_cols:
     feature_dtype_map.update({name: np.float32})
 for name in float64_cols:
