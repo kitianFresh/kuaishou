@@ -95,7 +95,6 @@ if __name__ == '__main__':
     # 这样划分出来的数据，训练集和验证集点击率分布不台符合
     # train_data, val_data, y_train, y_val = train_test_split(ensemble_train[id_features+features_to_train+y_label], ensemble_train[y_label], test_size=0.3, random_state=0)
 
-    # 决策树模型不需要归一化，本身就是范围划分
 
     print('Training model %s......' % model_name)
 
@@ -105,6 +104,8 @@ if __name__ == '__main__':
 
     print(y_train.mean(), y_train.std())
     print(y_val.mean(), y_val.std())
+    print(X_train.shape, y_train.shape)
+    print(X_val.shape,y_val.shape)
     import gc
     del ensemble_train
     gc.collect()

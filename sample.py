@@ -20,7 +20,11 @@ random.seed(a=int(args.seed))
 def user_sample(group, prop):
     n = group.shape[0]
     m = int(prop * n)
-    m = 1 if m == 0 else m
+    if m == 0:
+        if n >= 2:
+            m = 2
+        else:
+            m = 1
     group = group.iloc[random.sample(range(n), m)]
     return group
 
@@ -119,6 +123,12 @@ sample_text_train = photo_sample(text_train, sample_photo_ids_train)
 sample_text_train.to_csv('./sample/online/train_text.txt', sep='\t', index=False, header=False)
 print('sample_text_train sampled %d from %d text_train data' % (sample_text_train.shape[0], text_train.shape[0]))
 print(sample_text_train.info())
+
+
+train_text_photos = set(sample_text_train['photo_id'].unique())
+ui_photos = set(sample_user_item_train['photo_id'].unique())
+print(len(train_text_photos), len(ui_photos))
+print(len(train_text_photos & ui_photos))
 
 # visual_train_path = './data/visual_train'
 # visual_test_path = './data/visual_test'

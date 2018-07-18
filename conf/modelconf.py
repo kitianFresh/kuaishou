@@ -70,14 +70,14 @@ uint64_cols = ['user_id', 'photo_id', 'time']
 int32_cols = ['playing_sum', 'duration_sum', 'key_words_num', 'text_cluster_exposure_num']
 int16_cols = ['cover_length', 'browse_num', 'exposure_num', 'click_num', 'duration_time', 'like_num', 'follow_num', 'clicked_num']
 int8_cols = ['man_num', 'woman_num', 'face_num', 'time_cate', 'duration_time_cate', 'text_cluster_label', 'photo_cluster_label'] + expand_id_features
-bool_cols = ['have_face_cate', 'have_text_cate', 'click', 'text_class_label', 'photo_class_label']
+uint8_cols = ['have_face_cate', 'have_text_cate', 'click', 'text_class_label', 'photo_class_label']
 float32_cols = ['period_click_ratio', 'clicked_ratio','non_face_click_favor', 'face_click_favor',
                 'man_favor', 'woman_avg_age', 'playing_freq', 'woman_age_favor', 'woman_yen_value_favor',
                 'human_scale', 'woman_favor', 'click_freq', 'woman_cv_favor', 'man_age_favor', 'man_yen_value_favor',
                 'follow_ratio', 'man_scale', 'browse_freq', 'man_avg_age', 'man_cv_favor', 'man_avg_attr',
                 'playing_ratio', 'woman_scale', 'click_ratio', 'human_avg_age', 'woman_avg_attr', 'like_ratio',
                 'cover_length_favor', 'human_avg_attr', 'avg_tfidf', 'hour_click_ratio', 'woman_num_ratio',
-                'man_num_ratio', 'playing_favor', 'duration_favor', 'playing_duration_favor','browse_time_diff', 'face_favor', 'text_clicked_ratio']
+                'man_num_ratio', 'playing_favor', 'duration_favor', 'playing_duration_favor','browse_time_diff', 'face_favor', 'text_clicked_ratio', 'max_word_ctr']
 float64_cols = []
 
 int32_cate_cols = []
@@ -105,8 +105,8 @@ for name in int16_cols:
     feature_dtype_map.update({name: np.int16})
 for name in (int8_cols + int8_cate_cols):
     feature_dtype_map.update({name: np.int8})
-for name in bool_cols:
-    feature_dtype_map.update({name: np.bool_})
+for name in uint8_cols:
+    feature_dtype_map.update({name: np.uint8})
 for name in float32_cols:
     feature_dtype_map.update({name: np.float32})
 for name in float64_cols:
@@ -146,7 +146,6 @@ def get_data_file(name, online=True):
     else:
         DATA = os.path.join(offline_data_dir, name)
         feature_store_dir = os.path.join(offline_data_dir, 'features')
-        col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
         col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
         if not os.path.exists(feature_store_dir):
             os.makedirs(feature_store_dir)

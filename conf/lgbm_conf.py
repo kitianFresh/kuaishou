@@ -25,7 +25,7 @@ time_features = ['time', 'duration_time']
 # time_features = ['time_cate', 'duration_time_cate']
 
 # text_features = ['cover_length', 'avg_tfidf', 'key_words_num','text_class_label','text_cluster_label', 'text_cluster_exposure_num', 'text_clicked_ratio']
-text_features = ['cover_length', 'avg_tfidf', 'key_words_num', 'text_class_label', 'text_cluster_label']
+text_features = ['cover_length', 'avg_tfidf', 'key_words_num', 'text_class_label', 'text_cluster_label', 'max_word_ctr']
 # text_features = ['cover_length', 'avg_tfidf', 'key_words_num']
 
 visual_features = ['photo_cluster_label', 'photo_class_label']
