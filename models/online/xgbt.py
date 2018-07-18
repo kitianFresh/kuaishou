@@ -15,10 +15,10 @@ from sklearn.model_selection import cross_val_score, train_test_split, Stratifie
 from evolutionary_search import EvolutionaryAlgorithmSearchCV
 
 from xgboost import XGBClassifier
-# from conf.modelconf import user_action_features, face_features, user_face_favor_features, id_features, time_features, photo_features, user_features, y_label, features_to_train
 
 from common.utils import FeatureMerger, read_data, store_data, load_config_from_pyfile
 from common.base import Classifier
+from conf.modelconf import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--sample', help='use sample data or full data', action="store_true")
@@ -53,29 +53,30 @@ if __name__ == '__main__':
 
     model_store_path = './sample/' if USE_SAMPLE else './data'
 
-    feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
-
-    col_feature_store_path = '../sample/features/columns' if USE_SAMPLE else '../data/features/columns'
+    feature_store_dir = os.path.join(online_data_dir, 'features')
+    col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
 
     model = Classifier(None, dir=model_store_path, name=model_name, version=version, description=desc,
                        features_to_train=features_to_train)
 
+    start = time.time()
     if all_one:
-        ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
-        ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
-        ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
+        ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train' + '.' + fmt
+        ensemble_train = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TRAIN_FILE), fmt)
 
-        ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
-        ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
-        ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
+        ALL_FEATURE_TEST_FILE = 'ensemble_feature_test' + '.' + fmt
+        ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
     else:
-        feature_to_use = user_features + photo_features + time_features
-        fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use + y_label, fmt=fmt, data_type='train',
+        feature_to_use = id_features + user_features + photo_features + time_features
+        fm_trainer = FeatureMerger(col_feature_store_dir, feature_to_use + y_label, fmt=fmt, data_type='train',
                                    pool_type='process', num_workers=num_workers)
-        fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test',
+        fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use, fmt=fmt, data_type='test',
                                   pool_type='process', num_workers=num_workers)
-        ensemble_train = fm_trainer.merge()
-        ensemble_test = fm_tester.merge()
+        ensemble_train = fm_trainer.concat()
+        ensemble_test = fm_tester.concat()
+
+    end = time.time()
+    print('data read in %s seconds' % str(end - start))
 
     print(ensemble_train.info())
     print(ensemble_test.info())

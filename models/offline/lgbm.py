@@ -59,6 +59,7 @@ if __name__ == '__main__':
 
     model = Classifier(None,dir=model_store_path, name=model_name,version=version, description=desc, features_to_train=features_to_train)
 
+    start = time.time()
     if all_one:
         ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train' + str(kfold) + '.' + fmt
         ensemble_train = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TRAIN_FILE), fmt)
@@ -66,11 +67,14 @@ if __name__ == '__main__':
         ALL_FEATURE_TEST_FILE = 'ensemble_feature_test' + str(kfold) + '.' + fmt
         ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
     else:
-        feature_to_use = user_features + photo_features + time_features
+        feature_to_use = id_features + user_features + photo_features + time_features
         fm_trainer = FeatureMerger(col_feature_store_dir, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=num_workers)
-        fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=num_workers)
-        ensemble_train = fm_trainer.merge()
-        ensemble_test = fm_tester.merge()
+        fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use+y_label, fmt=fmt, data_type='test', pool_type='process', num_workers=num_workers)
+        ensemble_train = fm_trainer.concat()
+        ensemble_test = fm_tester.concat()
+
+    end = time.time()
+    print('data read in %s seconds' % str(end - start))
 
     print(ensemble_train.info())
     print(ensemble_test.info())

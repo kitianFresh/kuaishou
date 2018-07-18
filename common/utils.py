@@ -129,6 +129,28 @@ class FeatureMerger(object):
         logging.info("Construct data in %s seconds" % (str(time.clock() - start_time_1)))
         return data
 
+    def concat(self):
+        tasks_args = []
+        for feature in self.col_features_to_merge:
+            if self.data_type == "":
+                file = feature + '.' + self.fmt
+            else:
+                file = feature + '_' + self.data_type + '.' + self.fmt
+            args = (feature, os.path.join(self.col_feature_dir, file), self.fmt)
+            tasks_args.append(args)
+
+        start_time_1 = time.clock()
+
+        pool = ThreadPoolExecutor if self.pool_type == 'thread' else ProcessPoolExecutor
+        with pool(max_workers=self.num_workers) as executor:
+            dfs = (df for df in executor.map(feature_reader, tasks_args))
+        logging.info("%s pool reading execution in %s seconds" % (self.pool_type, str(time.clock() - start_time_1)))
+
+        start_time_2 = time.clock()
+        data = pd.concat(dfs, axis=1)
+        logging.info("Concatenating data in memory execution in %s seconds" % (str(time.clock() - start_time_2)))
+        logging.info("Construct data in %s seconds" % (str(time.clock() - start_time_1)))
+        return data
 
 def read_data(path, fmt):
     '''

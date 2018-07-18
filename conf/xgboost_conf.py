@@ -38,4 +38,4 @@ user_features = user_action_features + user_face_favor_features + user_text_favo
 
 y_label = ['click']
 
-features_to_train = user_features + photo_features + time_features + id_features
+features_to_train = user_features + photo_features + time_features

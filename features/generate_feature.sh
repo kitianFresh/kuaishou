@@ -38,7 +38,7 @@ then
     python feature_discretization.py -o
 else
     if [[ ${KFOLD} == '' ]]; then
-        KFOLD=1
+        KFOLD=0
     fi
     echo KFOLD = "${KFOLD}"
     python face_feature_extract.py -k ${KFOLD}

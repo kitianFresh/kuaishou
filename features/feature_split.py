@@ -111,28 +111,40 @@ if __name__ == '__main__':
     user_item_test.fillna(0, inplace=True)
     input_features = id_features + user_features + photo_features + time_features
     ensemble_train = user_item_train[input_features + y_label]
-    ensemble_test = user_item_test[input_features]
+    ensemble_test = user_item_test[input_features] if args.online else user_item_test[input_features + y_label]
 
 
     print(ensemble_train.info())
     print(ensemble_test.info())
 #     fmt = 'h5'
+    ensemble_train.sort_values(id_features, inplace=True)
+    ensemble_test.sort_values(id_features, inplace=True)
 
     input_features = input_features if len(split_features) == 0 else split_features
     tasks_args = []
-    for feature in set(input_features) - set(id_features):
+    for feature in set(input_features):
         train_file = feature  + '_train' + '.' + fmt
         test_file = feature  + '_test' + '.' + fmt
-        args = (ensemble_train[id_features+[feature]], os.path.join(col_feature_store_dir, train_file), fmt)
-        tasks_args.append(args)
-        args = (ensemble_test[id_features+[feature]], os.path.join(col_feature_store_dir, test_file), fmt)
-        tasks_args.append(args)
+        param = (ensemble_train[[feature]], os.path.join(col_feature_store_dir, train_file), fmt)
+        tasks_args.append(param)
+        param = (ensemble_test[[feature]], os.path.join(col_feature_store_dir, test_file), fmt)
+        tasks_args.append(param)
 
     if len(split_features) == 0:
-        feature = y_label[0]
-        train_file = feature  + '_train' + '.' + fmt
-        args = (ensemble_train[id_features+[feature]], os.path.join(col_feature_store_dir, train_file), fmt)
-        tasks_args.append(args)
+
+        if args.online:
+            feature = y_label[0]
+            train_file = feature  + '_train' + '.' + fmt
+            param = (ensemble_train[[feature]], os.path.join(col_feature_store_dir, train_file), fmt)
+            tasks_args.append(param)
+        else:
+            feature = y_label[0]
+            train_file = feature + '_train' + '.' + fmt
+            test_file = feature + '_test' + '.' + fmt
+            param = (ensemble_test[[feature]], os.path.join(col_feature_store_dir, test_file), fmt)
+            tasks_args.append(param)
+            param = (ensemble_train[[feature]], os.path.join(col_feature_store_dir, train_file), fmt)
+            tasks_args.append(param)
 
     def feature_saver(args):
         df, path, fmt = args

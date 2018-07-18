@@ -63,11 +63,11 @@ if __name__ == '__main__':
         ALL_FEATURE_TEST_FILE = 'ensemble_feature_test' + str(kfold) + '.' + fmt
         ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
     else:
-        feature_to_use = user_features + photo_features + time_features
+        feature_to_use = id_features + user_features + photo_features + time_features
         fm_trainer = FeatureMerger(col_feature_store_dir, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=num_workers)
-        fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=num_workers)
-        ensemble_train = fm_trainer.merge()
-        ensemble_test = fm_tester.merge()
+        fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use+y_label, fmt=fmt, data_type='test', pool_type='process', num_workers=num_workers)
+        ensemble_train = fm_trainer.concat()
+        ensemble_test = fm_tester.concat()
 
     end = time.time()
     print('data read in %s seconds' % str(end-start))
@@ -121,7 +121,7 @@ if __name__ == '__main__':
                                    pinned_memory_size=1073741824 * 8,
                                    used_ram_limit='200gb',
                                    boosting_type="Plain",
-                                   simple_ctr='Borders:PriorEstimation=BetaPrior:Prior=0.2',
+                                   simple_ctr='Borders:Prior=0.2',
                                    save_snapshot=True,
                                    snapshot_file=os.path.join(model_store_path, model_name + '-' + version + '.bak'),
                                    logging_level='Debug')

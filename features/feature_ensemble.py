@@ -94,8 +94,8 @@ if __name__ == '__main__':
 
     
     print(user_item_train.columns)
-    user_item_train.fillna(-1, inplace=True)
-    user_item_test.fillna(-1, inplace=True)
+    user_item_train.fillna(0, inplace=True)
+    user_item_test.fillna(0, inplace=True)
     input_features = id_features + user_features + photo_features + time_features
     
     print(input_features)
