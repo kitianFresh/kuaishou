@@ -51,7 +51,10 @@ if __name__ == '__main__':
     user_item_test = pd.merge(user_item_test, user_item_train[['user_id', 'time_cate', 'hour_click_ratio']].drop_duplicates(), how='left', on=['user_id', 'time_cate'])
 
     user_item_test['hour_click_ratio'].fillna(0, inplace=True)
-    store_data(user_item_train[['user_id', 'photo_id', 'hour_click_ratio']], os.path.join(col_feature_store_dir, 'hour_click_ratio_train.csv'), fmt)
+
+    user_item_test.sort_values(['user_id', 'photo_id'], inplace=True)
+    user_item_train.sort_values(['user_id', 'photo_id'], inplace=True)
+    store_data(user_item_train[['hour_click_ratio']], os.path.join(col_feature_store_dir, 'hour_click_ratio_train.csv'), fmt)
     
-    store_data(user_item_test[['user_id', 'photo_id', 'hour_click_ratio']], os.path.join(col_feature_store_dir, 'hour_click_ratio_test.csv'), fmt)
+    store_data(user_item_test[['hour_click_ratio']], os.path.join(col_feature_store_dir, 'hour_click_ratio_test.csv'), fmt)
     

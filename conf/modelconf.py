@@ -35,24 +35,24 @@ user_face_favor_features = ['face_favor', 'man_favor', 'woman_favor', 'man_cv_fa
 user_text_favor_features = ['cover_length_favor']
     
     
-# id_features = ['user_id', 'photo_id']
-id_features = ['uid0', 'uid1', 'uid2', 'uid3', 'uid4', 'uid5', 'uid6', 'uid7', 'uid8', 'uid9', 'uid10', 'uid11', 'uid12', 'uid13', 'uid14', 'uid15']
+id_features = ['user_id', 'photo_id']
+expand_id_features = ['uid0', 'uid1', 'uid2', 'uid3', 'uid4', 'uid5', 'uid6', 'uid7', 'uid8', 'uid9', 'uid10', 'uid11', 'uid12', 'uid13', 'uid14', 'uid15']
 time_features = ['time', 'duration_time']
 # time_features = ['time_cate', 'duration_time_cate']
 
-
+#text_features = ['cover_length', 'avg_tfidf', 'key_words_num','text_class_label','text_cluster_label', 'text_cluster_exposure_num', 'text_clicked_ratio']
 text_features = ['cover_length', 'avg_tfidf', 'key_words_num','text_class_label','text_cluster_label']
 #text_features = ['cover_length', 'avg_tfidf', 'key_words_num']
 
 visual_features = ['photo_cluster_label', 'photo_class_label']
 
 #'clicked_ratio', 'have_face_cate'
-photo_features = ['exposure_num', 'have_face_cate', 'have_text_cate', 'text_cluster_exposure_num', 'text_clicked_ratio'] + face_features + text_features
+photo_features = ['exposure_num', 'have_face_cate', 'have_text_cate'] + face_features + text_features
 user_features = user_action_features + user_face_favor_features + user_text_favor_features
 
 y_label = ['click']
 
-features_to_train = user_features + photo_features + time_features + id_features
+features_to_train = user_features + photo_features + time_features
 # features_to_train = list(set(features_to_train) - set(['clicked_ratio']))
 
 cate_features_to_train = []
@@ -69,7 +69,7 @@ norm_features = ['browse_num', 'click_num', 'like_num', 'follow_num', 'playing_s
 uint64_cols = ['user_id', 'photo_id', 'time']
 int32_cols = ['playing_sum', 'duration_sum', 'key_words_num', 'text_cluster_exposure_num']
 int16_cols = ['cover_length', 'browse_num', 'exposure_num', 'click_num', 'duration_time', 'like_num', 'follow_num', 'clicked_num']
-int8_cols = ['man_num', 'woman_num', 'face_num', 'time_cate', 'duration_time_cate', 'text_cluster_label', 'photo_cluster_label'] + id_features
+int8_cols = ['man_num', 'woman_num', 'face_num', 'time_cate', 'duration_time_cate', 'text_cluster_label', 'photo_cluster_label'] + expand_id_features
 bool_cols = ['have_face_cate', 'have_text_cate', 'click', 'text_class_label', 'photo_class_label']
 float32_cols = ['period_click_ratio', 'clicked_ratio','non_face_click_favor', 'face_click_favor',
                 'man_favor', 'woman_avg_age', 'playing_freq', 'woman_age_favor', 'woman_yen_value_favor',

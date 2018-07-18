@@ -53,9 +53,10 @@ if __name__ == '__main__':
     feature_store_dir = os.path.join(online_data_dir, 'features')
     col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
 
-    model = Classifier(None,dir=model_store_path, name=model_name,version=version, description=desc, features_to_train=features_to_train)
+    model = Classifier(None, dir=model_store_path, name=model_name, version=version, description=desc,
+                       features_to_train=features_to_train)
 
-
+    start = time.time()
     if all_one:
         ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train' + '.' + fmt
         ensemble_train = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TRAIN_FILE), fmt)
@@ -63,11 +64,16 @@ if __name__ == '__main__':
         ALL_FEATURE_TEST_FILE = 'ensemble_feature_test' + '.' + fmt
         ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
     else:
-        feature_to_use = user_features + photo_features + time_features
-        fm_trainer = FeatureMerger(col_feature_store_dir, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=num_workers)
-        fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use, fmt=fmt, data_type='test', pool_type='process', num_workers=num_workers)
-        ensemble_train = fm_trainer.merge()
-        ensemble_test = fm_tester.merge()
+        feature_to_use = id_features + user_features + photo_features + time_features
+        fm_trainer = FeatureMerger(col_feature_store_dir, feature_to_use + y_label, fmt=fmt, data_type='train',
+                                   pool_type='process', num_workers=num_workers)
+        fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use, fmt=fmt, data_type='test',
+                                  pool_type='process', num_workers=num_workers)
+        ensemble_train = fm_trainer.concat()
+        ensemble_test = fm_tester.concat()
+
+    end = time.time()
+    print('data read in %s seconds' % str(end - start))
 
     print(ensemble_train.info())
     print(ensemble_test.info())
@@ -99,15 +105,12 @@ if __name__ == '__main__':
     gc.collect()
     start_time_1 = time.clock()
 
-    model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=127,
-                                max_depth=5, learning_rate=0.01,
-                                n_estimators=500,objective='binary',
-                                min_split_gain=0.0, min_child_weight=0.001,
-                                min_child_samples=200, subsample=0.8,
-                                subsample_freq=0, colsample_bytree=0.8,
-                                reg_alpha=0.0, reg_lambda=0.0,
-                                random_state=2018, n_jobs=-1, device='gpu' if args.gpu_mode else 'cpu',
-                                silent=False)
+    model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=63, reg_alpha=0.0, reg_lambda=1,
+                               max_depth=-1, n_estimators=1200, objective='binary',
+                               subsample=0.8, colsample_bytree=0.8, subsample_freq=1, feature_fraction=0.8,
+                               learning_rate=0.05, min_child_weight=50,
+                               random_state=2018, n_jobs=-1, device='gpu' if args.gpu_mode else 'cpu',
+                               silent=False)
     model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel())], eval_metric='auc')
     print("Model trained in %s seconds" % (str(time.clock() - start_time_1)))
 
