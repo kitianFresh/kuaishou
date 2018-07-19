@@ -10,17 +10,21 @@ import sys
 sys.path.append('..')
 from common import cluster
 import os
+import logging
 import pandas as pd
 
 
 
 def data_transform_store(visual_path,matrix_store_path,photo_id_path):
+
     photo = np.load(visual_path)
     keys = photo.keys()
     vector = np.zeros([len(keys)-1, 2048])
     photo_id = [0 for j in range(len(keys)-1)]
     print('start transform single file to matrix')
     for i in range(len(keys)):
+        if(i%10000==0):
+            logging.info("%s line has been deal", i)
         if i == 0:
             continue
         photo_id[i] = int(keys[i].split('/')[1])
