@@ -2,6 +2,8 @@
 
 import logging
 import numpy as np
+# Python 2 and 3: alternative 1
+from past.builtins import basestring    # pip install future
 
 logging.basicConfig(level=logging.DEBUG,
                 format='%(asctime)s %(filename)s[line:%(lineno)d] [%(levelname)s] %(message)s',
@@ -120,7 +122,29 @@ import os
 def get_root():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-USE_SAMPLE = os.getenv('kuaishou_sample', True)
+def to_bool(val):
+    if val is None:
+        return False
+    if isinstance(val, bool):
+        return val
+    if isinstance(val, int):
+        if val == 0:
+            return False
+        else:
+            return True
+    if isinstance(val, float):
+        if val == 0.0:
+            return False
+        else:
+            return True
+    if not isinstance(val, basestring):
+        val = '%s' % val
+    if val.lower() in ['true', 'yes', '1', 'ok']:
+        return True
+    else:
+        return False
+
+USE_SAMPLE = to_bool(os.getenv('kuaishou_sample', True))
 
 data_dir = os.path.join(get_root(), 'sample') if USE_SAMPLE else os.path.join(get_root(), 'data')
 online_data_dir = os.path.join(data_dir, 'online')
