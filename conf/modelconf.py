@@ -120,7 +120,7 @@ import os
 def get_root():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-USE_SAMPLE = True
+USE_SAMPLE = os.getenv('kuaishou_sample', True)
 
 data_dir = os.path.join(get_root(), 'sample') if USE_SAMPLE else os.path.join(get_root(), 'data')
 online_data_dir = os.path.join(data_dir, 'online')
