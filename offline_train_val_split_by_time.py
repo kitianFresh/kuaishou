@@ -87,7 +87,7 @@ inter_train_val_photo_ids = set(kfold_user_item_val['photo_id'].unique()) & set(
 # online: train_user_ids = test_user_ids; train_photo_ids & test_photo_ids = null; train_time.max < test_time.min;
 # offline: this train will include train val intersection inter_train_val_photo_ids;
 # satisfy: train_user_ids = val_user_ids; train_photo_ids & val_photo_ids = null; train_time.max < val_time.min;
-train_photo_ids = kfold_user_item_train['photo_id'].unique()
+# train_photo_ids = kfold_user_item_train['photo_id'].unique()
 print("train shape: (%d, %d)" % (kfold_user_item_train.shape[0], kfold_user_item_train.shape[1]))
 print("valid shape: (%d, %d)" % (kfold_user_item_val.shape[0], kfold_user_item_val.shape[1]))
 kfold_val_users = kfold_user_item_val['user_id'].unique()
@@ -100,7 +100,11 @@ print("valid photos before remove intersection: %s" % len(set(kfold_user_item_va
 print("valid photos after remove train/val intersection: %s" % len(val_photo_ids))
 print('train click mean: %s' % user_item_train['click'].mean())
 print('val click mean before remove intersection: %s' % kfold_user_item_val['click'].mean())
-kfold_user_item_val = kfold_user_item_val.loc[kfold_user_item_val.photo_id.isin(val_photo_ids)]
+kfold_user_item_val_1 = kfold_user_item_val.loc[kfold_user_item_val.photo_id.isin(val_photo_ids)]
+kfold_user_item_val_2 = kfold_user_item_val.loc[~kfold_user_item_val.photo_id.isin(val_photo_ids)]
+# 这里取train_photo_ids 的话，就是训练集会加入更多的来自未做交集之前的验证集合的样例，但是无法保证时间完全先后顺序
+kfold_user_item_train = kfold_user_item_train.append(kfold_user_item_val_2)
+kfold_user_item_val = kfold_user_item_val_1
 print('val click mean after remove intersection: %s' % kfold_user_item_val['click'].mean())
 print("train shape after validation remove intersection: (%d, %d)" % (kfold_user_item_train.shape[0], kfold_user_item_train.shape[1]))
 print("valid shape after validation remove intersection: (%d, %d)" % (kfold_user_item_val.shape[0], kfold_user_item_val.shape[1]))
@@ -141,7 +145,7 @@ print(kfold_user_item_train.info())
 print('The %dth fold train_interaction extracted to %s' % (i, user_item_train_path))
 
 # 这里取train_photo_ids 的话，就是训练集会加入更多的来自未做交集之前的验证集合的样例，但是无法保证时间完全先后顺序
-# train_photo_ids = set(kfold_user_item_train['photo_id'].unique()) - val_photo_ids
+train_photo_ids = set(kfold_user_item_train['photo_id'].unique())
 
 kfold_face_val = photo_sample(face_train, val_photo_ids)
 kfold_face_train = photo_sample(face_train, train_photo_ids)
