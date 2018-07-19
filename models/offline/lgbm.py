@@ -119,7 +119,7 @@ if __name__ == '__main__':
     #                             silent=False)
     # model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())], eval_metric='auc', early_stopping_rounds=100)
 
-    LGBMClassifier(boosting_type='gbdt', num_leaves=127,
+    model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=127,
                    max_depth=8, learning_rate=0.1,
                    n_estimators=1000, objective='binary',
                    min_split_gain=0.0, min_child_weight=0.001,
