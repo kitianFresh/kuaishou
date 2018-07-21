@@ -34,6 +34,7 @@ then
     python text_feature_extract.py -o
     python photo_feature_extract.py -o
     python user_feature_extract.py -o
+    python combine_feature_extract.py -o
     python feature_ensemble.py -o
     python feature_discretization.py -o
 else
@@ -46,6 +47,7 @@ else
     python text_feature_extract.py -k ${KFOLD}
     python photo_feature_extract.py -k ${KFOLD}
     python user_feature_extract.py -k ${KFOLD}
+    python combine_feature_extract.py -k ${KFOLD}
     python feature_ensemble.py -k ${KFOLD}
     python feature_discretization.py -k ${KFOLD}
 fi

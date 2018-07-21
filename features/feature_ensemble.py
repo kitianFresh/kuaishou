@@ -27,6 +27,8 @@ if __name__ == '__main__':
         PHOTO_FEATURE_FILE = 'photo_feature' + '.' + fmt
         USER_FEATURE_FILE = 'user_feature' + '.' + fmt
         VISUAL_FEATURE_FILE = 'visual_feature' + '.' + fmt
+        COMBINE_TRAIN_FEATURE_FILE = 'combine_ctr_feature_train' + '.' + fmt
+        COMBINE_TEST_FEATURE_FILE = 'combine_ctr_feature_test' + '.' + fmt
 
 
     else:
@@ -38,6 +40,8 @@ if __name__ == '__main__':
         PHOTO_FEATURE_FILE = 'photo_feature' + str(kfold) + '.' + fmt
         USER_FEATURE_FILE = 'user_feature' + str(kfold) + '.' + fmt
         VISUAL_FEATURE_FILE = 'visual_feature' + str(kfold) + '.' + fmt
+        COMBINE_TRAIN_FEATURE_FILE = 'combine_ctr_feature_train' + str(kfold) + '.' + fmt
+        COMBINE_TEST_FEATURE_FILE = 'combine_ctr_feature_test' + str(kfold) + '.' + fmt
 
 
 
@@ -61,6 +65,8 @@ if __name__ == '__main__':
 
     photo_data = read_data(os.path.join(feature_store_dir, PHOTO_FEATURE_FILE), fmt)
     users = read_data(os.path.join(feature_store_dir, USER_FEATURE_FILE), fmt)
+    combine_feats_train = read_data(os.path.join(feature_store_dir, COMBINE_TRAIN_FEATURE_FILE), fmt)
+    combine_feats_test = read_data(os.path.join(feature_store_dir, COMBINE_TEST_FEATURE_FILE), fmt)
 
     path = os.path.join(feature_store_dir,VISUAL_FEATURE_FILE)
     if os.path.exists(path):
@@ -76,6 +82,9 @@ if __name__ == '__main__':
     user_item_train = pd.merge(user_item_train, photo_data,
                               how='left',
                               on=['photo_id'])
+
+    user_item_train = pd.merge(user_item_train, combine_feats_train,
+                               how='left', on=['user_id', 'photo_id'])
     if visual is not None:
         user_item_train = pd.merge(user_item_train,visual,
                                how='left',on=['user_id','photo_id'])
@@ -91,12 +100,14 @@ if __name__ == '__main__':
         user_item_test = pd.merge(user_item_test,visual,
                               how='left',
                               on=['user_id','photo_id'])
+    user_item_test = pd.merge(user_item_test, combine_feats_test,
+                               how='left', on=['user_id', 'photo_id'])
 
     
     print(user_item_train.columns)
     user_item_train.fillna(0, inplace=True)
     user_item_test.fillna(0, inplace=True)
-    input_features = id_features + user_features + photo_features + time_features
+    input_features = id_features + user_features + photo_features + time_features + combine_ctr_features
     
     print(input_features)
     ensemble_train = user_item_train[input_features + y_label]
