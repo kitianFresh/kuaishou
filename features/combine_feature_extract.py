@@ -29,6 +29,10 @@ if __name__ == '__main__':
                                                                                               args.online)
         TEST_TEXT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('test_text.txt',
                                                                                              args.online)
+        TRAIN_FACE, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('train_face.txt',
+                                                                                              args.online)
+        TEST_FACE, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('test_face.txt',
+                                                                                             args.online)
         TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
             'train_interaction.txt')
         TEST_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('test_interaction.txt')
@@ -39,39 +43,53 @@ if __name__ == '__main__':
             'train_text' + str(kfold) + '.txt', online=False)
         TEST_TEXT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
             'test_text' + str(kfold) + '.txt', online=False)
+        TRAIN_FACE, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
+            'train_face' + str(kfold) + '.txt', args.online)
+        TEST_FACE, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
+            'test_face' + str(kfold) + '.txt', args.online)
 
         TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
         'train_interaction' + str(kfold) + '.txt', online=False)
         TEST_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
         'test_interaction' + str(kfold) + '.txt', online=False)
 
+    face_train = pd.read_csv(TRAIN_FACE,
+                             sep='\t',
+                             header=None,
+                             names=['photo_id', 'faces'])
+
     user_item_train = pd.read_csv(TRAIN_USER_INTERACT,
                                   sep='\t',
-                                  usecols=[0, 1, 2],
                                   header=None,
-                                  names=['user_id', 'photo_id', 'click'])
-
-    print(user_item_train.info())
-
-    user_item_test = pd.read_csv(TEST_USER_INTERACT,
-                                 sep='\t',
-                                 usecols=[0, 1],
-                                 header=None,
-                                 names=['user_id', 'photo_id'])
+                                  names=['user_id', 'photo_id', 'click', 'like', 'follow', 'time', 'playing_time',
+                                         'duration_time'])
 
     text_train = pd.read_csv(TRAIN_TEXT,
                              sep='\t',
                              header=None,
                              names=['photo_id', 'cover_words'])
 
-    print(text_train.info())
+    face_test = pd.read_csv(TEST_FACE,
+                            sep='\t',
+                            header=None,
+                            names=['photo_id', 'faces'])
+
+    if args.online:
+        user_item_test = pd.read_csv(TEST_USER_INTERACT,
+                                 sep='\t',
+                                 header=None,
+                                 names=['user_id', 'photo_id', 'time', 'duration_time'])
+    else:
+        user_item_test = pd.read_csv(TEST_USER_INTERACT,
+                                     sep='\t',
+                                     header=None,
+                                     names=['user_id', 'photo_id', 'click', 'like', 'follow', 'time', 'playing_time',
+                                         'duration_time'])
 
     text_test = pd.read_csv(TEST_TEXT,
                             sep='\t',
                             header=None,
                             names=['photo_id', 'cover_words'])
-
-    print(text_test.info())
 
     def words_to_list(words):
         if words == '0':
@@ -89,6 +107,8 @@ if __name__ == '__main__':
     p2 = set(user_item_train['photo_id'].unique())
     print(len(p1), len(p2))
     print(len(p1 & p2))
+    print(user_item_train.info())
+    print(user_item_test.info())
 
     user_item_train['max_user_word_ctr'], user_item_test['max_user_word_ctr'] = count_combine_feat_ctr(
                                                                             user_item_train['user_id'].astype(str).values,
@@ -119,5 +139,5 @@ if __name__ == '__main__':
     store_data(combine_test, os.path.join(feature_store_dir, COMBINE_TEST_FEATURE_FILE), fmt)
 
     #column
-    store_data(combine_train['max_user_word_ctr'], os.path.join(col_feature_store_dir, COMBINE_TRAIN_FEATURE_FILE), fmt)
-    store_data(combine_test['max_user_word_ctr'], os.path.join(col_feature_store_dir, COMBINE_TRAIN_FEATURE_FILE), fmt)
+    store_data(combine_train[['max_user_word_ctr']], os.path.join(col_feature_store_dir, 'max_user_word_ctr_train.csv'), fmt)
+    store_data(combine_test[['max_user_word_ctr']], os.path.join(col_feature_store_dir, 'max_user_word_ctr_test.csv'), fmt)
