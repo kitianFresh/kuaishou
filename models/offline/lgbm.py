@@ -67,7 +67,7 @@ if __name__ == '__main__':
         ALL_FEATURE_TEST_FILE = 'ensemble_feature_test' + str(kfold) + '.' + fmt
         ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
     else:
-        feature_to_use = id_features + user_features + photo_features + time_features
+        feature_to_use = id_features + user_features + photo_features + time_features + one_ctr_features + combine_ctr_features
         fm_trainer = FeatureMerger(col_feature_store_dir, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=num_workers)
         fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use+y_label, fmt=fmt, data_type='test', pool_type='process', num_workers=num_workers)
         ensemble_train = fm_trainer.concat()
@@ -111,24 +111,24 @@ if __name__ == '__main__':
     gc.collect()
     start_time_1 = time.time()
 
-    # model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=63, reg_alpha=0.0, reg_lambda=1,
-    #                             max_depth=-1, n_estimators=1200, objective='binary',
-    #                             subsample=0.8, colsample_bytree=0.8, subsample_freq=1, feature_fraction=0.8,
-    #                             learning_rate=0.05, min_child_weight=50,
-    #                             random_state=2018, n_jobs=-1, device='gpu' if args.gpu_mode else 'cpu',
-    #                             silent=False)
-    # model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())], eval_metric='auc', early_stopping_rounds=100)
+    model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=63, reg_alpha=0.0, reg_lambda=1,
+                                max_depth=-1, n_estimators=1200, objective='binary',
+                                subsample=0.8, colsample_bytree=0.8, subsample_freq=1, feature_fraction=0.8,
+                                learning_rate=0.05, min_child_weight=50,
+                                random_state=2018, n_jobs=-1, device='gpu' if args.gpu_mode else 'cpu',
+                                silent=False)
+    model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())], eval_metric='auc', early_stopping_rounds=100)
 
-    model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=127,
-                   max_depth=8, learning_rate=0.1,
-                   n_estimators=2000, objective='binary',
-                   min_split_gain=0.0, min_child_weight=0.001,
-                   min_child_samples=20, subsample=0.8,
-                   subsample_freq=0, colsample_bytree=0.8,
-                   reg_alpha=0.0, reg_lambda=0.0,
-                   random_state=2018, n_jobs=-1, device='gpu' if args.gpu_mode else 'cpu',
-                   silent=False)
-    model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())], eval_metric='auc', early_stopping_rounds=300)
+    # model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=127,
+    #                max_depth=8, learning_rate=0.1,
+    #                n_estimators=2000, objective='binary',
+    #                min_split_gain=0.0, min_child_weight=0.001,
+    #                min_child_samples=20, subsample=0.8,
+    #                subsample_freq=0, colsample_bytree=0.8,
+    #                reg_alpha=0.0, reg_lambda=0.0,
+    #                random_state=2018, n_jobs=-1, device='gpu' if args.gpu_mode else 'cpu',
+    #                silent=False)
+    # model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())], eval_metric='auc', early_stopping_rounds=300)
 
     print("Model trained in %s seconds" % (str(time.time() - start_time_1)))
 
