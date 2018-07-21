@@ -1,5 +1,7 @@
 #coding:utf8
 
+from past.builtins import basestring    # pip install future
+
 import os
 import time
 import functools
