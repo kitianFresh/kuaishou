@@ -34,9 +34,11 @@ then
     python text_feature_extract.py -o
     python photo_feature_extract.py -o
     python user_feature_extract.py -o
-    python combine_feature_extract.py -o
+    python one_ctr_feature_extract.py -o
+    python combine_ctr_feature_extract.py -o
     python feature_ensemble.py -o
-    python feature_discretization.py -o
+#    python feature_discretization.py -o
+    python feature_split.py -o
 else
     if [[ ${KFOLD} == '' ]]; then
         KFOLD=0
@@ -47,7 +49,10 @@ else
     python text_feature_extract.py -k ${KFOLD}
     python photo_feature_extract.py -k ${KFOLD}
     python user_feature_extract.py -k ${KFOLD}
-    python combine_feature_extract.py -k ${KFOLD}
+    python one_ctr_feature_extract.py -k ${KFOLD}
+    python combine_ctr_feature_extract.py -k ${KFOLD}
     python feature_ensemble.py -k ${KFOLD}
-    python feature_discretization.py -k ${KFOLD}
+#    python feature_discretization.py -k ${KFOLD}
+    python feature_split.py -k ${KFOLD}
+
 fi

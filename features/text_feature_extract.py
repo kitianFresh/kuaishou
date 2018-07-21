@@ -104,10 +104,6 @@ if __name__ == '__main__':
     print(len(p1), len(p2))
     print(len(p1 & p2))
 
-    text_train['max_word_ctr'], text_test['max_word_ctr'] = count_feat_ctr(text_train['cover_words'].values,
-                                                                           text_test['cover_words'].values,
-                                                                           user_item_train['click'].values)
-
     print(text_train.info())
     print(text_test.info())
     print(np.sum(text_train.isnull()))
