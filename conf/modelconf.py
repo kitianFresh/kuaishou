@@ -52,9 +52,11 @@ visual_features = ['photo_cluster_label', 'photo_class_label']
 photo_features = ['exposure_num', 'have_face_cate', 'have_text_cate'] + face_features + text_features
 user_features = user_action_features + user_face_favor_features + user_text_favor_features
 
+combine_ctr_features = ['max_user_word_ctr']
+
 y_label = ['click']
 
-features_to_train = user_features + photo_features + time_features
+features_to_train = user_features + photo_features + time_features + combine_ctr_features
 # features_to_train = list(set(features_to_train) - set(['clicked_ratio']))
 
 cate_features_to_train = []
@@ -80,7 +82,8 @@ float32_cols = ['period_click_ratio', 'clicked_ratio','non_face_click_favor', 'f
                 'follow_ratio', 'man_scale', 'browse_freq', 'man_avg_age', 'man_cv_favor', 'man_avg_attr',
                 'playing_ratio', 'woman_scale', 'click_ratio', 'human_avg_age', 'woman_avg_attr', 'like_ratio',
                 'cover_length_favor', 'human_avg_attr', 'avg_tfidf', 'hour_click_ratio', 'woman_num_ratio',
-                'man_num_ratio', 'playing_favor', 'duration_favor', 'playing_duration_favor','browse_time_diff', 'face_favor', 'text_clicked_ratio', 'max_word_ctr']
+                'man_num_ratio', 'playing_favor', 'duration_favor', 'playing_duration_favor','browse_time_diff',
+                'face_favor', 'text_clicked_ratio', 'max_word_ctr', 'max_user_word_ctr']
 float64_cols = []
 
 int32_cate_cols = []
@@ -99,7 +102,6 @@ int8_cate_cols = ['browse_num_cate', 'click_num_cate', 'like_num_cate', 'follow_
 #                     'man_num_cate', 'woman_num_cate', 'cover_length_cate', 'key_words_num_cate']
 
 feature_dtype_map = {}
-feature_dtype_converters = {}
 for name in uint64_cols:
     feature_dtype_map.update({name: np.uint64})
 for name in int32_cols:

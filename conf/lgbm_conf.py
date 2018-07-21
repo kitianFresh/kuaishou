@@ -33,8 +33,8 @@ visual_features = ['photo_cluster_label', 'photo_class_label']
 # 'clicked_ratio', 'have_face_cate'
 photo_features = ['exposure_num', 'have_face_cate', 'have_text_cate'] + face_features + text_features
 user_features = user_action_features + user_face_favor_features + user_text_favor_features
+combine_ctr_features = ['max_user_word_ctr']
 
 y_label = ['click']
 
-features_to_train = user_features + photo_features + time_features
-#
+features_to_train = user_features + photo_features + time_features + combine_ctr_features
