@@ -15,7 +15,143 @@ import numpy as np
 import pandas as pd
 import scipy.special as special
 
-from conf.modelconf import feature_dtype_map, feature_dtype_converters
+from conf.modelconf import feature_dtype_map, alpha, beta
+
+
+def gen_count_dict(data, labels, begin, end):
+    total_dict = {}
+    pos_dict = {}
+    for i, d in enumerate(data):
+        if i >= begin and i < end:
+            continue
+        if not isinstance(d, list) and not isinstance(d, tuple):
+            assert isinstance(d, basestring)
+            d = d.split(' ')
+        for x in d:
+            if x not in total_dict:
+                total_dict[x] = 0.0
+            if x not in pos_dict:
+                pos_dict[x] = 0.0
+            total_dict[x] += 1
+            if labels[i] == 1:
+                pos_dict[x] += 1
+    return total_dict, pos_dict
+
+
+def count_feat_ctr(train, test, labels):
+    prior = alpha / (alpha + beta)
+    total_dict, pos_dict = gen_count_dict(train, labels, 1, 0)
+    train_res = []
+    for i, d in enumerate(train):
+        ctr_vec = []
+        if not isinstance(d, list) and not isinstance(d, tuple):
+            assert isinstance(d, basestring)
+            d = d.split(' ')
+        for x in d:
+            if x not in total_dict:
+                ctr_vec.append(prior)
+            else:
+                ctr_vec.append(alpha + pos_dict[x]/ (alpha+beta+total_dict[x]))
+        if len(ctr_vec) == 0:
+            train_res.append(prior)
+        else:
+            train_res.append(max(ctr_vec))
+
+    test_res = []
+    for i, d in enumerate(test):
+        ctr_vec = []
+        for x in d:
+            if not isinstance(d, list) and not isinstance(d, tuple):
+                assert isinstance(d, basestring)
+                d = d.split(' ')
+
+            if x not in total_dict:
+                ctr_vec.append(prior)
+            else:
+                ctr_vec.append(alpha + pos_dict[x]/ (alpha+beta+total_dict[x]))
+        if len(ctr_vec) == 0:
+            test_res.append(prior)
+        else:
+            test_res.append(max(ctr_vec))
+
+    return np.array(train_res), np.array(test_res)
+
+
+def gen_combine_count_dict(data1, data2, labels, begin, end):
+    total_dict = {}
+    pos_dict = {}
+    for i, d1 in enumerate(data1):
+        d2 = data2[i]
+        if i >= begin and i < end:
+            continue
+        if not isinstance(d1, list) and not isinstance(d1, tuple):
+            assert isinstance(d1, basestring)
+            d1 = d1.split(' ')
+        if not isinstance(d2, list) and not isinstance(d2, tuple):
+            assert isinstance(d2, basestring)
+            d2 = d2.split(' ')
+        for x in d1:
+            for y in d2:
+                comb = x + '|' + y
+                if comb not in total_dict:
+                    total_dict[comb] = 0.0
+                if comb not in pos_dict:
+                    pos_dict[comb] = 0.0
+                total_dict[comb] += 1
+                if labels[i] == True:
+                    pos_dict[comb] += 1
+    return total_dict, pos_dict
+
+
+def count_combine_feat_ctr(train1, train2, test1, test2, labels):
+    prior = alpha / (alpha + beta)
+    total_dict, pos_dict = gen_combine_count_dict(train1, train2, labels, 1, 0)
+    train_res = []
+    for i, d1 in enumerate(train1):
+        d2 = train2[i]
+        ctr_vec = []
+        if not isinstance(d1, list) and not isinstance(d1, tuple):
+            assert isinstance(d1, basestring)
+            d1 = d1.split(' ')
+        if not isinstance(d2, list) and not isinstance(d2, tuple):
+            assert isinstance(d2, basestring)
+            d2 = d2.split(' ')
+        for x in d1:
+            for y in d2:
+                comb = x + '|' + y
+                if comb not in total_dict:
+                    ctr_vec.append(prior)
+                else:
+                    ctr_vec.append(alpha + pos_dict[comb]/ (alpha+beta+total_dict[comb]))
+            if len(ctr_vec) == 0:
+                train_res.append(prior)
+            else:
+                train_res.append(max(ctr_vec))
+
+    test_res = []
+    for i, d1 in enumerate(test1):
+        d2 = test2[i]
+        ctr_vec = []
+        if not isinstance(d1, list) and not isinstance(d1, tuple):
+            assert isinstance(d1, basestring)
+            d1 = d1.split(' ')
+        if not isinstance(d2, list) and not isinstance(d2, tuple):
+            assert isinstance(d2, basestring)
+            d2 = d2.split(' ')
+        for x in d1:
+            for y in d2:
+                comb = x + '|' + y
+                if comb not in total_dict:
+                    ctr_vec.append(prior)
+                else:
+                    ctr_vec.append(alpha + pos_dict[comb]/ (alpha+beta+total_dict[comb]))
+            if len(ctr_vec) == 0:
+                test_res.append(prior)
+            else:
+                test_res.append(max(ctr_vec))
+
+    return np.array(train_res), np.array(test_res)
+
 
 
 def dump_json_file(data, file, ensure_ascii=False, ident=4):
