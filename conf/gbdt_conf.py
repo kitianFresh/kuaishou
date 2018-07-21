@@ -9,8 +9,10 @@ user_action_features = ['click_ratio', 'browse_num', 'click_num', 'like_num', 'f
                         'browse_freq', 'playing_freq', 'duration_favor']
 
 face_features = ['face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age',
-                 'woman_avg_age', 'human_avg_age', 'man_avg_attr', 'woman_avg_attr', 'human_avg_attr',
-                 'woman_num_ratio', 'man_num_ratio']
+                 'woman_avg_age',
+                 'human_avg_age', 'man_avg_attr', 'woman_avg_attr', 'human_avg_attr', 'woman_num_ratio',
+                 'man_num_ratio']
+photo_max_face_features = ['scale', 'gender', 'age', 'appearance']
 
 user_face_favor_features = ['face_favor', 'man_favor', 'woman_favor', 'man_cv_favor', 'woman_cv_favor', 'man_age_favor',
                             'woman_age_favor', 'man_yen_value_favor', 'woman_yen_value_favor', 'face_click_favor',
@@ -24,6 +26,7 @@ expand_id_features = ['uid0', 'uid1', 'uid2', 'uid3', 'uid4', 'uid5', 'uid6', 'u
 time_features = ['time', 'duration_time']
 # time_features = ['time_cate', 'duration_time_cate']
 
+# 0.0006 max_word_ctr
 # text_features = ['cover_length', 'avg_tfidf', 'key_words_num','text_class_label','text_cluster_label', 'text_cluster_exposure_num', 'text_clicked_ratio']
 text_features = ['cover_length', 'avg_tfidf', 'key_words_num', 'text_class_label', 'text_cluster_label']
 # text_features = ['cover_length', 'avg_tfidf', 'key_words_num']
@@ -33,8 +36,12 @@ visual_features = ['photo_cluster_label', 'photo_class_label']
 # 'clicked_ratio', 'have_face_cate'
 photo_features = ['exposure_num', 'have_face_cate', 'have_text_cate'] + face_features + text_features
 user_features = user_action_features + user_face_favor_features + user_text_favor_features
+
 combine_ctr_features = ['max_user_word_ctr']
+# combine_ctr_features = []
+one_ctr_features = ['max_word_ctr']
 
 y_label = ['click']
 
-features_to_train = user_features + photo_features + time_features + combine_ctr_features
+features_to_train = user_features + photo_features + time_features + combine_ctr_features + one_ctr_features
+# features_to_train = list(set(features_to_train) - set(['clicked_ratio']))
