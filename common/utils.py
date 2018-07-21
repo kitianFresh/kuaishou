@@ -23,6 +23,7 @@ from conf.modelconf import feature_dtype_map, alpha, beta
 def gen_count_dict(data, labels, begin, end):
     total_dict = {}
     pos_dict = {}
+    assert len(data) == len(labels)
     for i, d in enumerate(data):
         if i >= begin and i < end:
             continue
