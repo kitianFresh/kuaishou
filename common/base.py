@@ -290,8 +290,27 @@ class ModelMixin(object):
 
 
     def save(self):
-        joblib.dump(self.clf, self.model_file)
+        joblib.dump(self.clf, self.model_file, protocol=2)
         logging.info('Model %s saved in %s' % (self.model_name, self.model_file))
+        evals_result = None
+        best_iteration = None
+        best_score = None
+        try:
+            evals_result = self.clf.evals_result_
+
+        except AttributeError:
+            logging.warning('{} has no evals_result_'.format(self.model_name))
+        try:
+            best_iteration = self.clf.best_iteration_
+        except AttributeError:
+            logging.warning('{} has no best_iteration_'.format(self.model_name))
+
+        try:
+            best_score = self.clf.best_score_
+        except AttributeError:
+            logging.warning('{} has no best_score_'.format(self.model_name))
+
+
 
         model_metainfo = {
             'sub_file': self.sub_file,
@@ -307,6 +326,10 @@ class ModelMixin(object):
             'recall': self.recall,
             'roc_auc': self.roc_auc,
             'down_sample_rate': self.down_sample_rate,
+            'hyper_params': self.clf.get_params(),
+            'evals_result': evals_result,
+            'best_iteration': best_iteration,
+            'best_score': best_score,
         }
 
         dump_json_file(model_metainfo, self.meta_info_file)
