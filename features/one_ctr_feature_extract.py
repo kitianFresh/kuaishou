@@ -10,11 +10,13 @@ import numpy as np
 from common.utils import read_data, store_data
 from conf.modelconf import get_data_file, data_dir, feature_dtype_map
 from common.utils import count_combine_feat_ctr, count_feat_ctr
+from common import utils
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-o', '--online', help='online feature extract', action="store_true")
 parser.add_argument('-k', '--offline-kfold', help='offline kth fold feature extract, extract kth fold', default=0)
+parser.add_argument('-d', '--discretization', help='discrezatize or not some features', action='store_true')
 args = parser.parse_args()
 
 
@@ -157,7 +159,10 @@ if __name__ == '__main__':
             return words.split(',')
 
     text_train['cover_words'] = text_train['cover_words'].apply(words_to_list)
+    text_train['cover_length'] = text_train['cover_words'].apply(len)
     text_test['cover_words'] = text_test['cover_words'].apply(words_to_list)
+    text_test['cover_length'] = text_test['cover_words'].apply(len)
+
 
     user_item_train = pd.merge(user_item_train, text_train, how='left', on=['photo_id'])
     user_item_test = pd.merge(user_item_test, text_test, how='left', on=['photo_id'])
@@ -165,6 +170,20 @@ if __name__ == '__main__':
     user_item_train['max_word_ctr'], user_item_test['max_word_ctr'] = count_feat_ctr(user_item_train['cover_words'].values,
                                                                            user_item_test['cover_words'].values,
                                                                            user_item_train['click'].values)
+
+    if args.discretization:
+        for col in ['face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length', 'duration_time']:
+            func = getattr(utils, col) if hasattr(utils, col) else None
+            if func is not None and callable(func):
+                print(func.__name__)
+                user_item_train[col] = user_item_train[col].apply(func)
+                user_item_test[col] = user_item_test[col].apply(func)
+
+    for col in ['face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length', 'duration_time']:
+        user_item_train[col+'_ctr'], user_item_test[col+'_ctr'] = count_feat_ctr(user_item_train[col].astype(str).values,
+                                                                                 user_item_test[col].astype(str).values,
+                                                                                 user_item_train['click'].values)
+
     if args.online:
         ONE_CTR_TRAIN_FEATURE_FILE = 'one_ctr_feature_train' + '.' + fmt
         ONE_CTR_TEST_FEATURE_FILE = 'one_ctr_feature_test' + '.' + fmt
@@ -173,8 +192,8 @@ if __name__ == '__main__':
         ONE_CTR_TRAIN_FEATURE_FILE = 'one_ctr_feature_train' + str(kfold) + '.' + fmt
         ONE_CTR_TEST_FEATURE_FILE = 'one_ctr_feature_test' + str(kfold) + '.' + fmt
 
-    one_ctr_train = user_item_train[['user_id', 'photo_id', 'max_word_ctr']]
-    one_ctr_test = user_item_test[['user_id', 'photo_id', 'max_word_ctr']]
+    one_ctr_train = user_item_train[['user_id', 'photo_id', 'max_word_ctr', 'face_num_ctr', 'woman_num_ctr', 'man_num_ctr', 'gender_ctr', 'age_ctr', 'appearance_ctr', 'cover_length_ctr', 'duration_time_ctr']]
+    one_ctr_test = user_item_test[['user_id', 'photo_id', 'max_word_ctr', 'face_num_ctr', 'woman_num_ctr', 'man_num_ctr', 'gender_ctr', 'age_ctr', 'appearance_ctr', 'cover_length_ctr', 'duration_time_ctr']]
     one_ctr_train.sort_values(['user_id', 'photo_id'], inplace=True)
     one_ctr_test.sort_values(['user_id', 'photo_id'], inplace=True)
     print(one_ctr_train.info())
@@ -184,5 +203,6 @@ if __name__ == '__main__':
     store_data(one_ctr_test, os.path.join(feature_store_dir, ONE_CTR_TEST_FEATURE_FILE), fmt)
 
     #column
-    store_data(one_ctr_train[['max_word_ctr']], os.path.join(col_feature_store_dir, 'max_word_ctr_train.csv'), fmt)
-    store_data(one_ctr_test[['max_word_ctr']], os.path.join(col_feature_store_dir, 'max_word_ctr_test.csv'), fmt)
+    for col in set(one_ctr_train.columns) - set(['user_id', 'photo_id']):
+        store_data(one_ctr_train[[col]], os.path.join(col_feature_store_dir, col + '_train.csv'), fmt)
+        store_data(one_ctr_test[[col]], os.path.join(col_feature_store_dir, col + '_test.csv'), fmt)
