@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-python photos_dump.py
+python photos_dump.py -o
 echo "Photo dumped......"
 cores=`cat /proc/cpuinfo |grep "processor"|wc -l`
 
@@ -13,4 +13,4 @@ echo "Wating all sub matrix extracting......"
 wait
 echo "All sub matrix extracted......"
 echo "Merging all sub matrix"
-python visual_matrix_merge.py
+python visual_matrix_merge.py -k $cores

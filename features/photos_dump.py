@@ -1,5 +1,6 @@
 # coding:utf8
-import os
+
+import json
 import argparse
 import sys
 sys.path.append("..")
@@ -7,7 +8,6 @@ sys.path.append("..")
 import pandas as pd
 
 from conf.modelconf import *
-from common.utils import dump_json_file
 from multiprocessing import  cpu_count
 
 
@@ -67,6 +67,7 @@ if __name__ == '__main__':
         data['photo_ids_test' + str(i)] = photos_test[i*intervel_test : (i+1)*intervel_test]
 
     path = os.path.join(online_data_dir, 'photo_ids.json')
-    dump_json_file(data, path)
+    with open(path, 'w') as f:
+        json.dump(data, f)
     logging.info('Photo ids dumped in %s' % path)
 
