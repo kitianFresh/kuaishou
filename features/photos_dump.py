@@ -2,14 +2,10 @@
 import os
 import argparse
 import sys
-import json
 sys.path.append("..")
-import logging
 
 import pandas as pd
-import numpy as np
 
-from common.utils import read_data, store_data
 from conf.modelconf import *
 from common.utils import dump_json_file
 from multiprocessing import  cpu_count

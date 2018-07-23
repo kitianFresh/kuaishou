@@ -2,12 +2,12 @@
 import os
 import argparse
 import sys
+sys.path.append('..')
 import bloscpack as bp
 import gc
 from multiprocessing import cpu_count
 from conf.modelconf import *
 
-sys.path.append('..')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')

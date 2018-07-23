@@ -2,15 +2,11 @@
 import os
 import argparse
 import sys
-import logging
+sys.path.append('..')
 import bloscpack as bp
 import json
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
-import numpy as np
-from multiprocessing import cpu_count
 from conf.modelconf import *
 
-sys.path.append('..')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
