@@ -9,7 +9,7 @@ import pandas as pd
 
 from conf.modelconf import *
 from multiprocessing import  cpu_count
-
+from common.utils import dump_json_file
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
@@ -55,8 +55,8 @@ if __name__ == '__main__':
                                             'duration_time'])
 
     n = args.nums_split
-    photos_train = user_item_train['photo_id'].unique()
-    photos_test = user_item_test['photo_id'].unique()
+    photos_train = list(user_item_train['photo_id'].unique())
+    photos_test = list(user_item_test['photo_id'].unique())
     num_train = user_item_train['photo_id'].nunique()
     num_test = user_item_test['photo_id'].nunique()
 
@@ -67,7 +67,8 @@ if __name__ == '__main__':
         data['photo_ids_test' + str(i)] = photos_test[i*intervel_test : (i+1)*intervel_test]
 
     path = os.path.join(online_data_dir, 'photo_ids.json')
-    with open(path, 'w') as f:
-        json.dump(data, f)
+    # with open(path, 'w') as f:
+    #     json.dump(data, f)
+    dump_json_file(data, path)
     logging.info('Photo ids dumped in %s' % path)
 
