@@ -3,6 +3,8 @@ pre_path = '/Users/yuanguo/kuaishou/sample/offline/features/'
 TEST_FILE = pre_path + 'ensemble_feature_test0.csv'
 TRAIN_FILE = pre_path + 'ensemble_feature_train0.csv'
 
+SUB_DIR = "."
+
 
 
 NUM_SPLITS = 3
@@ -80,6 +82,40 @@ class DataParser(object):
     def __init__(self, feat_dict):
         self.feat_dict = feat_dict
 
+
+    def scale(self, scale_fun, df_train, df_test=None):
+
+        def scale_(df):
+
+            for col in df:
+                if col in self.feat_dict.ignore_cols:
+                    continue
+                if col in self.feat_dict.numeric_cols:
+                    df[col] = (df[col]-df[col].min())/(df[col].max()-df[col].min())
+            return df
+
+        if not df_test is None:
+            train_label = df_train.pop('click')
+            test_label = df_test.pop('click')
+            assert df_train.shape[1] == df_test.shape[1], \
+                ('train columns %s != test columns %s ', df_train.shape[1], df_test.shape[1])
+            train_line = df_train.shape[0]
+            df = pd.concat([df_train, df_test])
+
+            df = scale_(df)
+            df_train = df.iloc[:train_line, :]
+            df_test = df.iloc[train_line:, :]
+            df_train['click'] = train_label
+            df_test['click'] = test_label
+
+            return df_train, df_test
+
+        if df_test == None:
+            return scale_(df_train)
+
+
+
+
     def parse(self, infile=None, df=None, has_label=False):
         assert not ((infile is None) and (df is None)), "infile or df at least one is set"
         assert not ((infile is not None) and (df is not None)), "only one can be set"
@@ -92,7 +128,7 @@ class DataParser(object):
             y = dfi["click"].values.tolist()
             dfi.drop(["user_id", "photo_id", "click"], axis=1, inplace=True)
         else:
-            ids = dfi[["user_id", "photo_id"]].values.tolist()
+            ids = dfi[["user_id", "photo_id"]]
             dfi.drop(["user_id", "photo_id"], axis=1, inplace=True)
             dfi.drop(["click"], axis=1, inplace=True)
 
