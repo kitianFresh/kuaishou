@@ -7,7 +7,7 @@ import argparse
 import sys
 import time
 
-sys.path.append("..")
+sys.path.append("../../")
 from multiprocessing import cpu_count
 
 import numpy as np
@@ -126,33 +126,9 @@ if __name__ == '__main__':
     # model.clf = RandomizedSearchCV(LGBMClassifier(), param_dist, cv=3, scoring='roc_auc', n_iter=300, n_jobs=-1)
 
 
-    param_test1 = {'n_estimators': range(20, 81, 10)}
-    gsearch1 = GridSearchCV(
-        estimator=GradientBoostingClassifier(learning_rate=0.1, min_samples_split=1000, min_samples_leaf=500, max_depth=8,
-                                             max_features='sqrt', subsample=0.8, random_state=10),
-        param_grid=param_test1, scoring='roc_auc', n_jobs=4, iid=False, cv=3)
-    # ind_params = {
-    #     'seed': 32,
-    #     'n_estimators': 60,
-    #     'learning_rate': 0.1,
-    #     'nthread': 1
-    # }
-    # params = {'max_depth': (3, 5, 7, 9, 11),
-    #           'subsample': (0.75, 0.8, 0.9, 1.0),
-    #           'min_samples_split': (1000, 3000, 5000, 7000),
-    #           }
-    #
-    # model.clf = EvolutionaryAlgorithmSearchCV(estimator=GradientBoostingClassifier(**ind_params),
-    #                                           params=params,
-    #                                           scoring="roc_auc",
-    #                                           cv=3,
-    #                                           verbose=1,
-    #                                           population_size=50,
-    #                                           gene_mutation_prob=0.10,
-    #                                           gene_crossover_prob=0.5,
-    #                                           tournament_size=5,
-    #                                           generations_number=100,
-    #                                           n_jobs=cpu_count())
+    model.clf = GradientBoostingClassifier(learning_rate=0.1, min_samples_split=1000, min_samples_leaf=500, max_depth=8,
+                                             max_features='sqrt', subsample=0.8, random_state=10)
+
     # 在训练集上训练
     model.clf.fit(X_train, y_train.ravel())
 

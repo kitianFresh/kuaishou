@@ -14,7 +14,7 @@ from sklearn.metrics import classification_report
 from catboost import CatBoostClassifier
 
 from conf.modelconf import *
-from common.utils import FeatureMerger, read_data, store_data
+from common.utils import FeatureMerger, read_data, store_data, load_config_from_pyfile
 from common.base import Classifier
 
         
@@ -44,6 +44,16 @@ if __name__ == '__main__':
     down_sample_rate = float(args.down_sampling)
     k = int(args.topk_features)
     num_workers = args.num_workers
+    config = load_config_from_pyfile(args.config_file)
+    features_to_train = config.features_to_train
+    id_features = config.id_features
+    user_features = config.user_features
+    photo_features = config.photo_features
+    time_features = config.time_features
+    one_ctr_features = config.one_ctr_features
+    combine_ctr_features = config.combine_ctr_features
+    y_label = config.y_label
+
     kfold = 0
     model_name = 'catboost'
 
@@ -100,7 +110,9 @@ if __name__ == '__main__':
     X_train, y_train = ensemble_train[features_to_train].values, ensemble_train[y_label].values
 
     X_val, y_val = ensemble_test[features_to_train].values, ensemble_test[y_label].values
-    
+
+    print(X_train.shape)
+    print(X_val.shape)
     print(y_train.mean(), y_train.std())
     print(y_val.mean(), y_val.std())
 
@@ -113,19 +125,19 @@ if __name__ == '__main__':
     #     if num_uniques < descreate_max_num:
     #         print(c, num_uniques, descreate_max_num)
     #         cat_feature_inds.append(i)
-    cat_feature_inds = [27,28,29,30,31,46,47]
+    # cat_feature_inds = [27,28,29,30,31,46,47]
     start = time.time()
-    model.clf = CatBoostClassifier(iterations=1500,
-                                   task_type='GPU' if gpu_mode else 'CPU',
-                                   gpu_cat_features_storage='CpuPinnedMemory',
-                                   pinned_memory_size=1073741824 * 8,
-                                   used_ram_limit='200gb',
-                                   boosting_type="Plain",
-                                   simple_ctr='Borders:Prior=0.2',
-                                   save_snapshot=True,
-                                   snapshot_file=os.path.join(model_store_path, model_name + '-' + version + '.bak'),
-                                   logging_level='Debug')
-
+    # model.clf = CatBoostClassifier(iterations=1500,
+    #                                task_type='GPU' if gpu_mode else 'CPU',
+    #                                gpu_cat_features_storage='CpuPinnedMemory',
+    #                                pinned_memory_size=1073741824 * 8,
+    #                                used_ram_limit='200gb',
+    #                                boosting_type="Plain",
+    #                                simple_ctr='Borders:Prior=0.2',
+    #                                save_snapshot=True,
+    #                                snapshot_file=os.path.join(model_store_path, model_name + '-' + version + '.bak'),
+    #                                logging_level='Debug')
+    model.clf = CatBoostClassifier(task_type='GPU' if gpu_mode else 'CPU')
     # model.clf = CatBoostClassifier(iterations=3000, task_type='GPU' if gpu_mode else 'CPU', gpu_cat_features_storage='CpuPinnedMemory', pinned_memory_size=1073741824*8, used_ram_limit='200gb', save_snapshot=True,snapshot_file=os.path.join(model_store_path, model_name + '-' + version + '.bak'))
 
     model.clf.fit(X_train, y_train.ravel(), cat_features=cat_feature_inds, eval_set=(X_val, y_val.ravel()))

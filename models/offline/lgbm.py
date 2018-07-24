@@ -45,11 +45,14 @@ if __name__ == '__main__':
     num_workers = args.num_workers
     config = load_config_from_pyfile(args.config_file)
     features_to_train = config.features_to_train
+    id_features = config.id_features
     user_features = config.user_features
     photo_features = config.photo_features
     time_features = config.time_features
+    one_ctr_features = config.one_ctr_features
+    combine_ctr_features = config.combine_ctr_features
     y_label = config.y_label
-    
+
     model_name = 'lgbm'
 
     model_store_path = './sample/' if USE_SAMPLE else './data'
