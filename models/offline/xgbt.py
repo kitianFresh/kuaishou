@@ -7,15 +7,11 @@ import argparse
 import sys
 import time
 
-sys.path.append("..")
+sys.path.append("../../")
 from multiprocessing import cpu_count
 
-import numpy as np
-from sklearn.model_selection import cross_val_score, train_test_split, StratifiedKFold, RandomizedSearchCV
-from evolutionary_search import EvolutionaryAlgorithmSearchCV
-
 from xgboost import XGBClassifier
-# from conf.modelconf import user_action_features, face_features, user_face_favor_features, id_features, time_features, photo_features, user_features, y_label, features_to_train
+from conf.modelconf import *
 
 from common.utils import FeatureMerger, read_data, store_data, load_config_from_pyfile
 from common.base import Classifier
@@ -44,38 +40,36 @@ if __name__ == '__main__':
     num_workers = args.num_workers
     config = load_config_from_pyfile(args.config_file)
     features_to_train = config.features_to_train
+    id_features = config.id_features
     user_features = config.user_features
     photo_features = config.photo_features
     time_features = config.time_features
+    one_ctr_features = config.one_ctr_features
+    combine_ctr_features = config.combine_ctr_features
     y_label = config.y_label
-
+    kfold = 0
     model_name = 'xgbt'
 
     model_store_path = './sample/' if USE_SAMPLE else './data'
 
-    feature_store_path = '../sample/features' if USE_SAMPLE else '../data/features'
-
-    col_feature_store_path = '../sample/features/columns' if USE_SAMPLE else '../data/features/columns'
+    feature_store_dir = os.path.join(offline_data_dir, 'features')
+    col_feature_store_dir = os.path.join(feature_store_dir, 'columns')
 
     model = Classifier(None, dir=model_store_path, name=model_name, version=version, description=desc,
                        features_to_train=features_to_train)
 
     if all_one:
-        ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train'
-        ALL_FEATURE_TRAIN_FILE = ALL_FEATURE_TRAIN_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TRAIN_FILE + '.' + fmt
-        ensemble_train = read_data(os.path.join(feature_store_path, ALL_FEATURE_TRAIN_FILE), fmt)
+        ALL_FEATURE_TRAIN_FILE = 'ensemble_feature_train' + str(kfold) + '.' + fmt
+        ensemble_train = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TRAIN_FILE), fmt)
 
-        ALL_FEATURE_TEST_FILE = 'ensemble_feature_test'
-        ALL_FEATURE_TEST_FILE = ALL_FEATURE_TEST_FILE + '_sample' + '.' + fmt if USE_SAMPLE else ALL_FEATURE_TEST_FILE + '.' + fmt
-        ensemble_test = read_data(os.path.join(feature_store_path, ALL_FEATURE_TEST_FILE), fmt)
+        ALL_FEATURE_TEST_FILE = 'ensemble_feature_test' + str(kfold) + '.' + fmt
+        ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
     else:
-        feature_to_use = user_features + photo_features + time_features
-        fm_trainer = FeatureMerger(col_feature_store_path, feature_to_use + y_label, fmt=fmt, data_type='train',
-                                   pool_type='process', num_workers=num_workers)
-        fm_tester = FeatureMerger(col_feature_store_path, feature_to_use, fmt=fmt, data_type='test',
-                                  pool_type='process', num_workers=num_workers)
-        ensemble_train = fm_trainer.merge()
-        ensemble_test = fm_tester.merge()
+        feature_to_use = id_features + user_features + photo_features + time_features + one_ctr_features + combine_ctr_features
+        fm_trainer = FeatureMerger(col_feature_store_dir, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=num_workers)
+        fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use+y_label, fmt=fmt, data_type='test', pool_type='process', num_workers=num_workers)
+        ensemble_train = fm_trainer.concat()
+        ensemble_test = fm_tester.concat()
 
     print(ensemble_train.info())
     print(ensemble_test.info())
@@ -96,27 +90,22 @@ if __name__ == '__main__':
     # 这样划分出来的数据，训练集和验证集点击率分布不台符合
     # train_data, val_data, y_train, y_val = train_test_split(ensemble_train[id_features+features_to_train+y_label], ensemble_train[y_label], test_size=0.3, random_state=0)
 
-    # 决策树模型不需要归一化，本身就是范围划分
 
     print('Training model %s......' % model_name)
 
-    ensemble_train = ensemble_train.sort_values('time')
-    train_num = ensemble_train.shape[0]
-    train_data = ensemble_train.iloc[:int(train_num * 0.7)].copy()
-    val_data = ensemble_train.iloc[int(train_num * 0.7):].copy()
+    X_train, y_train = ensemble_train[features_to_train].values, ensemble_train[y_label].values
 
-    print(train_data.shape)
-    print(val_data.shape)
-    val_photo_ids = list(set(val_data['photo_id'].unique()) - set(train_data['photo_id'].unique()))
-    val_data = val_data.loc[val_data.photo_id.isin(val_photo_ids)]
-    print(val_data.shape)
-    X_train, X_val, y_train, y_val = train_data[features_to_train].values, val_data[features_to_train].values, \
-                                     train_data[y_label].values, val_data[y_label].values
+    X_val, y_val = ensemble_test[features_to_train].values, ensemble_test[y_label].values
 
     print(y_train.mean(), y_train.std())
     print(y_val.mean(), y_val.std())
+    print(X_train.shape, y_train.shape)
+    print(X_val.shape, y_val.shape)
+    import gc
 
-    start_time_1 = time.clock()
+    del ensemble_train
+    gc.collect()
+    start_time_1 = time.time()
 
     # RandomizedSearchCV参数说明，clf1设置训练的学习器
     # param_dist字典类型，放入参数搜索范围
@@ -125,31 +114,21 @@ if __name__ == '__main__':
     # n_jobs = -1，使用所有的CPU进行训练，默认为1，使用1个CPU
     # model.clf = RandomizedSearchCV(LGBMClassifier(), param_dist, cv=3, scoring='roc_auc', n_iter=300, n_jobs=-1)
 
-    ind_params = {
-        'random_state': 32,
-        'objective': 'binary:logistic',
-        'n_estimators': 200,
-        'learning_rate': 0.1,
-    }
-    params = {'max_depth': (4, 6, 8),
-              'subsample': (0.75, 0.8, 0.9, 1.0),
-              'colsample_bytree': (0.75, 0.8, 0.9, 1.0),
-              'gamma': [i / 10 for i in range(0, 5)]
-              }
+    param = {}
+    param['objective'] = 'binary:logistic'
+    param['booster'] = 'gbtree'
+    param['eta'] = 0.1
+    param['max_depth'] = 8
+    param['silent'] = 1
+    param['nthread'] = 16
+    param['subsample'] = 0.8
+    param['colsample_bytree'] = 0.8
+    param['eval_metric'] = 'auc'
+    param['num_round'] = 800
 
-    clf2 = EvolutionaryAlgorithmSearchCV(estimator=XGBClassifier(**ind_params),
-                                         params=params,
-                                         scoring="roc_auc",
-                                         cv=3,
-                                         verbose=1,
-                                         population_size=60,
-                                         gene_mutation_prob=0.10,
-                                         gene_crossover_prob=0.5,
-                                         tournament_size=5,
-                                         generations_number=100,
-                                         n_jobs=8)
+    model.clf = XGBClassifier(**param)
     # 在训练集上训练
-    model.clf.fit(X_train, y_train.ravel())
+    model.clf.fit(X_train, y_train.ravel(), eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())], eval_metric='auc', early_stopping_rounds=100)
 
     # KFold cross validation
     # def cross_validate(*args, **kwargs):
@@ -157,10 +136,10 @@ if __name__ == '__main__':
     #     scores = cross_val_score(model.clf, X, y.ravel(), cv=cv, scoring='roc_auc')
     #     return scores
     # model.cross_validation(cross_validate)
-    print("Model trained in %s seconds" % (str(time.clock() - start_time_1)))
+    print("Model trained in %s seconds" % (str(time.time() - start_time_1)))
 
     # 首先声明两者所要实现的功能是一致的（将多维数组降位一维），两者的区别在于返回拷贝（copy）还是返回视图（view），numpy.flatten()返回一份拷贝，对拷贝所做的修改不会影响（reflects）原始矩阵，而numpy.ravel()返回的是视图（view)，会影响（reflects）原始矩阵。
     model.compute_metrics(X_val, y_val.ravel())
     model.compute_features_distribution()
     model.save()
-    model.submit(ensemble_test)
+    # model.submit(ensemble_test)
