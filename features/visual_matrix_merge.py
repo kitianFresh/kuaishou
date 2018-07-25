@@ -5,6 +5,7 @@ import sys
 sys.path.append('..')
 import bloscpack as bp
 import gc
+import json
 from multiprocessing import cpu_count
 from conf.modelconf import *
 
@@ -29,33 +30,41 @@ if __name__ == '__main__':
     TRAIN_VISUAL_PHOTO_ID = os.path.join(online_data_dir, 'visual_train_photo_id.blp')
     TEST_VISUAL_PHOTO_ID = os.path.join(online_data_dir, 'visual_test_photo_id.blp')
 
+    path = os.path.join(online_data_dir, 'photo_ids.json')
+    with open(path, 'r') as f:
+        data = json.load(f)
 
-    train_photos = np.load(VISUAL_TRAIN)
-    test_photos = np.load(VISUAL_TEST)
-    sum_train = len(train_photos.keys()) - 1
-    sum_test = len(test_photos.keys()) - 1
+    sum_train = 0
+    sum_test = 0
+    for k in range(kfold):
+        photo_ids_train = data['photo_ids_train' + str(k)]
+        photo_ids_test = data['photo_ids_test' + str(k)]
+        sum_train += len(photo_ids_train)
+        sum_test += len(photo_ids_test)
+
     vector_train = np.random.random([sum_train, 2048])
     vector_test = np.random.random([sum_test, 2048])
+
+    photo_ids_train = np.arange(sum_train)
+    photo_ids_test = np.arange(sum_test)
     num_train = 0
     num_test = 0
-    photo_ids_train = [0]* sum_train
-    photo_ids_test = [0] * sum_test
     for k in range(kfold):
         TRAIN_VISUAL_MATRIX_K = os.path.join(online_data_dir,'visual_train_matrix' + str(k) + '.blp')
         TEST_VISUAL_MATRIX_K = os.path.join(online_data_dir,  'visual_test_matrix' + str(k) + '.blp')
         TRAIN_VISUAL_PHOTO_ID_K = os.path.join(online_data_dir, 'visual_train_photo_id' + str(k) + '.blp')
         TEST_VISUAL_PHOTO_ID_K = os.path.join(online_data_dir, 'visual_test_photo_id' + str(k) + '.blp')
 
-        vec_train_k = bp.unpack_ndarray_file(TRAIN_VISUAL_MATRIX)
-        vec_test_k = bp.unpack_ndarray_file(TEST_VISUAL_MATRIX)
-        photo_ids_train_k = bp.unpack_ndarray_file(TRAIN_VISUAL_PHOTO_ID)
-        photo_ids_test_k = bp.unpack_ndarray_file(TEST_VISUAL_PHOTO_ID)
+        vec_train_k = bp.unpack_ndarray_file(TRAIN_VISUAL_MATRIX_K)
+        vec_test_k = bp.unpack_ndarray_file(TEST_VISUAL_MATRIX_K)
+        photo_ids_train_k = bp.unpack_ndarray_file(TRAIN_VISUAL_PHOTO_ID_K)
+        photo_ids_test_k = bp.unpack_ndarray_file(TEST_VISUAL_PHOTO_ID_K)
         for i, vec in enumerate(vec_train_k):
             vector_train[num_train+i, :] = vec
-            photo_ids_train[num_train+i] = photo_ids_train_k[i]
+            photo_ids_train[num_train+i] = photo_ids_train_k
         for i, vec in enumerate(vec_test_k):
             vector_test[num_test+i, :] = vec
-            photo_ids_test[num_test+i, :] = photo_ids_test_k[i]
+            photo_ids_test[num_test+i] = photo_ids_test_k
         num_train += vec_train_k.shape[0]
         num_test += vec_test_k.shape[0]
         del vec_test_k

@@ -18,7 +18,8 @@ parser.add_argument('-k', '--kfold', help='the kth matrix', default=0, required=
 args = parser.parse_args()
 
 
-def matrix_fill(visual_dir, photo_id, matrix, i):
+def matrix_fill(args):
+    visual_dir, photo_id, matrix, i = args
     path = os.path.join(visual_dir, str(photo_id))
     photo = np.load(path)
     matrix[i, :] = photo
