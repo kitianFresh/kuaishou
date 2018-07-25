@@ -17,6 +17,7 @@ parser.add_argument('-f', '--format', help='store pandas feature format, csv, pk
 parser.add_argument('-o', '--online', help='online feature extract', action="store_true")
 parser.add_argument('-k', '--offline-kfold', help='offline kth fold feature extract, extract kth fold', default=0)
 parser.add_argument('-d', '--discretization', help='discrezatize or not some features', action='store_true')
+parser.add_argument('-m', '--max-face-attr', help='attribute get max face used for each photo, options: appearance, scale, age', default='scale')
 args = parser.parse_args()
 
 
@@ -122,11 +123,14 @@ if __name__ == '__main__':
     }
 
     # max_scale_face, max_age_face
-    prefix = 'max_appearance_'
+    prefix = 'max_' + args.max_face_attr + '_'
     temp_col = prefix + 'face'
-    # face_data['max_scale_face'] = face_data['faces'].apply(max_scale_face)
-    face_data[temp_col] = face_data['faces'].apply(max_appearance_face)
-    # face_data['max_age_face'] = face_data['faces'].apply(max_age_face)
+    if temp_col == 'max_scale_face':
+        face_data['max_scale_face'] = face_data['faces'].apply(max_scale_face)
+    elif temp_col == 'max_apperance_face':
+        face_data[temp_col] = face_data['faces'].apply(max_appearance_face)
+    elif temp_col == 'max_age_face':
+        face_data['max_age_face'] = face_data['faces'].apply(max_age_face)
 
     faces = face_data[temp_col].str.split('|', expand=True)  # 多名字分列
     face_data.pop(temp_col)

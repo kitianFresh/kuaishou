@@ -138,8 +138,8 @@ if __name__ == '__main__':
                                on=['user_id','photo_id'])
 
     print(user_item_train.columns)
-    # user_item_train.fillna(0, inplace=True)
-    # user_item_test.fillna(0, inplace=True)
+    user_item_train.fillna(0, inplace=True)
+    user_item_test.fillna(0, inplace=True)
     print(np.sum(user_item_train.isnull()))
     print(np.sum(user_item_test.isnull()))
     input_features = id_features + user_features + photo_features + time_features + one_ctr_features + combine_ctr_features
