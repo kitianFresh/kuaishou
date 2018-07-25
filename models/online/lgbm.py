@@ -9,10 +9,6 @@ import time
 sys.path.append("../../")
 from multiprocessing import cpu_count
 
-import numpy as np
-from sklearn.model_selection import cross_val_score, train_test_split, StratifiedKFold, RandomizedSearchCV
-from evolutionary_search import EvolutionaryAlgorithmSearchCV
-
 from lightgbm import LGBMClassifier
 
 from common.utils import FeatureMerger, read_data, store_data, load_config_from_pyfile
@@ -41,9 +37,12 @@ if __name__ == '__main__':
     num_workers = args.num_workers
     config = load_config_from_pyfile(args.config_file)
     features_to_train = config.features_to_train
+    id_features = config.id_features
     user_features = config.user_features
     photo_features = config.photo_features
     time_features = config.time_features
+    one_ctr_features = config.one_ctr_features
+    combine_ctr_features = config.combine_ctr_features
     y_label = config.y_label
     
     model_name = 'lgbm'
@@ -64,10 +63,10 @@ if __name__ == '__main__':
         ALL_FEATURE_TEST_FILE = 'ensemble_feature_test' + '.' + fmt
         ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
     else:
-        feature_to_use = id_features + user_features + photo_features + time_features
+        feature_to_use = id_features + user_features + photo_features + time_features + one_ctr_features + combine_ctr_features
         fm_trainer = FeatureMerger(col_feature_store_dir, feature_to_use + y_label, fmt=fmt, data_type='train',
                                    pool_type='process', num_workers=num_workers)
-        fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use, fmt=fmt, data_type='test',
+        fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use + y_label, fmt=fmt, data_type='test',
                                   pool_type='process', num_workers=num_workers)
         ensemble_train = fm_trainer.concat()
         ensemble_test = fm_tester.concat()
@@ -98,7 +97,7 @@ if __name__ == '__main__':
 
     X_train, y_train = ensemble_train[features_to_train].values, \
                                      ensemble_train[y_label].values
-
+    print(X_train.shape)
     print(y_train.mean(), y_train.std())
     import gc
     del ensemble_train

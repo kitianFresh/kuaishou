@@ -11,7 +11,7 @@ import pandas as pd
 from catboost import CatBoostClassifier
 
 from conf.modelconf import *
-from common.utils import FeatureMerger, read_data, store_data
+from common.utils import FeatureMerger, read_data, store_data, load_config_from_pyfile
 from common.base import Classifier
 
         
@@ -41,7 +41,16 @@ if __name__ == '__main__':
     down_sample_rate = float(args.down_sampling)
     k = int(args.topk_features)
     num_workers = args.num_workers
-    
+    config = load_config_from_pyfile(args.config_file)
+    features_to_train = config.features_to_train
+    id_features = config.id_features
+    user_features = config.user_features
+    photo_features = config.photo_features
+    time_features = config.time_features
+    one_ctr_features = config.one_ctr_features
+    combine_ctr_features = config.combine_ctr_features
+    y_label = config.y_label
+
     model_name = 'catboost'
 
     model_store_path = './sample/' if USE_SAMPLE else './data'
@@ -60,10 +69,10 @@ if __name__ == '__main__':
         ALL_FEATURE_TEST_FILE = 'ensemble_feature_test' + '.' + fmt
         ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
     else:
-        feature_to_use = id_features + user_features + photo_features + time_features
+        feature_to_use = id_features + user_features + photo_features + time_features + one_ctr_features + combine_ctr_features
         fm_trainer = FeatureMerger(col_feature_store_dir, feature_to_use + y_label, fmt=fmt, data_type='train',
                                    pool_type='process', num_workers=num_workers)
-        fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use, fmt=fmt, data_type='test',
+        fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use + y_label, fmt=fmt, data_type='test',
                                   pool_type='process', num_workers=num_workers)
         ensemble_train = fm_trainer.concat()
         ensemble_test = fm_tester.concat()
@@ -100,6 +109,7 @@ if __name__ == '__main__':
 
     X_train, y_train = ensemble_train[features_to_train].values, ensemble_train[y_label].values
 
+    print(X_train.shape)
     print(y_train.mean(), y_train.std())
 
 
