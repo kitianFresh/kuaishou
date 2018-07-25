@@ -173,7 +173,8 @@ if __name__ == '__main__':
     cate_cols = ['face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length', 'duration_time']
     if args.discretization:
         for col in cate_cols:
-            func = getattr(utils, col) if hasattr(utils, col) else None
+            func_name = col + '_discretization'
+            func = getattr(utils, func_name) if hasattr(utils, func_name) else None
             if func is not None and callable(func):
                 print(func.__name__)
                 user_item_train[col] = user_item_train[col].apply(func)
