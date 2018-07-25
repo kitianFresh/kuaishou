@@ -23,6 +23,10 @@ if __name__ == '__main__':
 
     fmt = args.format if args.format else 'csv'
     kfold = int(args.offline_kfold)
+    path = os.path.join(online_data_dir, 'photo_ids.json')
+    if os.path.exists(path):
+        logging.info('Already dumped')
+        exit(0)
     if args.online:
         TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
             'train_interaction.txt')
@@ -66,7 +70,6 @@ if __name__ == '__main__':
         data['photo_ids_train' + str(i)] = photos_train[i*interval_train : (i+1)*interval_train]
         data['photo_ids_test' + str(i)] = photos_test[i*intervel_test : (i+1)*intervel_test]
 
-    path = os.path.join(online_data_dir, 'photo_ids.json')
     # with open(path, 'w') as f:
     #     json.dump(data, f)
     dump_json_file(data, path)
