@@ -1,5 +1,7 @@
 pre_path = '/Users/yuanguo/kuaishou/sample/offline/features/'
 
+pre_path = '../../data/offline/features/'
+
 TEST_FILE = pre_path + 'ensemble_feature_test0.csv'
 TRAIN_FILE = pre_path + 'ensemble_feature_train0.csv'
 
@@ -29,6 +31,8 @@ NUMERIC_COLS = ['user_id', 'photo_id', 'click_ratio', 'browse_num',
                 'woman_num_ratio', 'man_num_ratio', 'cover_length',
                 'avg_tfidf', 'key_words_num', 'text_class_label',
                 'text_cluster_label', 'time', 'duration_time', 'click']
+
+NUMERIC_COLS = ['user_id', 'photo_id', 'click_ratio', 'browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum', 'duration_sum', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq', 'playing_freq', 'duration_favor', 'face_favor', 'man_favor', 'woman_favor', 'man_cv_favor', 'woman_cv_favor', 'man_age_favor', 'woman_age_favor', 'man_yen_value_favor', 'woman_yen_value_favor', 'face_click_favor', 'non_face_click_favor', 'cover_length_favor', 'exposure_num', 'have_face_cate', 'have_text_cate', 'face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age', 'woman_avg_age', 'human_avg_age', 'man_avg_attr', 'woman_avg_attr', 'human_avg_attr', 'woman_num_ratio', 'man_num_ratio', 'cover_length', 'avg_tfidf', 'key_words_num', 'text_class_label', 'text_cluster_label', 'time', 'duration_time', 'max_user_word_ctr', 'max_word_ctr', 'face_num_ctr', 'woman_num_ctr', 'man_num_ctr', 'gender_ctr', 'age_ctr', 'appearance_ctr', 'cover_length_ctr', 'duration_time_ctr', 'click']
 
 IGNORE_COLS = [ 'browse_time_diff', 'click_freq',
                 'browse_freq', 'playing_freq',  'time']
