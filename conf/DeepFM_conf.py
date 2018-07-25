@@ -83,7 +83,7 @@ class DataParser(object):
         self.feat_dict = feat_dict
 
 
-    def scale(self, scale_fun, df_train, df_test=None):
+    def scale(self, df_train, df_test=None):
 
         def scale_(df):
 
@@ -95,6 +95,7 @@ class DataParser(object):
             return df
 
         if not df_test is None:
+            print(df_train['click'])
             train_label = df_train.pop('click')
             test_label = df_test.pop('click')
             assert df_train.shape[1] == df_test.shape[1], \
