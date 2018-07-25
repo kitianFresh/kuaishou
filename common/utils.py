@@ -125,7 +125,7 @@ def count_combine_feat_ctr(train1, train2, test1, test2, labels):
                 if comb not in total_dict:
                     ctr_vec.append(prior)
                 else:
-                    ctr_vec.append(alpha + pos_dict[comb]/ (alpha+beta+total_dict[comb]))
+                    ctr_vec.append((alpha + pos_dict[comb])/ (alpha+beta+total_dict[comb]))
             if len(ctr_vec) == 0:
                 train_res.append(prior)
             else:
@@ -147,7 +147,7 @@ def count_combine_feat_ctr(train1, train2, test1, test2, labels):
                 if comb not in total_dict:
                     ctr_vec.append(prior)
                 else:
-                    ctr_vec.append(alpha + pos_dict[comb]/ (alpha+beta+total_dict[comb]))
+                    ctr_vec.append((alpha + pos_dict[comb])/ (alpha+beta+total_dict[comb]))
             if len(ctr_vec) == 0:
                 test_res.append(prior)
             else:
