@@ -170,7 +170,7 @@ if __name__ == '__main__':
     user_item_train = pd.merge(user_item_train, text_train, how='left', on=['photo_id'])
     user_item_test = pd.merge(user_item_test, text_test, how='left', on=['photo_id'])
 
-    cate_cols = ['face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length', 'duration_time']
+    cate_cols = ['face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length', 'duration_time', 'time']
     if args.discretization:
         for col in cate_cols:
             func_name = col + '_discretization'

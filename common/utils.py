@@ -785,38 +785,26 @@ def duration_time_discretization(t):
 def face_num_discretization(face_num):
     if face_num == 0:
         return 0
-    elif face_num == 1:
+    elif 1 <= face_num <=3:
         return 1
-    elif face_num == 2:
-        return 2
-    elif face_num == 3:
-        return 3
     else:
-        return 4
+        return 2
 
 def man_num_discretization(man_num):
     if man_num == 0:
         return 0
-    elif man_num == 1:
+    elif 1 <= man_num <= 2:
         return 1
-    elif man_num == 2:
-        return 2
-    elif man_num == 3:
-        return 3
     else:
-        return 4
+        return 2
     
 def woman_num_discretization(woman_num):
     if woman_num == 0:
         return 0
-    elif woman_num == 1:
-        return 1
-    elif woman_num == 2:
+    elif 1 <= woman_num <= 2:
         return 2
-    elif woman_num == 3:
-        return 3
     else:
-        return 4
+        return 3
 
 def age_discretization(age):
     if age == -1:
@@ -835,26 +823,12 @@ def age_discretization(age):
 def appearance_discretization(appearance):
     if appearance == -1:
         return -1
-    elif 0 <= appearance <= 10:
+    elif 0 <= appearance <= 60:
         return 0
-    elif 10 < appearance <= 20:
+    elif 60 <= appearance <= 80:
         return 1
-    elif 20 < appearance <= 30:
-        return 2
-    elif 30 < appearance <= 40:
-        return 3
-    elif 40 < appearance <= 50:
-        return 4
-    elif 50 < appearance <= 60:
-        return 5
-    elif 60 < appearance <= 70:
-        return 6
-    elif 70 < appearance <= 80:
-        return 7
-    elif 80 < appearance <= 90:
-        return 8
     else:
-        return 9
+        return 2
 
 
 def human_avg_age_discretization(human_age):
@@ -998,14 +972,12 @@ def woman_scale_discretization(woman_scale):
 def cover_length_discretization(num):
     if num == 0:
         return 0
-    elif 0 < num <= 3:
+    elif 0 < num <= 8:
         return 1
-    elif 3 < num <= 8:
-        return 2
     elif 8 < num <= 20:
-        return 3
+        return 2
     else:
-        return 4
+        return 3
 
 
 def key_words_num_discretization(num):

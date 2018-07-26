@@ -175,18 +175,22 @@ if __name__ == '__main__':
                                                                            user_item_test['cover_words'].values,
                                                                            user_item_train['click'].values)
 
+    cate_cols = ['face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length', 'duration_time', 'time']
     if args.discretization:
-        for col in ['face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length', 'duration_time']:
-            func = getattr(utils, col) if hasattr(utils, col) else None
+        for col in cate_cols:
+            func_name = col + '_discretization'
+            func = getattr(utils, func_name) if hasattr(utils, func_name) else None
             if func is not None and callable(func):
                 print(func.__name__)
                 user_item_train[col] = user_item_train[col].apply(func)
                 user_item_test[col] = user_item_test[col].apply(func)
 
-    for col in ['face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length', 'duration_time']:
+    ctr_cols = []
+    for col in cate_cols:
         user_item_train[col+'_ctr'], user_item_test[col+'_ctr'] = count_feat_ctr(user_item_train[col].astype(str).values,
                                                                                  user_item_test[col].astype(str).values,
                                                                                  user_item_train['click'].values)
+        ctr_cols.append(col+'_ctr')
 
     if args.online:
         ONE_CTR_TRAIN_FEATURE_FILE = 'one_ctr_feature_train' + '.' + fmt
@@ -196,8 +200,8 @@ if __name__ == '__main__':
         ONE_CTR_TRAIN_FEATURE_FILE = 'one_ctr_feature_train' + str(kfold) + '.' + fmt
         ONE_CTR_TEST_FEATURE_FILE = 'one_ctr_feature_test' + str(kfold) + '.' + fmt
 
-    one_ctr_train = user_item_train[['user_id', 'photo_id', 'max_word_ctr', 'face_num_ctr', 'woman_num_ctr', 'man_num_ctr', 'gender_ctr', 'age_ctr', 'appearance_ctr', 'cover_length_ctr', 'duration_time_ctr']]
-    one_ctr_test = user_item_test[['user_id', 'photo_id', 'max_word_ctr', 'face_num_ctr', 'woman_num_ctr', 'man_num_ctr', 'gender_ctr', 'age_ctr', 'appearance_ctr', 'cover_length_ctr', 'duration_time_ctr']]
+    one_ctr_train = user_item_train[['user_id', 'photo_id', 'max_word_ctr'] + ctr_cols]
+    one_ctr_test = user_item_test[['user_id', 'photo_id', 'max_word_ctr'] + ctr_cols]
     one_ctr_train.sort_values(['user_id', 'photo_id'], inplace=True)
     one_ctr_test.sort_values(['user_id', 'photo_id'], inplace=True)
 
