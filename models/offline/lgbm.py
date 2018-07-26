@@ -117,7 +117,7 @@ if __name__ == '__main__':
     model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=63, reg_alpha=0.0, reg_lambda=1,
                                 max_depth=-1, n_estimators=1200, objective='binary',
                                 subsample=0.8, colsample_bytree=0.8, subsample_freq=1, feature_fraction=0.8,
-                                learning_rate=0.05, min_child_weight=50,
+                                learning_rate=0.05, min_child_weight=200,
                                 random_state=2018, n_jobs=-1, device='gpu' if args.gpu_mode else 'cpu',
                                 silent=False)
     model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())], eval_metric='auc', early_stopping_rounds=100)

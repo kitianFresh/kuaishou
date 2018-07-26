@@ -69,7 +69,7 @@ if __name__ == '__main__':
         ALL_FEATURE_TEST_FILE = 'ensemble_feature_test' + str(kfold) + '.' + fmt
         ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
     else:
-        feature_to_use = id_features + user_features + photo_features + time_features
+        feature_to_use = id_features + user_features + photo_features + time_features + one_ctr_features + combine_ctr_features
         fm_trainer = FeatureMerger(col_feature_store_dir, feature_to_use + y_label, fmt=fmt, data_type='train',
                                    pool_type='process', num_workers=num_workers)
         fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use + y_label, fmt=fmt, data_type='test',
