@@ -140,8 +140,10 @@ if __name__ == '__main__':
     print(user_item_train.columns)
     user_item_train.fillna(0, inplace=True)
     user_item_test.fillna(0, inplace=True)
+
     print(np.sum(user_item_train.isnull()))
     print(np.sum(user_item_test.isnull()))
+
     input_features = id_features + user_features + photo_features + time_features + one_ctr_features + combine_ctr_features
     ensemble_train = user_item_train[input_features + y_label]
     ensemble_test = user_item_test[input_features] if args.online else user_item_test[input_features + y_label]

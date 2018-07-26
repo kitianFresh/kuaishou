@@ -119,10 +119,15 @@ if __name__ == '__main__':
 
     
     print(user_item_train.columns)
+
+
     user_item_train.fillna(0, inplace=True)
     user_item_test.fillna(0, inplace=True)
     input_features = id_features + user_features + photo_features + time_features + combine_ctr_features + one_ctr_features
-    
+
+    print(np.sum(user_item_train.isnull()))
+    print(np.sum(user_item_test.isnull()))
+
     print(input_features)
     ensemble_train = user_item_train[input_features + y_label]
 

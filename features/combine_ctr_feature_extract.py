@@ -208,6 +208,10 @@ if __name__ == '__main__':
     combine_test.sort_values(['user_id', 'photo_id'], inplace=True)
     print(combine_train.info())
     print(combine_test.info())
+
+    print(np.sum(combine_train.isnull()))
+    print(np.sum(combine_test.isnull()))
+
     if not os.path.exists(feature_store_dir):
         os.mkdir(feature_store_dir)
     store_data(combine_train, os.path.join(feature_store_dir, COMBINE_TRAIN_FEATURE_FILE), fmt)

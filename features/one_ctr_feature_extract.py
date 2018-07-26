@@ -200,8 +200,11 @@ if __name__ == '__main__':
     one_ctr_test = user_item_test[['user_id', 'photo_id', 'max_word_ctr', 'face_num_ctr', 'woman_num_ctr', 'man_num_ctr', 'gender_ctr', 'age_ctr', 'appearance_ctr', 'cover_length_ctr', 'duration_time_ctr']]
     one_ctr_train.sort_values(['user_id', 'photo_id'], inplace=True)
     one_ctr_test.sort_values(['user_id', 'photo_id'], inplace=True)
+
     print(one_ctr_train.info())
     print(one_ctr_test.info())
+    print(np.sum(one_ctr_train.isnull()))
+    print(np.sum(one_ctr_test.isnull()))
 
     store_data(one_ctr_train, os.path.join(feature_store_dir, ONE_CTR_TRAIN_FEATURE_FILE), fmt)
     store_data(one_ctr_test, os.path.join(feature_store_dir, ONE_CTR_TEST_FEATURE_FILE), fmt)
