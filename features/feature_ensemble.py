@@ -26,7 +26,8 @@ if __name__ == '__main__':
         TEST_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('test_interaction.txt')
         PHOTO_FEATURE_FILE = 'photo_feature' + '.' + fmt
         USER_FEATURE_FILE = 'user_feature' + '.' + fmt
-        VISUAL_FEATURE_FILE = 'visual_feature' + '.' + fmt
+        VISUAL_FEATURE_TRAIN_FILE = 'visual_feature_train' + '.' + fmt
+        VISUAL_FEATURE_TEST_FILE = 'visual_feature_test' + '.' + fmt
         COMBINE_CTR_TRAIN_FEATURE_FILE = 'combine_ctr_feature_train' + '.' + fmt
         COMBINE_CTR_TEST_FEATURE_FILE = 'combine_ctr_feature_test' + '.' + fmt
         ONE_CTR_TRAIN_FEATURE_FILE = 'one_ctr_feature_train' + '.' + fmt
@@ -34,14 +35,15 @@ if __name__ == '__main__':
 
 
     else:
-        TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
+        TRAIN_USER_INTERACT, offline_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
         'train_interaction' + str(kfold) + '.txt', online=False)
-        TEST_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
+        TEST_USER_INTERACT, offline_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
             'test_interaction' + str(kfold) + '.txt', online=False)
 
         PHOTO_FEATURE_FILE = 'photo_feature' + str(kfold) + '.' + fmt
         USER_FEATURE_FILE = 'user_feature' + str(kfold) + '.' + fmt
-        VISUAL_FEATURE_FILE = 'visual_feature' + str(kfold) + '.' + fmt
+        VISUAL_FEATURE_TRAIN_FILE = 'visual_feature_train' + str(kfold) + '.' + fmt
+        VISUAL_FEATURE_TEST_FILE = 'visual_feature_test' + str(kfold) + '.' + fmt
         COMBINE_CTR_TRAIN_FEATURE_FILE = 'combine_ctr_feature_train' + str(kfold) + '.' + fmt
         COMBINE_CTR_TEST_FEATURE_FILE = 'combine_ctr_feature_test' + str(kfold) + '.' + fmt
         ONE_CTR_TRAIN_FEATURE_FILE = 'one_ctr_feature_train' + str(kfold) + '.' + fmt
@@ -75,12 +77,19 @@ if __name__ == '__main__':
     one_ctr_feats_train = read_data(os.path.join(feature_store_dir, ONE_CTR_TRAIN_FEATURE_FILE), fmt)
     one_ctr_feats_test = read_data(os.path.join(feature_store_dir, ONE_CTR_TEST_FEATURE_FILE), fmt)
 
-    path = os.path.join(feature_store_dir,VISUAL_FEATURE_FILE)
+    path = os.path.join(feature_store_dir,VISUAL_FEATURE_TRAIN_FILE)
     if os.path.exists(path):
-        visual = read_data(os.path.join(feature_store_dir,VISUAL_FEATURE_FILE),fmt)
+        visual_train = read_data(path,fmt)
     else:
         logging.warning('%s not exist, ignore.' % path)
-        visual = None
+        visual_train = None
+
+    path = os.path.join(feature_store_dir, VISUAL_FEATURE_TEST_FILE)
+    if os.path.exists(path):
+        visual_test = read_data(path, fmt)
+    else:
+        logging.warning('%s not exist, ignore.' % path)
+        visual_test = None
     
     user_item_train = pd.merge(user_item_train, users,
                           how='inner',
@@ -96,8 +105,8 @@ if __name__ == '__main__':
     user_item_train = pd.merge(user_item_train, one_ctr_feats_train,
                                how='left', on=['user_id', 'photo_id'])
 
-    if visual is not None:
-        user_item_train = pd.merge(user_item_train,visual,
+    if visual_train is not None:
+        user_item_train = pd.merge(user_item_train,visual_train,
                                how='left',on=['user_id','photo_id'])
     
     user_item_test = pd.merge(user_item_test, users,
@@ -107,8 +116,8 @@ if __name__ == '__main__':
     user_item_test = pd.merge(user_item_test, photo_data,
                           how='left',
                           on=['photo_id'])
-    if visual is not None:
-        user_item_test = pd.merge(user_item_test,visual,
+    if visual_test is not None:
+        user_item_test = pd.merge(user_item_test,visual_test,
                               how='left',
                               on=['user_id','photo_id'])
     user_item_test = pd.merge(user_item_test, combine_ctr_feats_test,
