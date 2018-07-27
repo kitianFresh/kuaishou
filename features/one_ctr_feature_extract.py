@@ -4,6 +4,9 @@ import argparse
 import sys
 
 sys.path.append('..')
+from multiprocessing import cpu_count
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+import time
 
 import pandas as pd
 import numpy as np
@@ -12,7 +15,10 @@ from conf.modelconf import get_data_file, data_dir, feature_dtype_map
 from common.utils import count_combine_feat_ctr, count_feat_ctr
 from common import utils
 
+
 parser = argparse.ArgumentParser()
+parser.add_argument('-p', '--pool-type', help='pool type, threads or process, here use process for more performance')
+parser.add_argument('-n', '--num-workers', help='workers num in pool', default=cpu_count())
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-o', '--online', help='online feature extract', action="store_true")
 parser.add_argument('-k', '--offline-kfold', help='offline kth fold feature extract, extract kth fold', default=0)
@@ -225,6 +231,19 @@ if __name__ == '__main__':
     store_data(one_ctr_test, os.path.join(feature_store_dir, ONE_CTR_TEST_FEATURE_FILE), fmt)
 
     #column
+    tasks_args = []
     for col in set(one_ctr_train.columns) - set(['user_id', 'photo_id']):
-        store_data(one_ctr_train[[col]], os.path.join(col_feature_store_dir, col + '_train.csv'), fmt)
-        store_data(one_ctr_test[[col]], os.path.join(col_feature_store_dir, col + '_test.csv'), fmt)
+        tasks_args.append((one_ctr_train[[col]], os.path.join(col_feature_store_dir, col + '_train.csv'), fmt))
+        tasks_args.append((one_ctr_test[[col]], os.path.join(col_feature_store_dir, col + '_test.csv'), fmt))
+
+    def feature_saver(args):
+        df, path, fmt = args
+        res = store_data(df, path, fmt)
+        return res
+    start_time_1 = time.time()
+    Executor = ThreadPoolExecutor if args.pool_type == 'thread' else ProcessPoolExecutor
+    with Executor(max_workers=int(args.n)) as executor:
+        for file in executor.map(feature_saver,  tasks_args):
+            print('%s saved' % file)
+    print ("%s pool execution in %s seconds" % (args.pool_type, str(time.time() - start_time_1)))
+
