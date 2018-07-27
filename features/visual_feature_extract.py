@@ -60,13 +60,25 @@ if __name__ == '__main__':
     user_item_data = pd.concat([user_item_train,user_item_test])
 
 
+    def concat(X, Y, copy=False):
+        """Return an array of references if copy=False"""
+        if copy is True:  # deep copy
+            return np.append(X, Y, axis=0)
+        len_x, len_y = len(X), len(Y)
+        ret = np.array([None for _ in range(len_x + len_y)])
+        for i in range(len_x):
+            ret[i] = X[i]
+        for j in range(len_y):
+            ret[len_x + j] = Y[j]
+        return ret
+
     matrix = None
     photo_id = None
     if os.path.exists(TRAIN_VISUAL_MATRIX) and os.path.exists(TEST_VISUAL_MATRIX):
         train_matrix,train_photo_id = load_data(TRAIN_VISUAL_MATRIX,TRAIN_VISUAL_PHOTO_ID)
         test_matrix,test_photo_id = load_data(TEST_VISUAL_MATRIX,TEST_VISUAL_PHOTO_ID)
-        matrix = np.vstack([train_matrix,test_matrix])
-        photo_id = np.append(train_photo_id,test_photo_id)
+        matrix = concat(train_matrix,test_matrix)
+        photo_id = concat(train_photo_id,test_photo_id)
     else:
         if USE_SAMPLE:
             sample_data_transform_store(TRAIN_VISUAL_DIR,TRAIN_VISUAL_MATRIX,TRAIN_VISUAL_PHOTO_ID)
