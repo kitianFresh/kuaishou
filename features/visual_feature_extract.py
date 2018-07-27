@@ -43,7 +43,10 @@ if __name__ == '__main__':
     TEST_VISUAL_MATRIX = os.path.join(online_data_dir, 'visual_test_matrix.blp')
     TRAIN_VISUAL_PHOTO_ID = os.path.join(online_data_dir, 'visual_train_photo_id.blp')
     TEST_VISUAL_PHOTO_ID = os.path.join(online_data_dir, 'visual_test_photo_id.blp')
-    VISUAL_CLUSTER_MODEL = os.path.join(online_data_dir, 'visual_cluster_model_kmeans.pkl')
+    VISUAL_CLUSTER_MODEL_PREFIX = os.path.join(online_data_dir, 'visual_cluster_model')
+    VISUAL_CLUSTER_ENCODER = os.path.join(online_data_dir, 'visual_cluster_model_encoder.pkl')
+    VISUAL_CLUSTER_KMEANS = os.path.join(online_data_dir, 'visual_cluster_model_kmeans.pkl')
+
 
     user_item_train = pd.read_csv(TRAIN_USER_INTERACT,
                                   sep='\t',
@@ -77,12 +80,12 @@ if __name__ == '__main__':
         raise IOError('No matrix')
 
     cluster_nums = 50
-    if os.path.exists(VISUAL_CLUSTER_MODEL):
-        visual_feature_train = cluster_model_predict(VISUAL_CLUSTER_MODEL,train_matrix,train_photo_id)
-        visual_feature_test = cluster_model_predict(VISUAL_CLUSTER_MODEL, test_matrix, test_photo_id)
+    if os.path.exists(VISUAL_CLUSTER_ENCODER) and os.path.exists(VISUAL_CLUSTER_KMEANS):
+        visual_feature_train = cluster_model_predict(VISUAL_CLUSTER_MODEL_PREFIX,train_matrix,train_photo_id)
+        visual_feature_test = cluster_model_predict(VISUAL_CLUSTER_MODEL_PREFIX, test_matrix, test_photo_id)
     else:
-        visual_feature_train = train_cluster_model(train_matrix,train_photo_id,VISUAL_CLUSTER_MODEL,cluster_nums)
-        visual_feature_test = cluster_model_predict(VISUAL_CLUSTER_MODEL, test_matrix, test_photo_id)
+        visual_feature_train = train_cluster_model(train_matrix,train_photo_id,VISUAL_CLUSTER_MODEL_PREFIX,cluster_nums)
+        visual_feature_test = cluster_model_predict(VISUAL_CLUSTER_MODEL_PREFIX, test_matrix, test_photo_id)
 
     print(np.sum(visual_feature_train.isnull()))
     print(np.sum(visual_feature_test.isnull()))
