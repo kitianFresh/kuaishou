@@ -84,9 +84,18 @@ if __name__ == '__main__':
         visual_feature_train = train_cluster_model(train_matrix,train_photo_id,VISUAL_CLUSTER_MODEL,cluster_nums)
         visual_feature_test = cluster_model_predict(VISUAL_CLUSTER_MODEL, test_matrix, test_photo_id)
 
+    print(np.sum(visual_feature_train.isnull()))
+    print(np.sum(visual_feature_test.isnull()))
     visual_feature_train = pd.merge(user_item_train,visual_feature_train,how='left',on=['photo_id'])
     visual_feature_test = pd.merge(user_item_test,visual_feature_test,how='left',on=['photo_id'])
 
+    print(visual_feature_train.info())
+    print(visual_feature_test.info())
+    print(np.sum(visual_feature_train.isnull()))
+    print(np.sum(visual_feature_test.isnull()))
+
+    visual_feature_train.fillna(-1, inplace=True)
+    visual_feature_test.fillna(-1, inplace=True)
     visual_feature_train['photo_cluster_label'] = visual_feature_train['photo_cluster_label'].astype(feature_dtype_map['photo_cluster_label'])
     visual_feature_test['photo_cluster_label'] = visual_feature_test['photo_cluster_label'].astype(feature_dtype_map['photo_cluster_label'])
 
