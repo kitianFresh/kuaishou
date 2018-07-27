@@ -39,6 +39,8 @@ if __name__ == '__main__':
         TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
             'train_interaction.txt')
         TEST_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('test_interaction.txt')
+        VISUAL_FEATURE_TRAIN_FILE = 'visual_feature_train' + '.' + fmt
+        VISUAL_FEATURE_TEST_FILE = 'visual_feature_test' + '.' + fmt
 
 
     else:
@@ -55,6 +57,9 @@ if __name__ == '__main__':
         'train_interaction' + str(kfold) + '.txt', online=False)
         TEST_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
         'test_interaction' + str(kfold) + '.txt', online=False)
+
+        VISUAL_FEATURE_TRAIN_FILE = 'visual_feature_train' + str(kfold) + '.' + fmt
+        VISUAL_FEATURE_TEST_FILE = 'visual_feature_test' + str(kfold) + '.' + fmt
 
     face_train = pd.read_csv(TRAIN_FACE,
                              sep='\t',
@@ -93,6 +98,12 @@ if __name__ == '__main__':
                             sep='\t',
                             header=None,
                             names=['photo_id', 'cover_words'])
+
+    visual_train = read_data(os.path.join(feature_store_dir, VISUAL_FEATURE_TRAIN_FILE), fmt)
+    visual_test = read_data(os.path.join(feature_store_dir, VISUAL_FEATURE_TEST_FILE), fmt)
+
+    user_item_train = pd.merge(user_item_train, visual_train, how='left', on=['photo_id'])
+    user_item_test = pd.merge(user_item_test, visual_test, how='left', on=['photo_id'])
 
 
     num_face_train = face_train.shape[0]
@@ -175,7 +186,7 @@ if __name__ == '__main__':
                                                                            user_item_test['cover_words'].values,
                                                                            user_item_train['click'].values)
 
-    cate_cols = ['face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length', 'duration_time', 'time']
+    cate_cols = ['face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length', 'duration_time', 'time', 'photo_cluster_label']
     if args.discretization:
         for col in cate_cols:
             func_name = col + '_discretization'
