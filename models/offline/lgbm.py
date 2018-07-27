@@ -53,6 +53,8 @@ if __name__ == '__main__':
     combine_ctr_features = config.combine_ctr_features
     y_label = config.y_label
 
+    logging.info('--------------------version: %s ----------------------' % version)
+    logging.info('desc: %s' % desc)
     model_name = 'lgbm'
 
     model_store_path = './sample/' if USE_SAMPLE else './data'
