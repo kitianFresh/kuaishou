@@ -48,15 +48,16 @@ text_features = ['cover_length', 'avg_tfidf', 'key_words_num','text_class_label'
 # text_features = ['cover_length', 'avg_tfidf', 'key_words_num','text_class_label','text_cluster_label']
 #text_features = ['cover_length', 'avg_tfidf', 'key_words_num']
 
-visual_features = ['photo_cluster_label', 'photo_class_label']
+# visual_features = ['photo_cluster_label', 'photo_class_label']
+visual_features = ['photo_cluster_label']
 
 #'clicked_ratio', 'have_face_cate'
-photo_features = ['exposure_num', 'have_face_cate', 'have_text_cate'] + face_features + text_features
+photo_features = ['exposure_num', 'have_face_cate', 'have_text_cate'] + face_features + text_features + visual_features
 user_features = user_action_features + user_face_favor_features + user_text_favor_features
 
-combine_ctr_features = ['user_id_face_num_ctr', 'user_id_woman_num_ctr', 'user_id_man_num_ctr', 'user_id_gender_ctr', 'user_id_age_ctr', 'user_id_appearance_ctr', 'user_id_cover_length_ctr', 'user_id_duration_time_ctr']
-# combine_ctr_features = []
-one_ctr_features = ['max_word_ctr', 'face_num_ctr', 'woman_num_ctr', 'man_num_ctr', 'gender_ctr', 'age_ctr', 'appearance_ctr', 'cover_length_ctr', 'duration_time_ctr']
+# combine_ctr_features = ['user_id_face_num_ctr', 'user_id_woman_num_ctr', 'user_id_man_num_ctr', 'user_id_gender_ctr', 'user_id_age_ctr', 'user_id_appearance_ctr', 'user_id_cover_length_ctr', 'user_id_duration_time_ctr']
+combine_ctr_features = []
+one_ctr_features = ['max_word_ctr', 'face_num_ctr', 'woman_num_ctr', 'man_num_ctr', 'gender_ctr', 'age_ctr', 'appearance_ctr', 'cover_length_ctr', 'duration_time_ctr', 'time_ctr']
 
 y_label = ['click']
 
@@ -79,7 +80,7 @@ int32_cols = ['playing_sum', 'duration_sum', 'key_words_num', 'text_cluster_expo
 int16_cols = ['cover_length', 'browse_num', 'exposure_num', 'click_num', 'duration_time', 'like_num', 'follow_num', 'clicked_num']
 int8_cols = ['have_face_cate', 'have_text_cate', 'click', 'text_class_label', 'photo_class_label'] + \
             ['appearance', 'age', 'gender', 'man_num', 'woman_num', 'face_num', 'time_cate', 'duration_time_cate', 'text_cluster_label', 'photo_cluster_label'] + \
-            expand_id_features
+            expand_id_features + visual_features
 float32_cols = ['period_click_ratio', 'clicked_ratio','non_face_click_favor', 'face_click_favor',
                 'man_favor', 'woman_avg_age', 'playing_freq', 'woman_age_favor', 'woman_yen_value_favor',
                 'human_scale', 'woman_favor', 'click_freq', 'woman_cv_favor', 'man_age_favor', 'man_yen_value_favor',
