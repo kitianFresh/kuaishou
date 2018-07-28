@@ -52,16 +52,17 @@ text_features = ['cover_length', 'avg_tfidf', 'key_words_num','text_class_label'
 visual_features = ['photo_cluster_label']
 
 #'clicked_ratio', 'have_face_cate'
-photo_features = ['exposure_num', 'have_face_cate', 'have_text_cate'] + face_features + text_features + visual_features
+photo_features = ['exposure_num', 'have_face_cate', 'have_text_cate'] + face_features + text_features + visual_features + photo_max_face_features
 user_features = user_action_features + user_face_favor_features + user_text_favor_features
 
 # combine_ctr_features = ['user_id_face_num_ctr', 'user_id_woman_num_ctr', 'user_id_man_num_ctr', 'user_id_gender_ctr', 'user_id_age_ctr', 'user_id_appearance_ctr', 'user_id_cover_length_ctr', 'user_id_duration_time_ctr']
 combine_ctr_features = []
-one_ctr_features = ['max_word_ctr', 'face_num_ctr', 'woman_num_ctr', 'man_num_ctr', 'gender_ctr', 'age_ctr', 'appearance_ctr', 'cover_length_ctr', 'duration_time_ctr', 'time_ctr']
+one_ctr_features = ['max_word_ctr', 'face_num_ctr', 'woman_num_ctr', 'man_num_ctr', 'gender_ctr',
+                    'age_ctr', 'appearance_ctr', 'cover_length_ctr', 'duration_time_ctr', 'time_ctr', 'photo_cluster_label_ctr']
 
 y_label = ['click']
 
-features_to_train = user_features + photo_features + time_features + combine_ctr_features + one_ctr_features
+features_to_train = user_features + photo_features + time_features + combine_ctr_features + one_ctr_features + visual_features
 # features_to_train = list(set(features_to_train) - set(['clicked_ratio']))
 
 cate_features_to_train = []

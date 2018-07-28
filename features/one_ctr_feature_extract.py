@@ -108,8 +108,10 @@ if __name__ == '__main__':
     visual_train = read_data(os.path.join(feature_store_dir, VISUAL_FEATURE_TRAIN_FILE), fmt)
     visual_test = read_data(os.path.join(feature_store_dir, VISUAL_FEATURE_TEST_FILE), fmt)
 
-    user_item_train = pd.merge(user_item_train, visual_train, how='left', on=['photo_id'])
-    user_item_test = pd.merge(user_item_test, visual_test, how='left', on=['photo_id'])
+    print(visual_train.head())
+    print(visual_test.head())
+    user_item_train = pd.merge(user_item_train, visual_train, how='left', on=['user_id', 'photo_id'])
+    user_item_test = pd.merge(user_item_test, visual_test, how='left', on=['user_id', 'photo_id'])
 
 
     num_face_train = face_train.shape[0]
@@ -192,6 +194,8 @@ if __name__ == '__main__':
                                                                            user_item_test['cover_words'].values,
                                                                            user_item_train['click'].values)
 
+    print(user_item_train.head())
+    print(user_item_test.head())
     cate_cols = ['face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length', 'duration_time', 'time', 'photo_cluster_label']
     if args.discretization:
         for col in cate_cols:
@@ -216,6 +220,7 @@ if __name__ == '__main__':
     else:
         ONE_CTR_TRAIN_FEATURE_FILE = 'one_ctr_feature_train' + str(kfold) + '.' + fmt
         ONE_CTR_TEST_FEATURE_FILE = 'one_ctr_feature_test' + str(kfold) + '.' + fmt
+
 
     one_ctr_train = user_item_train[['user_id', 'photo_id', 'max_word_ctr'] + ctr_cols]
     one_ctr_test = user_item_test[['user_id', 'photo_id', 'max_word_ctr'] + ctr_cols]
@@ -242,7 +247,7 @@ if __name__ == '__main__':
         return res
     start_time_1 = time.time()
     Executor = ThreadPoolExecutor if args.pool_type == 'thread' else ProcessPoolExecutor
-    with Executor(max_workers=int(args.n)) as executor:
+    with Executor(max_workers=int(args.num_workers)) as executor:
         for file in executor.map(feature_saver,  tasks_args):
             print('%s saved' % file)
     print ("%s pool execution in %s seconds" % (args.pool_type, str(time.time() - start_time_1)))
