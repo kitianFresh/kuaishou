@@ -59,7 +59,6 @@ if __name__ == '__main__':
     user_item_train = pd.merge(user_item_train, face_data,
                           how="left",
                           on=['photo_id'])
-
     user_item_train = pd.merge(user_item_train, face_max_data,
                                how="left",
                                on=['photo_id'])

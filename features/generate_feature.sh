@@ -71,8 +71,8 @@ then
 
     python photo_feature_extract.py -o
     python user_feature_extract.py -o
-    python one_ctr_feature_extract.py -o &
-    python combine_ctr_feature_extract.py -o &
+    python one_ctr_feature_extract.py -o -d &
+    python combine_ctr_feature_extract.py -o -d &
     wait
     python feature_ensemble.py -o
 #    python feature_discretization.py -o
@@ -83,7 +83,7 @@ else
     fi
     echo KFOLD = "${KFOLD}"
     python face_feature_extract.py -k ${KFOLD} &
-    python face_max_feature_extract.py -k ${KFOLD} &
+    python face_max_feature_extract.py -k ${KFOLD} -d &
 
     python3 text_classify.py -k ${KFOLD}
     python3 text_feature_extract.py -k ${KFOLD}
@@ -91,8 +91,8 @@ else
 
     python photo_feature_extract.py -k ${KFOLD}
     python user_feature_extract.py -k ${KFOLD}
-    python one_ctr_feature_extract.py -k ${KFOLD} &
-    python combine_ctr_feature_extract.py -k ${KFOLD} &
+    python one_ctr_feature_extract.py -k ${KFOLD} -d &
+    python combine_ctr_feature_extract.py -k ${KFOLD} -d &
     wait
     python feature_ensemble.py -k ${KFOLD}
 #    python feature_discretization.py -k ${KFOLD}
