@@ -25,6 +25,8 @@ if __name__ == '__main__':
         TEST_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('test_interaction.txt')
 
         FACE_FEATURE_FILE = 'face_feature' + '.' + fmt
+        FACE_MAX_FEATURE_FILE = 'face_max_feature' + '.' + fmt
+
         TEXT_FEATURE_FILE = 'text_feature' + '.' + fmt
     else:
         TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
@@ -33,10 +35,13 @@ if __name__ == '__main__':
             'test_interaction' + str(kfold) + '.txt', online=False)
 
         FACE_FEATURE_FILE = 'face_feature' + str(kfold) + '.' + fmt
+        FACE_MAX_FEATURE_FILE = 'face_max_feature' + str(kfold) + '.' + fmt
         TEXT_FEATURE_FILE = 'text_feature' + str(kfold) + '.' + fmt
 
     face_data = read_data(os.path.join(feature_store_dir, FACE_FEATURE_FILE), fmt)
+    face_max_data = read_data(os.path.join(feature_store_dir, FACE_MAX_FEATURE_FILE), fmt)
     print(face_data.info())
+    print(face_max_data.info())
     text_data = read_data(os.path.join(feature_store_dir, TEXT_FEATURE_FILE), fmt)
     print(text_data.info())
 
@@ -55,6 +60,10 @@ if __name__ == '__main__':
                           how="left",
                           on=['photo_id'])
 
+    user_item_train = pd.merge(user_item_train, face_max_data,
+                               how="left",
+                               on=['photo_id'])
+
     user_item_train = pd.merge(user_item_train, text_data,
                           how="left",
                           on=['photo_id'])
@@ -62,6 +71,10 @@ if __name__ == '__main__':
     user_item_test = pd.merge(user_item_test, face_data,
                                how="left",
                                on=['photo_id'])
+
+    user_item_test = pd.merge(user_item_test, face_max_data,
+                              how="left",
+                              on=['photo_id'])
 
     user_item_test = pd.merge(user_item_test, text_data,
                                how="left",
@@ -95,7 +108,7 @@ if __name__ == '__main__':
                                 user_item_test])
     num_train, num_test = user_item_train.shape[0], user_item_test.shape[0]
 
-    common = list(set(text_data.columns) | set(face_data.columns) - set(['user_id']))
+    common = list(set(text_data.columns) | set(face_data.columns) | set(face_max_data.columns) - set(['user_id']))
     photo_data = user_item_data[common].copy()
     photo_data['exposure_num'] = user_item_data['photo_id'].groupby(user_item_data['photo_id']).transform('count')
     photo_data['text_cluster_exposure_num'] = user_item_data['photo_id'].groupby(user_item_data['text_cluster_label']).transform('count')
@@ -113,7 +126,13 @@ if __name__ == '__main__':
     photo_data['text_class_label'] = photo_data['text_class_label'].astype(feature_dtype_map['text_class_label'])
     photo_data['text_cluster_label'] = photo_data['text_cluster_label'].astype(feature_dtype_map['text_cluster_label'])
     print(photo_data.info())
-    
+
+    photo_data['scale'].fillna(-1, inplace=True)
+    photo_data['gender'].fillna(-1, inplace=True)
+    photo_data['age'].fillna(-1, inplace=True)
+    photo_data['appearance'].fillna(-1, inplace=True)
+
+
     if args.online:
         PHOTO_FEATURE_FILE = 'photo_feature' + '.' + fmt
     else:
