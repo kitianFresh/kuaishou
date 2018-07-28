@@ -27,15 +27,53 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 echo ONLINE          = "${ONLINE}"
 echo KFOLD          = "${KFOLD}"
+#if [[ ${ONLINE} == '1' ]];
+#then
+#    python face_feature_extract.py -o
+#    python face_max_feature_extract.py -o
+#    python text_classify.py -o
+#    python text_feature_extract.py -o
+#    python photo_feature_extract.py -o
+#    python user_feature_extract.py -o
+#    python one_ctr_feature_extract.py -o
+#    python combine_ctr_feature_extract.py -o
+#    python feature_ensemble.py -o
+##    python feature_discretization.py -o
+#    python feature_split.py -o
+#else
+#    if [[ ${KFOLD} == '' ]]; then
+#        KFOLD=0
+#    fi
+#    echo KFOLD = "${KFOLD}"
+#    python face_feature_extract.py -k ${KFOLD}
+#    python face_max_feature_extract.py -k ${KFOLD}
+#    python text_classify.py -k ${KFOLD}
+#    python text_feature_extract.py -k ${KFOLD}
+#    python photo_feature_extract.py -k ${KFOLD}
+#    python user_feature_extract.py -k ${KFOLD}
+#    python one_ctr_feature_extract.py -k ${KFOLD}
+#    python combine_ctr_feature_extract.py -k ${KFOLD}
+#    python feature_ensemble.py -k ${KFOLD}
+##    python feature_discretization.py -k ${KFOLD}
+#    python feature_split.py -k ${KFOLD}
+#
+#fi
+#
+
 if [[ ${ONLINE} == '1' ]];
 then
-    python face_feature_extract.py -o
+    python face_feature_extract.py -o &
+    python face_max_feature_extract.py -o &
+
     python text_classify.py -o
     python text_feature_extract.py -o
+    wait
+
     python photo_feature_extract.py -o
     python user_feature_extract.py -o
-    python one_ctr_feature_extract.py -o
-    python combine_ctr_feature_extract.py -o
+    python one_ctr_feature_extract.py -o &
+    python combine_ctr_feature_extract.py -o &
+    wait
     python feature_ensemble.py -o
 #    python feature_discretization.py -o
     python feature_split.py -o
@@ -44,15 +82,21 @@ else
         KFOLD=0
     fi
     echo KFOLD = "${KFOLD}"
-    python face_feature_extract.py -k ${KFOLD}
-    python text_classify.py -k ${KFOLD}
-    python text_feature_extract.py -k ${KFOLD}
+    python face_feature_extract.py -k ${KFOLD} &
+    python face_max_feature_extract.py -k ${KFOLD} &
+
+    python3 text_classify.py -k ${KFOLD}
+    python3 text_feature_extract.py -k ${KFOLD}
+    wait
+
     python photo_feature_extract.py -k ${KFOLD}
     python user_feature_extract.py -k ${KFOLD}
-    python one_ctr_feature_extract.py -k ${KFOLD}
-    python combine_ctr_feature_extract.py -k ${KFOLD}
+    python one_ctr_feature_extract.py -k ${KFOLD} &
+    python combine_ctr_feature_extract.py -k ${KFOLD} &
+    wait
     python feature_ensemble.py -k ${KFOLD}
 #    python feature_discretization.py -k ${KFOLD}
     python feature_split.py -k ${KFOLD}
 
 fi
+
