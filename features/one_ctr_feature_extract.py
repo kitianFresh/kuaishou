@@ -234,11 +234,11 @@ if __name__ == '__main__':
     ctr_cols = [col + '_ctr' for col in one_ctr_cols]
     ctr_args = []
     for col in one_ctr_cols:
-        ctr_args.append((user_item_train[col].astype(str).values, user_item_test[col].astype(str).values, user_item_train['click'].values))
+        ctr_args.append((user_item_train[col].astype(str).values, user_item_test[col].astype(str).values, user_item_train['click'].values, col+'_ctr'))
     Executor = ThreadPoolExecutor if args.pool_type == 'thread' else ProcessPoolExecutor
     with Executor(max_workers=int(args.num_workers)) as executor:
-        results = [result for result in executor.map(ctr_computer, ctr_args)]
-        for train, test, ctr_col in results:
+        for result in executor.map(ctr_computer, ctr_args):
+            train, test, ctr_col = result
             user_item_train[ctr_col] = train
             user_item_test[ctr_col] = test
 
@@ -250,8 +250,8 @@ if __name__ == '__main__':
         ONE_CTR_TRAIN_FEATURE_FILE = 'one_ctr_feature_train' + str(kfold) + '.' + fmt
         ONE_CTR_TEST_FEATURE_FILE = 'one_ctr_feature_test' + str(kfold) + '.' + fmt
 
-    one_ctr_train = user_item_train[['user_id', 'photo_id', 'max_word_ctr'] + ctr_cols]
-    one_ctr_test = user_item_test[['user_id', 'photo_id', 'max_word_ctr'] + ctr_cols]
+    one_ctr_train = user_item_train[['user_id', 'photo_id'] + ctr_cols]
+    one_ctr_test = user_item_test[['user_id', 'photo_id'] + ctr_cols]
     # one_ctr_train.sort_values(['user_id', 'photo_id'], inplace=True)
     # one_ctr_test.sort_values(['user_id', 'photo_id'], inplace=True)
 
