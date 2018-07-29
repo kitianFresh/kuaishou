@@ -21,6 +21,7 @@ parser.add_argument('-s', '--sample', help='use sample data or full data', actio
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-o', '--online', help='use online data', action='store_true')
 parser.add_argument('-k', '--offline-kfold', help='offline kth fold feature extract, extract kth fold', default=0)
+parser.add_argument('-c', '--cluster-nums', help='cluster nums', default=50)
 args = parser.parse_args()
 
 
@@ -39,13 +40,15 @@ if __name__ == '__main__':
         TEST_USER_INTERACT, offline_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
             'test_interaction' + str(kfold) + '.txt', online=False)
 
+    cluster_nums = int(args.cluster_nums)
+
     TRAIN_VISUAL_MATRIX = os.path.join(online_data_dir, 'visual_train_matrix.blp')
     TEST_VISUAL_MATRIX = os.path.join(online_data_dir, 'visual_test_matrix.blp')
     TRAIN_VISUAL_PHOTO_ID = os.path.join(online_data_dir, 'visual_train_photo_id.blp')
     TEST_VISUAL_PHOTO_ID = os.path.join(online_data_dir, 'visual_test_photo_id.blp')
     VISUAL_CLUSTER_MODEL_PREFIX = os.path.join(online_data_dir, 'visual_cluster_model')
-    VISUAL_CLUSTER_ENCODER = os.path.join(online_data_dir, 'visual_cluster_model_encoder.pkl')
-    VISUAL_CLUSTER_KMEANS = os.path.join(online_data_dir, 'visual_cluster_model_kmeans.pkl')
+    VISUAL_CLUSTER_ENCODER = os.path.join(online_data_dir, 'visual_cluster_model_encoder' + str(cluster_nums) +  '.pkl')
+    VISUAL_CLUSTER_KMEANS = os.path.join(online_data_dir, 'visual_cluster_model_kmeans' + str(cluster_nums) + '.pkl')
 
 
     user_item_train = pd.read_csv(TRAIN_USER_INTERACT,
@@ -79,13 +82,12 @@ if __name__ == '__main__':
     else:
         raise IOError('No matrix')
 
-    cluster_nums = 50
     if os.path.exists(VISUAL_CLUSTER_ENCODER) and os.path.exists(VISUAL_CLUSTER_KMEANS):
-        visual_feature_train = cluster_model_predict(VISUAL_CLUSTER_MODEL_PREFIX,train_matrix,train_photo_id)
-        visual_feature_test = cluster_model_predict(VISUAL_CLUSTER_MODEL_PREFIX, test_matrix, test_photo_id)
+        visual_feature_train = cluster_model_predict(VISUAL_CLUSTER_MODEL_PREFIX,train_matrix,train_photo_id, cluster_nums)
+        visual_feature_test = cluster_model_predict(VISUAL_CLUSTER_MODEL_PREFIX, test_matrix, test_photo_id, cluster_nums)
     else:
         visual_feature_train = train_cluster_model(train_matrix,train_photo_id,VISUAL_CLUSTER_MODEL_PREFIX,cluster_nums)
-        visual_feature_test = cluster_model_predict(VISUAL_CLUSTER_MODEL_PREFIX, test_matrix, test_photo_id)
+        visual_feature_test = cluster_model_predict(VISUAL_CLUSTER_MODEL_PREFIX, test_matrix, test_photo_id, cluster_nums)
 
     print(np.sum(visual_feature_train.isnull()))
     print(np.sum(visual_feature_test.isnull()))

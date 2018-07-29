@@ -193,8 +193,8 @@ if __name__ == '__main__':
     word_embedding_corpus = np.array(word_embedding_corpus)
 
     cluster_nums = 20
-    if os.path.exists(CLUSTER_MODEL_PATH + '_kmeans.pkl'):
-        text_data['text_cluster_label'] = cluster_model_predict(CLUSTER_MODEL_PATH,word_embedding_corpus)
+    if os.path.exists(CLUSTER_MODEL_PATH + '_kmeans' + str(cluster_nums) + '.pkl'):
+        text_data['text_cluster_label'] = cluster_model_predict(CLUSTER_MODEL_PATH,word_embedding_corpus, cluster_nums)
     else:
         text_data['text_cluster_label'] = train_cluster_model(CLUSTER_MODEL_PATH,word_embedding_corpus,cluster_nums)
 

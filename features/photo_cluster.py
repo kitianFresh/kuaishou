@@ -78,8 +78,8 @@ def train_cluster_model(matrix,photo_id,cluster_model_path,cluster_nums):
     photo_df = pd.DataFrame(photo_df)
     return photo_df
 
-def cluster_model_predict(cluster_model_path,matrix,photo_id):
-    clustered = cluster.predict(matrix,cluster_model_path)
+def cluster_model_predict(cluster_model_path,matrix,photo_id,cluster_nums):
+    clustered = cluster.predict(matrix,cluster_model_path, cluster_nums)
     photo_df = {'photo_id':photo_id,'photo_cluster_label':clustered}
     photo_df = pd.DataFrame(photo_df)
     return photo_df

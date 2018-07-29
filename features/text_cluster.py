@@ -18,5 +18,5 @@ def train_cluster_model(cluster_model_path,data,cluster_nums):
     return clustered
 
 
-def cluster_model_predict(model_path,data):
-    return cluster.predict(data,model_path)
+def cluster_model_predict(model_path,data, cluster_nums=20):
+    return cluster.predict(data,model_path, cluster_nums)
