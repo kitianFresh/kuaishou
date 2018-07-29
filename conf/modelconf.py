@@ -57,7 +57,7 @@ user_features = user_action_features + user_face_favor_features + user_text_favo
 
 # combine_ctr_features = ['user_id_face_num_ctr', 'user_id_woman_num_ctr', 'user_id_man_num_ctr', 'user_id_gender_ctr', 'user_id_age_ctr', 'user_id_appearance_ctr', 'user_id_cover_length_ctr', 'user_id_duration_time_ctr']
 combine_ctr_features = []
-one_ctr_features = ['max_word_ctr', 'face_num_ctr', 'woman_num_ctr', 'man_num_ctr', 'gender_ctr',
+one_ctr_features = ['cover_words_ctr', 'face_num_ctr', 'woman_num_ctr', 'man_num_ctr', 'gender_ctr',
                     'age_ctr', 'appearance_ctr', 'cover_length_ctr', 'duration_time_ctr', 'time_ctr', 'photo_cluster_label_ctr']
 
 y_label = ['click']
