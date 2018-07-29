@@ -54,7 +54,7 @@ def count_feat_ctr(train, test, labels):
             if x not in total_dict:
                 ctr_vec.append(prior)
             else:
-                ctr_vec.append(alpha + pos_dict[x]/ (alpha+beta+total_dict[x]))
+                ctr_vec.append((alpha + pos_dict[x])/ (alpha+beta+total_dict[x]))
         if len(ctr_vec) == 0:
             train_res.append(prior)
         else:
@@ -71,7 +71,7 @@ def count_feat_ctr(train, test, labels):
             if x not in total_dict:
                 ctr_vec.append(prior)
             else:
-                ctr_vec.append(alpha + pos_dict[x]/ (alpha+beta+total_dict[x]))
+                ctr_vec.append((alpha + pos_dict[x])/ (alpha+beta+total_dict[x]))
         if len(ctr_vec) == 0:
             test_res.append(prior)
         else:
