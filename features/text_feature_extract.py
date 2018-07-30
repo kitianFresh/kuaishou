@@ -20,6 +20,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-o', '--online', help='online feature extract', action="store_true")
 parser.add_argument('-k', '--offline-kfold', help='offline kth fold feature extract, extract kth fold', default=0)
+parser.add_argument('-c', '--cluster-nums', help='cluster nums', default=20)
 args = parser.parse_args()
 
 
@@ -192,7 +193,7 @@ if __name__ == '__main__':
             word_embedding_corpus.append(word_embedding)
     word_embedding_corpus = np.array(word_embedding_corpus)
 
-    cluster_nums = 20
+    cluster_nums = int(args.cluster_nums)
     if os.path.exists(CLUSTER_MODEL_PATH + '_kmeans' + str(cluster_nums) + '.pkl'):
         text_data['text_cluster_label'] = cluster_model_predict(CLUSTER_MODEL_PATH,word_embedding_corpus, cluster_nums)
     else:
