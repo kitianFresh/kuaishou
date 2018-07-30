@@ -3,10 +3,9 @@
 # model config
 
 # feature config
-# 'hour_click_ratio', 'period_click_ratio', 'click_ratio'， 'playing_duration_favor'
+# 'hour_click_ratio', 'period_click_ratio', 'click_ratio'， 'playing_duration_favor', 'browse_freq', 'browse_time_diff', 'click_freq', 'playing_freq'
 user_action_features = ['click_ratio', 'browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum',
-                        'duration_sum', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq',
-                        'browse_freq', 'playing_freq', 'duration_favor']
+                        'duration_sum', 'like_ratio', 'follow_ratio', 'playing_ratio', 'duration_favor']
 
 face_features = ['face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age',
                  'woman_avg_age',
@@ -41,7 +40,7 @@ user_features = user_action_features + user_face_favor_features + user_text_favo
 
 # combine_ctr_features = ['user_id_face_num_ctr', 'user_id_woman_num_ctr', 'user_id_man_num_ctr', 'user_id_gender_ctr', 'user_id_age_ctr', 'user_id_appearance_ctr', 'user_id_cover_length_ctr', 'user_id_duration_time_ctr']
 combine_ctr_features = []
-one_ctr_features = ['max_word_ctr', 'face_num_ctr', 'woman_num_ctr', 'man_num_ctr', 'gender_ctr', 'age_ctr',
+one_ctr_features = ['cover_words_ctr', 'face_num_ctr', 'woman_num_ctr', 'man_num_ctr', 'gender_ctr', 'age_ctr',
                     'appearance_ctr', 'cover_length_ctr', 'duration_time_ctr', 'time_ctr', 'photo_cluster_label_ctr']
 
 y_label = ['click']

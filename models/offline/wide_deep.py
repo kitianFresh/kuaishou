@@ -11,7 +11,7 @@ import time
 
 import tensorflow as tf
 from common.base import *
-from common.utils import load_config_from_pyfile, read_data
+from common.utils import load_config_from_pyfile, read_data, normalize_min_max
 from conf.modelconf import *
 
 parser = argparse.ArgumentParser()
@@ -95,14 +95,32 @@ if __name__ == '__main__':
 
     # Continuous base columns.
     real_valued_columns = []
+    reals = []
+    # playing_freq click_freq browse_time_diff browse_freq
+    float32_cols = one_ctr_features + combine_ctr_features + ['non_face_click_favor', 'face_click_favor',
+                'man_favor', 'woman_avg_age', 'woman_age_favor', 'woman_yen_value_favor',
+                'human_scale', 'woman_favor', 'woman_cv_favor', 'man_age_favor', 'man_yen_value_favor',
+                'follow_ratio', 'man_scale', 'man_avg_age', 'man_cv_favor', 'man_avg_attr',
+                'playing_ratio', 'woman_scale', 'click_ratio', 'human_avg_age', 'woman_avg_attr', 'like_ratio',
+                'cover_length_favor', 'human_avg_attr', 'avg_tfidf', 'woman_num_ratio',
+                'man_num_ratio', 'playing_favor', 'duration_favor', 'playing_duration_favor',
+                'face_favor', 'text_clicked_ratio', 'scale']
+                                                              # ]
+
     features_to_train_sets = set(features_to_train)
     for feat in float32_cols:
         if feat in features_to_train_sets:
             col = tf.feature_column.numeric_column(feat)
             real_valued_columns.append(col)
             numeric_columns.append(feat)
+            reals.append(feat)
 
     print(real_valued_columns)
+    num_train = ensemble_train.shape[0]
+    data = pd.concat([ensemble_train, ensemble_test])
+    normalize_min_max(data, reals)
+    ensemble_train = data.iloc[:num_train]
+    ensemble_test = data.iloc[num_train:]
 
     # Continuous base columns.
     key_words_num = tf.feature_column.numeric_column("key_words_num")
@@ -142,7 +160,6 @@ if __name__ == '__main__':
       tf.feature_column.crossed_column([age_buckets, appearance_buckets], hash_bucket_size=int(1e3))] + wide_buckets_columns
 
 
-
     deep_columns = [
       tf.feature_column.embedding_column(gender, dimension=8),
       tf.feature_column.embedding_column(age_buckets, dimension=8),
@@ -178,6 +195,7 @@ if __name__ == '__main__':
           values=df[k].values,
           dense_shape=[df[k].size, 1])
                           for k in categorical_columns}
+      # categorical_features = {}
       # Merges the two dictionaries into one.
       feature_cols = dict(continuous_features.items() + categorical_features.items())
       # Converts the label column into a constant Tensor.
@@ -191,7 +209,7 @@ if __name__ == '__main__':
     def eval_input_fn():
       return input_fn(ensemble_test)
 
-    model.train(input_fn=train_input_fn, steps=200)
+    model.train(input_fn=train_input_fn, steps=200, )
     results = model.evaluate(input_fn=eval_input_fn, steps=1)
     for key in sorted(results):
         print("%s: %s" % (key, results[key]))
