@@ -172,6 +172,8 @@ if __name__ == '__main__':
         temp_feature = user_item_train[user_item_train[y_label] == 1][['user_id', feature]]
         temp_feature[feature] = temp_feature[feature].astype(str)
         temp = temp_feature.groupby('user_id')[feature].agg(lambda x: ' '.join(x)).reset_index(name="pos_" + feature)
+        print("pos_" + feature)
+        print(temp.head())
 
         logging.info("pos_" +  feature + " 去除重复")
         temp["pos_" + feature] = temp["pos_" + feature].apply(lambda x: x.split(' '))
@@ -192,6 +194,8 @@ if __name__ == '__main__':
         temp_feature = user_item_train[user_item_train[y_label] == 0][['user_id', feature]]
         temp_feature[feature] = temp_feature[feature].astype(str)
         temp = temp_feature.groupby('user_id')[feature].agg(lambda x: ' '.join(x)).reset_index(name="neg_" + feature)
+        print("pos_" + feature)
+        print(temp.head())
 
         logging.info("neg_" +  feature + " 去除重复")
         temp["neg_" + feature] = temp["neg_" + feature].apply(lambda x: x.split(' '))
@@ -200,6 +204,7 @@ if __name__ == '__main__':
         print("pos_" + feature)
         print(temp.head())
 
+        # merge
         user_item_train = pd.merge(user_item_train, temp, on = 'user_id', how = 'left')
         user_item_test = pd.merge(user_item_test, temp, on='user_id', how='left')
         user_item_train['neg_' + feature] = user_item_train['neg_' + feature].astype(str)
@@ -215,11 +220,16 @@ if __name__ == '__main__':
         temp_feature = user_item_train[user_item_train[y_label] == 1][[concat_feature, feature]]
         temp_feature[feature] = temp_feature[feature].astype(str)
         temp = temp_feature.groupby(concat_feature)[feature].agg(lambda x: ' '.join(x)).reset_index(name="pos_" + feature)
+        print("pos_" + feature)
+        print(temp.head())
 
         logging.info("pos_" +  feature + " 去除重复")
         temp["pos_" + feature] = temp["pos_" + feature].apply(lambda x: x.split(' '))
         temp["pos_" + feature] = temp["pos_" + feature].apply(lambda x: list(set(x)))
         temp["pos_" + feature] = temp["pos_" + feature].apply(lambda x: ' '.join(x))
+        print("pos_" + feature)
+        print(temp.head())
+
         # merge
         user_item_train = pd.merge(user_item_train, temp, on=concat_feature, how='left')
         user_item_test = pd.merge(user_item_test, temp, on=concat_feature, how='left')
@@ -230,12 +240,17 @@ if __name__ == '__main__':
         temp_feature = user_item_train[user_item_train[y_label] == 0][[concat_feature, feature]]
         temp_feature[feature] = temp_feature[feature].astype(str)
         temp = temp_feature.groupby(concat_feature)[feature].agg(lambda x: ' '.join(x)).reset_index(name="neg_" + feature)
+        print("pos_" + feature)
+        print(temp.head())
 
         logging.info("neg_" +  feature + " 去除重复")
         temp["neg_" + feature] = temp["neg_" + feature].apply(lambda x: x.split(' '))
         temp["neg_" + feature] = temp["neg_" + feature].apply(lambda x: list(set(x)))
         temp["neg_" + feature] = temp["neg_" + feature].apply(lambda x: ' '.join(x))
+        print("pos_" + feature)
+        print(temp.head())
 
+        #merge
         user_item_train = pd.merge(user_item_train, temp, on=concat_feature, how='left')
         user_item_test = pd.merge(user_item_test, temp, on=concat_feature, how='left')
         user_item_train['neg_' + feature] = user_item_train['neg_' + feature].astype(str)
@@ -252,62 +267,109 @@ if __name__ == '__main__':
     print(user_item_train.info())
     print(user_item_train.head())
 
+    def loopy_apply(df, column, func):
+        vs = map(func, [row[column] for _, row in df.iterrows()])
+        return vs
+
+
     y_label = 'click'
     # 去掉当前记录的属性
     logging.info("pos_user_id" + " 去除当前记录")
     user_item_train.loc[user_item_train[y_label]==1, 'pos_user_id'] += " " + user_item_train[user_item_train[y_label]==1]['user_id'].astype(str)
-    user_item_train.loc[user_item_train[y_label]==1, 'pos_user_id'] = user_item_train[user_item_train[y_label]==1]['pos_user_id'].apply(lambda x: x.split(' '))
-    user_item_train.loc[user_item_train[y_label]==1, 'pos_user_id'] = user_item_train[user_item_train[y_label]==1]['pos_user_id'].apply(lambda x: list(filter(lambda item: item != x[-1], x)))
-    user_item_train.loc[user_item_train[y_label]==1, 'pos_user_id'] = user_item_train[user_item_train[y_label]==1]['pos_user_id'].apply(lambda x: ' '.join(x))
+    user_item_train.loc[user_item_train[y_label]==1, 'pos_user_id'] = loopy_apply(user_item_train[user_item_train[y_label]==1], 'pos_user_id', lambda x: x.split(' '))
+    user_item_train.loc[user_item_train[y_label]==1, 'pos_user_id'] = loopy_apply(user_item_train[user_item_train[y_label]==1], 'pos_user_id', lambda x: list(filter(lambda item: item != x[-1], x)))
+    user_item_train.loc[user_item_train[y_label]==1, 'pos_user_id'] = loopy_apply(user_item_train[user_item_train[y_label]==1], 'pos_user_id', lambda x: ' '.join(x))
 
     logging.info("pos_photo_id" + " 去除当前记录")
     user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_id'] += " " + user_item_train[user_item_train[y_label]==1]['photo_id'].astype(str)
-    user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_id'] = user_item_train[user_item_train[y_label]==1]['pos_photo_id'].apply(lambda x: x.split(' '))
-    user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_id'] = user_item_train[user_item_train[y_label]==1]['pos_photo_id'].apply(
-        lambda x: list(filter(lambda item: item != x[-1], x)))
-    user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_id'] = user_item_train[user_item_train[y_label]==1]['pos_photo_id'].apply(lambda x: ' '.join(x))
+    user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_id'] = loopy_apply(user_item_train[user_item_train[y_label]==1], 'pos_photo_id', lambda x: x.split(' '))
+    user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_id'] = loopy_apply(user_item_train[user_item_train[y_label]==1], 'pos_photo_id', lambda x: list(filter(lambda item: item != x[-1], x)))
+    user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_id'] = loopy_apply(user_item_train[user_item_train[y_label]==1], 'pos_photo_id', lambda x: ' '.join(x))
 
     logging.info("pos_photo_cluster_label" + " 去除当前记录")
     user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_cluster_label'] += " " + user_item_train[user_item_train[y_label]==1]['photo_cluster_label'].astype(str)
-    user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_cluster_label'] = user_item_train[user_item_train[y_label]==1]['pos_photo_cluster_label'].apply(lambda x: x.split(' '))
-    user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_cluster_label'] = user_item_train[user_item_train[y_label]==1]['pos_photo_cluster_label'].apply(
-        lambda x: list(filter(lambda item: item != x[-1], x)))
-    user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_cluster_label'] = user_item_train[user_item_train[y_label]==1]['pos_photo_cluster_label'].apply(lambda x: ' '.join(x))
-
-
-
+    user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_cluster_label'] = loopy_apply(user_item_train[user_item_train[y_label]==1], 'pos_photo_cluster_label', lambda x: x.split(' '))
+    user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_cluster_label'] = loopy_apply(user_item_train[user_item_train[y_label]==1], 'pos_photo_cluster_label', lambda x: list(filter(lambda item: item != x[-1], x)))
+    user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_cluster_label'] = loopy_apply(user_item_train[user_item_train[y_label]==1], 'pos_photo_cluster_label', lambda x: ' '.join(x))
 
 
     logging.info("neg_user_id" + " 去除当前记录")
     user_item_train.loc[user_item_train[y_label] == 0, 'neg_user_id'] += " " + user_item_train[user_item_train[y_label]==0]['user_id'].astype(str)
-    user_item_train.loc[user_item_train[y_label] == 0, 'neg_user_id'] = user_item_train[user_item_train[y_label] == 0][
-        'neg_user_id'].apply(lambda x: x.split(' '))
-    user_item_train.loc[user_item_train[y_label] == 0, 'neg_user_id'] = user_item_train[user_item_train[y_label] == 0][
-        'neg_user_id'].apply(lambda x: list(filter(lambda item: item != x[-1], x)))
-    user_item_train.loc[user_item_train[y_label] == 0, 'neg_user_id'] = user_item_train[user_item_train[y_label] == 0][
-        'neg_user_id'].apply(lambda x: ' '.join(x))
+    user_item_train.loc[user_item_train[y_label] == 0, 'neg_user_id'] = loopy_apply(user_item_train[user_item_train[y_label] == 0], 'neg_user_id', lambda x: x.split(' '))
+    user_item_train.loc[user_item_train[y_label] == 0, 'neg_user_id'] = loopy_apply(user_item_train[user_item_train[y_label] == 0], 'neg_user_id', lambda x: list(filter(lambda item: item != x[-1], x)))
+    user_item_train.loc[user_item_train[y_label] == 0, 'neg_user_id'] = loopy_apply(user_item_train[user_item_train[y_label] == 0], 'neg_user_id', lambda x: ' '.join(x))
 
     logging.info("neg_photo_id" + " 去除当前记录")
     user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_id'] += " " + user_item_train[user_item_train[y_label]==0]['photo_id'].astype(str)
-    user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_id'] = user_item_train[user_item_train[y_label] == 0][
-        'neg_photo_id'].apply(lambda x: x.split(' '))
-    user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_id'] = user_item_train[user_item_train[y_label] == 0][
-        'neg_photo_id'].apply(
-        lambda x: list(filter(lambda item: item != x[-1], x)))
-    user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_id'] = user_item_train[user_item_train[y_label] == 0][
-        'neg_photo_id'].apply(lambda x: ' '.join(x))
-
+    user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_id'] = loopy_apply(user_item_train[user_item_train[y_label] == 0], 'neg_photo_id', lambda x: x.split(' '))
+    user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_id'] = loopy_apply(user_item_train[user_item_train[y_label] == 0], 'neg_photo_id', lambda x: list(filter(lambda item: item != x[-1], x)))
+    user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_id'] = loopy_apply(user_item_train[user_item_train[y_label] == 0], 'neg_photo_id', lambda x: ' '.join(x))
 
     logging.info("neg_photo_cluster_label" + " 去除当前记录")
     user_item_train.loc[
         user_item_train[y_label] == 0, 'neg_photo_cluster_label'] += " " + user_item_train[user_item_train[y_label]==0]['photo_cluster_label'].astype(str)
-    user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_cluster_label'] = \
-    user_item_train[user_item_train[y_label] == 0]['neg_photo_cluster_label'].apply(lambda x: x.split(' '))
-    user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_cluster_label'] = \
-    user_item_train[user_item_train[y_label] == 0]['neg_photo_cluster_label'].apply(
-        lambda x: list(filter(lambda item: item != x[-1], x)))
-    user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_cluster_label'] = \
-    user_item_train[user_item_train[y_label] == 0]['neg_photo_cluster_label'].apply(lambda x: ' '.join(x))
+    user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_cluster_label'] = loopy_apply(user_item_train[user_item_train[y_label] == 0], 'neg_photo_cluster_label', lambda x: x.split(' '))
+    user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_cluster_label'] = loopy_apply(user_item_train[user_item_train[y_label] == 0], 'neg_photo_cluster_label', lambda x: list(filter(lambda item: item != x[-1], x)))
+    user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_cluster_label'] = loopy_apply(user_item_train[user_item_train[y_label] == 0], 'neg_photo_cluster_label', lambda x: ' '.join(x))
+
+
+    '''
+    pandas apply function usually memory exploding 10 times than original data, which cause memory error !!!!
+    '''
+    # logging.info("pos_user_id" + " 去除当前记录")
+    # user_item_train.loc[user_item_train[y_label]==1, 'pos_user_id'] += " " + user_item_train[user_item_train[y_label]==1]['user_id'].astype(str)
+    # user_item_train.loc[user_item_train[y_label]==1, 'pos_user_id'] = user_item_train[user_item_train[y_label]==1]['pos_user_id'].apply(lambda x: x.split(' '))
+    # user_item_train.loc[user_item_train[y_label]==1, 'pos_user_id'] = user_item_train[user_item_train[y_label]==1]['pos_user_id'].apply(lambda x: list(filter(lambda item: item != x[-1], x)))
+    # user_item_train.loc[user_item_train[y_label]==1, 'pos_user_id'] = user_item_train[user_item_train[y_label]==1]['pos_user_id'].apply(lambda x: ' '.join(x))
+    #
+    # logging.info("pos_photo_id" + " 去除当前记录")
+    # user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_id'] += " " + user_item_train[user_item_train[y_label]==1]['photo_id'].astype(str)
+    # user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_id'] = user_item_train[user_item_train[y_label]==1]['pos_photo_id'].apply(lambda x: x.split(' '))
+    # user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_id'] = user_item_train[user_item_train[y_label]==1]['pos_photo_id'].apply(
+    #     lambda x: list(filter(lambda item: item != x[-1], x)))
+    # user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_id'] = user_item_train[user_item_train[y_label]==1]['pos_photo_id'].apply(lambda x: ' '.join(x))
+    #
+    # logging.info("pos_photo_cluster_label" + " 去除当前记录")
+    # user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_cluster_label'] += " " + user_item_train[user_item_train[y_label]==1]['photo_cluster_label'].astype(str)
+    # user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_cluster_label'] = user_item_train[user_item_train[y_label]==1]['pos_photo_cluster_label'].apply(lambda x: x.split(' '))
+    # user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_cluster_label'] = user_item_train[user_item_train[y_label]==1]['pos_photo_cluster_label'].apply(
+    #     lambda x: list(filter(lambda item: item != x[-1], x)))
+    # user_item_train.loc[user_item_train[y_label]==1, 'pos_photo_cluster_label'] = user_item_train[user_item_train[y_label]==1]['pos_photo_cluster_label'].apply(lambda x: ' '.join(x))
+    #
+    #
+    #
+    # logging.info("neg_user_id" + " 去除当前记录")
+    # user_item_train.loc[user_item_train[y_label] == 0, 'neg_user_id'] += " " + user_item_train[user_item_train[y_label]==0]['user_id'].astype(str)
+    # user_item_train.loc[user_item_train[y_label] == 0, 'neg_user_id'] = user_item_train[user_item_train[y_label] == 0][
+    #     'neg_user_id'].apply(lambda x: x.split(' '))
+    # user_item_train.loc[user_item_train[y_label] == 0, 'neg_user_id'] = user_item_train[user_item_train[y_label] == 0][
+    #     'neg_user_id'].apply(lambda x: list(filter(lambda item: item != x[-1], x)))
+    # user_item_train.loc[user_item_train[y_label] == 0, 'neg_user_id'] = user_item_train[user_item_train[y_label] == 0][
+    #     'neg_user_id'].apply(lambda x: ' '.join(x))
+    #
+    # logging.info("neg_photo_id" + " 去除当前记录")
+    # user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_id'] += " " + user_item_train[user_item_train[y_label]==0]['photo_id'].astype(str)
+    # user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_id'] = user_item_train[user_item_train[y_label] == 0][
+    #     'neg_photo_id'].apply(lambda x: x.split(' '))
+    # user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_id'] = user_item_train[user_item_train[y_label] == 0][
+    #     'neg_photo_id'].apply(
+    #     lambda x: list(filter(lambda item: item != x[-1], x)))
+    # user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_id'] = user_item_train[user_item_train[y_label] == 0][
+    #     'neg_photo_id'].apply(lambda x: ' '.join(x))
+    #
+    # logging.info("neg_photo_cluster_label" + " 去除当前记录")
+    # user_item_train.loc[
+    #     user_item_train[y_label] == 0, 'neg_photo_cluster_label'] += " " + user_item_train[user_item_train[y_label]==0]['photo_cluster_label'].astype(str)
+    # user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_cluster_label'] = \
+    # user_item_train[user_item_train[y_label] == 0]['neg_photo_cluster_label'].apply(lambda x: x.split(' '))
+    # user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_cluster_label'] = \
+    # user_item_train[user_item_train[y_label] == 0]['neg_photo_cluster_label'].apply(
+    #     lambda x: list(filter(lambda item: item != x[-1], x)))
+    # user_item_train.loc[user_item_train[y_label] == 0, 'neg_photo_cluster_label'] = \
+    # user_item_train[user_item_train[y_label] == 0]['neg_photo_cluster_label'].apply(lambda x: ' '.join(x))
+
+
+
 
     # user_docs = gen_user_pos_neg_docs(user_item_train)
     # photo_docs = gen_photo_pos_neg_docs(user_item_train)
