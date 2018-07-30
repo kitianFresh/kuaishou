@@ -6,11 +6,14 @@ sys.path.append('../')
 import pandas as pd
 
 from conf.modelconf import *
+online_feature_store_dir = os.path.join(offline_data_dir, 'features')
+visual_train_file = os.path.join(online_feature_store_dir, 'visual_feature_train.csv')
+visual_test_file = os.path.join(online_feature_store_dir, 'visual_feature_test.csv')
 
-visual_train_file = os.path.join(online_data_dir, 'visual_feature_train.csv')
-visual_test_file = os.path.join(online_data_dir, 'visual_feature_test.csv')
 inter_train_file = os.path.join(online_data_dir, 'train_interaction.txt')
 inter_test_file = os.path.join(online_data_dir, 'test_interaction.txt')
+
+feature_store_dir = os.path.join(offline_data_dir, 'features')
 
 inter_train_file0 = os.path.join(offline_data_dir, 'train_interaction0.txt')
 inter_test_file0 = os.path.join(offline_data_dir, 'test_interaction0.txt')
@@ -52,6 +55,5 @@ print(user_item_train0.head())
 print(user_item_test0.head())
 visual_sample_train0 = pd.merge(user_item_train0, visual_train, how='left', on=['user_id', 'photo_id'])
 visual_sample_test0 = pd.merge(user_item_test0, visual_train, how='left', on=['user_id', 'photo_id'])
-feature_store_dir = os.path.join(offline_data_dir, 'features')
 visual_sample_train0[['user_id', 'photo_id', 'photo_cluster_label']].to_csv(os.path.join(feature_store_dir,'visual_feature_train0.csv'), sep='\t', index=False)
 visual_sample_test0[['user_id', 'photo_id', 'photo_cluster_label']].to_csv(os.path.join(feature_store_dir,'visual_feature_test0.csv'), sep='\t', index=False)
