@@ -15,6 +15,7 @@ from conf.modelconf import get_data_file, data_dir, feature_dtype_map
 from common.utils import count_combine_feat_ctr, count_feat_ctr
 from common import utils
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-p', '--pool-type', help='pool type, threads or process, here use process for more performance')
 parser.add_argument('-n', '--num-workers', help='workers num in pool', default=cpu_count())
@@ -22,9 +23,11 @@ parser.add_argument('-f', '--format', help='store pandas feature format, csv, pk
 parser.add_argument('-o', '--online', help='online feature extract', action="store_true")
 parser.add_argument('-k', '--offline-kfold', help='offline kth fold feature extract, extract kth fold', default=0)
 parser.add_argument('-d', '--discretization', help='discrezatize or not some features', action='store_true')
-parser.add_argument('-m', '--max-face-attr',
-                    help='attribute get max face used for each photo, options: appearance, scale, age', default='scale')
+parser.add_argument('-m', '--max-face-attr', help='attribute get max face used for each photo, options: appearance, scale, age', default='scale')
 args = parser.parse_args()
+
+
+
 
 if __name__ == '__main__':
 
@@ -41,8 +44,7 @@ if __name__ == '__main__':
                                                                                              args.online)
         TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
             'train_interaction.txt')
-        TEST_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
-            'test_interaction.txt')
+        TEST_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('test_interaction.txt')
         VISUAL_FEATURE_TRAIN_FILE = 'visual_feature_train' + '.' + fmt
         VISUAL_FEATURE_TEST_FILE = 'visual_feature_test' + '.' + fmt
 
@@ -58,9 +60,9 @@ if __name__ == '__main__':
             'test_face' + str(kfold) + '.txt', args.online)
 
         TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
-            'train_interaction' + str(kfold) + '.txt', online=False)
+        'train_interaction' + str(kfold) + '.txt', online=False)
         TEST_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
-            'test_interaction' + str(kfold) + '.txt', online=False)
+        'test_interaction' + str(kfold) + '.txt', online=False)
 
         VISUAL_FEATURE_TRAIN_FILE = 'visual_feature_train' + str(kfold) + '.' + fmt
         VISUAL_FEATURE_TEST_FILE = 'visual_feature_test' + str(kfold) + '.' + fmt
@@ -88,15 +90,15 @@ if __name__ == '__main__':
 
     if args.online:
         user_item_test = pd.read_csv(TEST_USER_INTERACT,
-                                     sep='\t',
-                                     header=None,
-                                     names=['user_id', 'photo_id', 'time', 'duration_time'])
+                                 sep='\t',
+                                 header=None,
+                                 names=['user_id', 'photo_id', 'time', 'duration_time'])
     else:
         user_item_test = pd.read_csv(TEST_USER_INTERACT,
                                      sep='\t',
                                      header=None,
                                      names=['user_id', 'photo_id', 'click', 'like', 'follow', 'time', 'playing_time',
-                                            'duration_time'])
+                                         'duration_time'])
 
     text_test = pd.read_csv(TEST_TEXT,
                             sep='\t',
@@ -111,13 +113,13 @@ if __name__ == '__main__':
     user_item_train = pd.merge(user_item_train, visual_train, how='left', on=['user_id', 'photo_id'])
     user_item_test = pd.merge(user_item_test, visual_test, how='left', on=['user_id', 'photo_id'])
 
+
     num_face_train = face_train.shape[0]
     face_data = pd.concat([face_train, face_test]).reset_index(drop=True)
     face_data['faces'] = face_data['faces'].apply(eval)
     face_data['face_num'] = face_data['faces'].apply(lambda l: len(l))
     face_data['man_num'] = face_data['faces'].apply(lambda lists: len([1 for l in lists if l[1] == 1]))
     face_data['woman_num'] = face_data['faces'].apply(lambda lists: len([1 for l in lists if l[1] == 0]))
-
 
     # 0: scale, 1: gender, 2: age, 3: appearance
     def max_scale_face(faces):
@@ -172,75 +174,46 @@ if __name__ == '__main__':
         df['appearance'].fillna(-1, inplace=True)
 
 
+
     def words_to_list(words):
         if words == '0':
             return []
         else:
             return words.split(',')
 
-
     text_train['cover_words'] = text_train['cover_words'].apply(words_to_list)
     text_train['cover_length'] = text_train['cover_words'].apply(len)
     text_test['cover_words'] = text_test['cover_words'].apply(words_to_list)
     text_test['cover_length'] = text_test['cover_words'].apply(len)
 
+
     user_item_train = pd.merge(user_item_train, text_train, how='left', on=['photo_id'])
     user_item_test = pd.merge(user_item_test, text_test, how='left', on=['photo_id'])
 
+    user_item_train['cover_words_ctr'], user_item_test['cover_words_ctr'] = count_feat_ctr(user_item_train['cover_words'].values,
+                                                                           user_item_test['cover_words'].values,
+                                                                           user_item_train['click'].values)
 
     print(user_item_train.head())
     print(user_item_test.head())
-
-    user_item_train.sort_values(['user_id', 'photo_id'], inplace=True)
-    user_item_test.sort_values(['user_id', 'photo_id'], inplace=True)
-
-    def featurue_discretizer(args):
-        series, col = args
-        func_name = col + '_discretization'
-        func = getattr(utils, func_name) if hasattr(utils, func_name) else None
-        if func is not None and callable(func):
-            logging.info(func.__name__)
-            series = series.apply(func)
-        return series
-
-    cate_cols = ['face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length', 'duration_time',
-                 'time']
+    cate_cols = ['face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length', 'duration_time', 'time', 'photo_cluster_label']
     if args.discretization:
-        discretizer_train_args = []
-        discretizer_test_args = []
         for col in cate_cols:
-            discretizer_train_args.append((user_item_train[col], col))
-            discretizer_test_args.append((user_item_test[col], col))
-        Executor = ThreadPoolExecutor if args.pool_type == 'thread' else ProcessPoolExecutor
-        with Executor(max_workers=int(args.num_workers)) as executor:
-            cols = [col for col in executor.map(featurue_discretizer, discretizer_train_args)]
-            user_item_train = pd.concat([user_item_train] + cols, axis=1)
+            func_name = col + '_discretization'
+            func = getattr(utils, func_name) if hasattr(utils, func_name) else None
+            if func is not None and callable(func):
+                user_item_train[col] = user_item_train[col].apply(func)
+                user_item_test[col] = user_item_test[col].apply(func)
+                logging.info(func.__name__ + ' done')
 
-            cols = [col for col in executor.map(featurue_discretizer, discretizer_test_args)]
-            user_item_test = pd.concat([user_item_test] + cols, axis=1)
+    ctr_cols = []
+    for col in cate_cols:
+        user_item_train[col+'_ctr'], user_item_test[col+'_ctr'] = count_feat_ctr(user_item_train[col].astype(str).values,
+                                                                                 user_item_test[col].astype(str).values,
+                                                                                 user_item_train['click'].values)
+        ctr_cols.append(col+'_ctr')
+        logging.info('computed ' + col+'_ctr')
 
-
-
-
-    def ctr_computer(args):
-        train, test, label, ctr_col = args
-        train_ctr, test_ctr = count_feat_ctr(train, test, label)
-        logging.info('computed ' + ctr_col)
-        return (train_ctr, test_ctr, ctr_col)
-
-    one_ctr_cols = ['cover_words', 'face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length',
-                 'duration_time',
-                 'time', 'photo_cluster_label']
-    ctr_cols = [col + '_ctr' for col in one_ctr_cols]
-    ctr_args = []
-    for col in one_ctr_cols:
-        ctr_args.append((user_item_train[col].astype(str).values, user_item_test[col].astype(str).values, user_item_train['click'].values, col+'_ctr'))
-    Executor = ThreadPoolExecutor if args.pool_type == 'thread' else ProcessPoolExecutor
-    with Executor(max_workers=int(args.num_workers)) as executor:
-        for result in executor.map(ctr_computer, ctr_args):
-            train, test, ctr_col = result
-            user_item_train[ctr_col] = train
-            user_item_test[ctr_col] = test
 
     if args.online:
         ONE_CTR_TRAIN_FEATURE_FILE = 'one_ctr_feature_train' + '.' + fmt
@@ -250,10 +223,11 @@ if __name__ == '__main__':
         ONE_CTR_TRAIN_FEATURE_FILE = 'one_ctr_feature_train' + str(kfold) + '.' + fmt
         ONE_CTR_TEST_FEATURE_FILE = 'one_ctr_feature_test' + str(kfold) + '.' + fmt
 
-    one_ctr_train = user_item_train[['user_id', 'photo_id'] + ctr_cols]
-    one_ctr_test = user_item_test[['user_id', 'photo_id'] + ctr_cols]
-    # one_ctr_train.sort_values(['user_id', 'photo_id'], inplace=True)
-    # one_ctr_test.sort_values(['user_id', 'photo_id'], inplace=True)
+
+    one_ctr_train = user_item_train[['user_id', 'photo_id', 'cover_words_ctr'] + ctr_cols]
+    one_ctr_test = user_item_test[['user_id', 'photo_id', 'cover_words_ctr'] + ctr_cols]
+    one_ctr_train.sort_values(['user_id', 'photo_id'], inplace=True)
+    one_ctr_test.sort_values(['user_id', 'photo_id'], inplace=True)
 
     print(one_ctr_train.info())
     print(one_ctr_test.info())
@@ -263,23 +237,20 @@ if __name__ == '__main__':
     store_data(one_ctr_train, os.path.join(feature_store_dir, ONE_CTR_TRAIN_FEATURE_FILE), fmt)
     store_data(one_ctr_test, os.path.join(feature_store_dir, ONE_CTR_TEST_FEATURE_FILE), fmt)
 
-    # column
+    #column
     tasks_args = []
     for col in set(one_ctr_train.columns) - set(['user_id', 'photo_id']):
         tasks_args.append((one_ctr_train[[col]], os.path.join(col_feature_store_dir, col + '_train.csv'), fmt))
         tasks_args.append((one_ctr_test[[col]], os.path.join(col_feature_store_dir, col + '_test.csv'), fmt))
 
-
     def feature_saver(args):
         df, path, fmt = args
         res = store_data(df, path, fmt)
         return res
-
-
     start_time_1 = time.time()
     Executor = ThreadPoolExecutor if args.pool_type == 'thread' else ProcessPoolExecutor
     with Executor(max_workers=int(args.num_workers)) as executor:
-        for file in executor.map(feature_saver, tasks_args):
+        for file in executor.map(feature_saver,  tasks_args):
             print('%s saved' % file)
     print ("%s pool execution in %s seconds" % (args.pool_type, str(time.time() - start_time_1)))
 
