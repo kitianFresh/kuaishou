@@ -6,7 +6,7 @@ sys.path.append('../')
 import pandas as pd
 
 from conf.modelconf import *
-online_feature_store_dir = os.path.join(offline_data_dir, 'features')
+online_feature_store_dir = os.path.join(online_data_dir, 'features')
 visual_train_file = os.path.join(online_feature_store_dir, 'visual_feature_train.csv')
 visual_test_file = os.path.join(online_feature_store_dir, 'visual_feature_test.csv')
 
