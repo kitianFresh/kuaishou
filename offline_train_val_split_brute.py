@@ -74,6 +74,8 @@ kfold_user_item_val = user_item_train.iloc[:int(num*prop)]
 kfold_user_item_train = user_item_train.iloc[int(num*prop):]
 val_photo_ids = set(kfold_user_item_val['photo_id'].unique()) - set(kfold_user_item_train['photo_id'].unique())
 inter_train_val_photo_ids = set(kfold_user_item_val['photo_id'].unique()) & set(kfold_user_item_train['photo_id'].unique())
+kfold_user_item_val_inter = kfold_user_item_val.loc[kfold_user_item_val.photo_id.isin(inter_train_val_photo_ids)]
+
 # online: train_user_ids = test_user_ids; train_photo_ids & test_photo_ids = null; train_time.max < test_time.min;
 # offline: this train will include train val intersection inter_train_val_photo_ids;
 # satisfy: train_user_ids = val_user_ids; train_photo_ids & val_photo_ids = null; train_time.max < val_time.min;
@@ -91,6 +93,9 @@ print("valid photos after remove train/val intersection: %s" % len(val_photo_ids
 print('train click mean: %s' % user_item_train['click'].mean())
 print('val click mean before remove intersection: %s' % kfold_user_item_val['click'].mean())
 kfold_user_item_val = kfold_user_item_val.loc[kfold_user_item_val.photo_id.isin(val_photo_ids)]
+#
+print(kfold_user_item_val_inter.shape)
+kfold_user_item_train = kfold_user_item_train.append(kfold_user_item_val_inter)
 print('val click mean after remove intersection: %s' % kfold_user_item_val['click'].mean())
 print("train shape after validation remove intersection: (%d, %d)" % (kfold_user_item_train.shape[0], kfold_user_item_train.shape[1]))
 print("valid shape after validation remove intersection: (%d, %d)" % (kfold_user_item_val.shape[0], kfold_user_item_val.shape[1]))

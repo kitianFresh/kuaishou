@@ -80,8 +80,11 @@ i = 0
 user_sample = functools.partial(user_sample, prop=float(args.prop))
 kfold_user_item_val = user_item_train.groupby(['user_id']).apply(user_sample)
 kfold_user_item_val.reset_index(drop=True, inplace=True)
+print(kfold_user_item_train.time.min())
 
 kfold_user_item_train = user_item_train.append(kfold_user_item_val).drop_duplicates(keep=False).reset_index(drop=True)
+print(kfold_user_item_train.time.max())
+
 val_photo_ids = set(kfold_user_item_val['photo_id'].unique()) - set(kfold_user_item_train['photo_id'].unique())
 inter_train_val_photo_ids = set(kfold_user_item_val['photo_id'].unique()) & set(kfold_user_item_train['photo_id'].unique())
 # online: train_user_ids = test_user_ids; train_photo_ids & test_photo_ids = null; train_time.max < test_time.min;
@@ -103,7 +106,13 @@ print('val click mean before remove intersection: %s' % kfold_user_item_val['cli
 kfold_user_item_val_1 = kfold_user_item_val.loc[kfold_user_item_val.photo_id.isin(val_photo_ids)]
 kfold_user_item_val_2 = kfold_user_item_val.loc[~kfold_user_item_val.photo_id.isin(val_photo_ids)]
 # 这里取train_photo_ids 的话，就是训练集会加入更多的来自未做交集之前的验证集合的样例，但是无法保证时间完全先后顺序
-# kfold_user_item_train = kfold_user_item_train.append(kfold_user_item_val_2)
+min_time = kfold_user_item_val_1.time.min()
+print(min_time)
+kfold_user_item_val_2 = kfold_user_item_val_2.loc[kfold_user_item_val_2['time']<min_time]
+print(kfold_user_item_val_2.shape)
+print(kfold_user_item_train.time.max())
+kfold_user_item_train = kfold_user_item_train.append(kfold_user_item_val_2)
+print(kfold_user_item_train.time.max())
 kfold_user_item_val = kfold_user_item_val_1
 print('val click mean after remove intersection: %s' % kfold_user_item_val['click'].mean())
 print("train shape after validation remove intersection: (%d, %d)" % (kfold_user_item_train.shape[0], kfold_user_item_train.shape[1]))
