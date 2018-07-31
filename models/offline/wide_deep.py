@@ -96,7 +96,7 @@ if __name__ == '__main__':
     # Continuous base columns.
     real_valued_columns = []
     reals = []
-    # playing_freq click_freq browse_time_diff browse_freq
+    # playing_freq click_freq browse_time_diff browse_freq， not valid, remove them
     float32_cols = one_ctr_features + combine_ctr_features + ['non_face_click_favor', 'face_click_favor',
                 'man_favor', 'woman_avg_age', 'woman_age_favor', 'woman_yen_value_favor',
                 'human_scale', 'woman_favor', 'woman_cv_favor', 'man_age_favor', 'man_yen_value_favor',
@@ -105,7 +105,6 @@ if __name__ == '__main__':
                 'cover_length_favor', 'human_avg_attr', 'avg_tfidf', 'woman_num_ratio',
                 'man_num_ratio', 'playing_favor', 'duration_favor', 'playing_duration_favor',
                 'face_favor', 'text_clicked_ratio', 'scale']
-                                                              # ]
 
     features_to_train_sets = set(features_to_train)
     for feat in float32_cols:
@@ -149,7 +148,7 @@ if __name__ == '__main__':
                             woman_num_buckets, man_num_buckets, age_buckets, appearance_buckets, cover_length_buckets, duration_time_buckets]
 
 
-    vector_feature_columns = ['cover_words', 'user_pos_docs', 'user_neg_docs']
+    vector_feature_columns = ['cover_words', 'pos_photo_id', 'neg_photo_id', 'pos_photo_cluster_label', 'neg_photo_cluster_label', 'pos_user_id', 'neg_user_id']
 
 
     wide_columns = [
@@ -209,10 +208,21 @@ if __name__ == '__main__':
     def eval_input_fn():
       return input_fn(ensemble_test)
 
-    model.train(input_fn=train_input_fn, steps=200, )
-    results = model.evaluate(input_fn=eval_input_fn, steps=1)
-    for key in sorted(results):
-        print("%s: %s" % (key, results[key]))
+    max_steps = 200
+    for i in range(max_steps):
+        model.train(input_fn=train_input_fn, steps=1)
+        # 评估auc，准确率
+        results = model.evaluate(input_fn=eval_input_fn, steps=1)
+        for key in sorted(results):
+            print("%s: %s" % (key, results[key]))
+        # 评估打分
+        results = model.predict(input_fn=input_fn('evaluate.csv'))
+        for y, r in zip(ensemble_test[y_label].values, results):
+            print ('label = %d, positive_ratio = %f'
+                   % (y, r['probabilities'][1]))
+        print("auc", roc_auc_score(ensemble_test[y_label].values, results['probabilities'][1]))
+
+
 
     # Train and evaluate the model every `FLAGS.epochs_per_eval` epochs.
     # for n in range(train_epochs // epochs_per_eval):
