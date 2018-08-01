@@ -222,6 +222,8 @@ if __name__ == '__main__':
         "cross_layer_num": 3,
     }
 
+    # ensemble_train = ensemble_train[:10000]
+    # ensemble_test = ensemble_test[:10000]
 
     fd = FeatureDictionary(ensemble_train, ensemble_test, numeric_cols=config.numeric_features,
                            ignore_cols=config.ignore_features,
