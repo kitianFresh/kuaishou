@@ -30,7 +30,7 @@ real_value_vector_features = ['cover_words', 'visual', 'pos_photo_id', 'neg_phot
 
 features_to_train = cate_features + numeric_features
 
-ignore_features = []
+ignore_features = ['user_id', 'photo_id', 'click']
 
 y_label = ['click']
 
