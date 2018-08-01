@@ -188,7 +188,8 @@ if __name__ == '__main__':
     # 这样划分出来的数据，训练集和验证集点击率分布不台符合
     # train_data, val_data, y_train, y_val = train_test_split(ensemble_train[id_features+features_to_train+y_label], ensemble_train[y_label], test_size=0.3, random_state=0)
 
-
+    # cover_words_vector_len = cover_words_vector_train.shape[1]
+    # ensemble_train = sparse.hstack([ensemble_train, cover_words_vector_train])
     print('Training model %s......' % model_name)
 
     print(ensemble_train[y_label].mean(), ensemble_train[y_label].std())

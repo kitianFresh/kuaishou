@@ -157,8 +157,6 @@ class DCN(BaseEstimator, TransformerMixin):
 
 
 
-
-
     def _initialize_weights(self):
         weights = dict()
 
@@ -278,9 +276,9 @@ class DCN(BaseEstimator, TransformerMixin):
         :param refit: refit the model on the train+valid dataset or not
         :return: None
         """
-        print(len(cate_Xi_train))
-        print(len(cate_Xv_train))
-        print(len(numeric_Xv_train))
+        print(cate_Xi_train.shape)
+        print(cate_Xv_train.shape)
+        print(numeric_Xv_train.shape)
         print(len(y_train))
         has_valid = cate_Xv_valid is not None
         for epoch in range(self.epoch):
@@ -295,77 +293,29 @@ class DCN(BaseEstimator, TransformerMixin):
 
             if has_valid:
                 y_valid = np.array(y_valid).reshape((-1,1))
-                loss = self.predict(cate_Xi_valid, cate_Xv_valid, numeric_Xv_valid, y_valid)
-                print("epoch",epoch,"loss",loss)
+                res, loss = self.evaluate(cate_Xi_valid, cate_Xv_valid, numeric_Xv_valid, y_valid)
+                print("epoch",epoch,"loss",loss, "eval", res)
 
 
-    def predict1(self, static_index_dict, dynamic_index_dict, dynamic_lengths_dict, y = []):
-        """
-        :param static_index:
-        :param dynamic_index:
-        :param dynamic_lengths:
-        :return:
-        """
-        print("predict begin")
-        # dummy y
-        if len(y) == 0:
-            dummy_y = [1] * len(static_index_dict[self.static_features[0]])
-        else:
-            dummy_y = y
-        batch_index = 0
-        batch_size = 1024
-        static_index_dict_batch, dynamic_index_dict_batch, dynamic_lengths_dict_batch, y_batch\
-            = self.get_batch(static_index_dict, dynamic_index_dict, dynamic_lengths_dict, dummy_y, batch_size, batch_index)
-        y_pred = None
-        total_loss = 0.0
-        total_size = 0.0
-        while len(static_index_dict_batch[self.static_features[0]]) > 0:
-            num_batch = len(y_batch)
-            feed_dict = {
-                         self.label: y_batch,
-                         self.dropout_keep_fm: [1.0] * len(self.dropout_fm),
-                         self.dropout_keep_deep: [1.0] * len(self.dropout_deep),
-                         self.train_phase: False}
-            for key in self.static_features:
-                feed_dict[self.static_index_dict[key]] = static_index_dict_batch[key]
-            for key in self.dynamic_features:
-                feed_dict[self.dynamic_index_dict[key]] = dynamic_index_dict_batch[key]
-                feed_dict[self.dynamic_lengths_dict[key]] = dynamic_lengths_dict_batch[key]
-            batch_out, batch_loss = self.sess.run((self.out, self.loss), feed_dict=feed_dict)
-            total_loss += batch_loss * num_batch
-            total_size += num_batch
-            if batch_index == 0:
-                y_pred = np.reshape(batch_out, (num_batch,))
-            else:
-                y_pred = np.concatenate((y_pred, np.reshape(batch_out, (num_batch,))))
-
-            batch_index += 1
-            static_index_dict_batch, dynamic_index_dict_batch, dynamic_lengths_dict_batch, y_batch \
-                = self.get_batch(static_index_dict, dynamic_index_dict, dynamic_lengths_dict, dummy_y, batch_size,
-                                 batch_index)
-        print("valid logloss is %.6f" % (total_loss / total_size))
-        return y_pred
-
-
-    def evaluate(self, static_index_dict, dynamic_index_dict, dynamic_lengths_dict, y):
-        """
-        :param static_index:
-        :param dynamic_index:
-        :param dynamic_lengths:
-        :param y:
-        :return:
-        """
-        print("evaluate begin")
+    def evaluate(self, cate_Xi, cate_Xv, numeric_Xv, y):
+        feed_dict = {self.feat_index: cate_Xi,
+                     self.feat_value: cate_Xv,
+                     self.numeric_value: numeric_Xv,
+                     self.label: y,
+                     self.dropout_keep_deep: [1.0] * len(self.dropout_dep),
+                     self.train_phase: True}
         print("predicting ing")
         b_time = time()
-        y_pred = self.predict(static_index_dict, dynamic_index_dict, dynamic_lengths_dict, y)
+        out, loss = self.sess.run([self.out, self.loss], feed_dict=feed_dict)
         print("predicting costs %.1f" %(time()- b_time))
-        print("counting eval ing")
+        num = len(y)
+        y_pred = np.reshape(out, (num,))
+
         b_time = time()
-        res =  self.eval_metric(y, y_pred)
-        print("counting eval cost %.1f" %(time()- b_time))
+        res = self.eval_metric(y, y_pred)
+        print("counting eval cost %.1f" % (time() - b_time))
         print("evaluate end")
-        return res
+        return res, loss
 
     def save_model(self, path, i):
         self.saver.save(self.sess, path, global_step=i)
