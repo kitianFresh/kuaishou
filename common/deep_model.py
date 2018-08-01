@@ -230,24 +230,24 @@ class DCN(BaseEstimator, TransformerMixin):
         np.random.set_state(rng_state)
         np.random.shuffle(d)
 
-    def predict(self, Xi, Xv,Xv2,y):
-        """
-        :param Xi: list of list of feature indices of each sample in the dataset
-        :param Xv: list of list of feature values of each sample in the dataset
-        :return: predicted probability of each sample
-        """
-        # dummy y
-
-        feed_dict = {self.feat_index: Xi,
-                     self.feat_value: Xv,
-                     self.numeric_value: Xv2,
-                     self.label: y,
-                     self.dropout_keep_deep: [1.0] * len(self.dropout_dep),
-                     self.train_phase: True}
-
-        loss = self.sess.run([self.loss], feed_dict=feed_dict)
-
-        return loss
+    # def predict(self, Xi, Xv,Xv2,y):
+    #     """
+    #     :param Xi: list of list of feature indices of each sample in the dataset
+    #     :param Xv: list of list of feature values of each sample in the dataset
+    #     :return: predicted probability of each sample
+    #     """
+    #     # dummy y
+    #
+    #     feed_dict = {self.feat_index: Xi,
+    #                  self.feat_value: Xv,
+    #                  self.numeric_value: Xv2,
+    #                  self.label: y,
+    #                  self.dropout_keep_deep: [1.0] * len(self.dropout_dep),
+    #                  self.train_phase: True}
+    #
+    #     loss = self.sess.run([self.loss], feed_dict=feed_dict)
+    #
+    #     return loss
 
 
     def fit_on_batch(self,Xi,Xv,Xv2,y):
@@ -296,29 +296,61 @@ class DCN(BaseEstimator, TransformerMixin):
 
             if has_valid:
                 y_valid = np.array(y_valid).reshape((-1,1))
-                res, loss = self.evaluate(cate_Xi_valid, cate_Xv_valid, numeric_Xv_valid, y_valid)
-                print("epoch",epoch,"loss",loss, "eval", res)
+                eval_result = self.evaluate(cate_Xi_valid, cate_Xv_valid, numeric_Xv_valid, y_valid)
+                print("epoch",epoch, "eval", eval_result)
 
+    def predict(self, Xi, Xv,Xv2, y):
+        """
+        :param Xi: list of list of feature indices of each sample in the dataset
+        :param Xv: list of list of feature values of each sample in the dataset
+        :return: predicted probability of each sample
+        """
+        # dummy y
+        dummy_y = [1] * len(Xi)
+        batch_index = 0
+        cate_Xi_batch, cate_Xv_batch, numeric_Xv_batch, y_batch = self.get_batch(Xi, Xv, Xv2, y, self.batch_size, batch_index)
+        y_pred = None
+        total_loss = 0.0
+        total_size = 0.0
+        while len(cate_Xi_batch) > 0:
+            num_batch = len(y_batch)
+            feed_dict = {self.feat_index: cate_Xi_batch,
+                         self.feat_value: cate_Xv_batch,
+                         self.numeric_value: numeric_Xv_batch,
+                         self.label: y_batch,
+                         self.dropout_keep_deep: [1.0] * len(self.dropout_dep),
+                         self.train_phase: True}
+            batch_out, batch_loss = self.sess.run([self.out, self.loss], feed_dict=feed_dict)
+            #print(batch_out)
+            total_loss += batch_loss * num_batch
+            total_size += num_batch
+
+            if batch_index == 0:
+                y_pred = np.reshape(batch_out, (num_batch,))
+            else:
+                y_pred = np.concatenate((y_pred, np.reshape(batch_out, (num_batch,))))
+
+            batch_index += 1
+            cate_Xi_batch, cate_Xv_batch, numeric_Xv_batch, y_batch = self.get_batch(Xi, Xv, dummy_y, self.batch_size,
+                                                                                     batch_index)
+        print("valid logloss is %.6f" % (total_loss / total_size))
+        print("predict end")
+        return y_pred
 
     def evaluate(self, cate_Xi, cate_Xv, numeric_Xv, y):
-        feed_dict = {self.feat_index: cate_Xi,
-                     self.feat_value: cate_Xv,
-                     self.numeric_value: numeric_Xv,
-                     self.label: y,
-                     self.dropout_keep_deep: [1.0] * len(self.dropout_dep),
-                     self.train_phase: True}
-        print("predicting ing")
-        b_time = time()
-        out, loss = self.sess.run([self.out, self.loss], feed_dict=feed_dict)
-        print("predicting costs %.1f" %(time()- b_time))
-        num = len(y)
-        y_pred = np.reshape(out, (num,))
+        """
+        :param Xi: list of list of feature indices of each sample in the dataset
+        :param Xv: list of list of feature values of each sample in the dataset
+        :param y: label of each sample in the dataset
+        :return: metric of the evaluation
+        """
+        y_pred = self.predict(cate_Xi, cate_Xv, numeric_Xv, y)
+        #print(Xi[0], Xv[0])
+        #print(len(Xi), len(Xv), len(Xi[0]), len(Xv[0]))
+        #print(y)
+        #print(y_pred)
+        return self.eval_metric(y, y_pred)
 
-        b_time = time()
-        res = self.eval_metric(y, y_pred)
-        print("counting eval cost %.1f" % (time() - b_time))
-        print("evaluate end")
-        return res, loss
 
     def save_model(self, path, i):
         self.saver.save(self.sess, path, global_step=i)
