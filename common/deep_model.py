@@ -1,3 +1,6 @@
+from __future__ import print_function    # (at top of module)
+
+
 import numpy as np
 import tensorflow as tf
 
@@ -303,7 +306,7 @@ class DCN(BaseEstimator, TransformerMixin):
         :param dynamic_lengths:
         :return:
         """
-        print "predict begin"
+        print("predict begin")
         # dummy y
         if len(y) == 0:
             dummy_y = [1] * len(static_index_dict[self.static_features[0]])
@@ -341,7 +344,6 @@ class DCN(BaseEstimator, TransformerMixin):
                 = self.get_batch(static_index_dict, dynamic_index_dict, dynamic_lengths_dict, dummy_y, batch_size,
                                  batch_index)
         print "valid logloss is %.6f" % (total_loss / total_size)
-        print "predict end"
         return y_pred
 
 
