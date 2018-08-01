@@ -85,8 +85,8 @@ else
     python face_feature_extract.py -k ${KFOLD} &
     python face_max_feature_extract.py -k ${KFOLD}  &
 
-    python3 text_classify.py -k ${KFOLD}
-    python3 text_feature_extract.py -k ${KFOLD}
+    python text_classify.py -k ${KFOLD}
+    python text_feature_extract.py -k ${KFOLD}
     wait
 
     python photo_feature_extract.py -k ${KFOLD}

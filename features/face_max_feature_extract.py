@@ -96,13 +96,14 @@ if __name__ == '__main__':
 
     face_data.drop(['faces'], axis=1, inplace=True)
 
-    cate_cols = ['appearance']
-    for col in cate_cols:
-        func_name = col + '_discretization'
-        func = getattr(utils, func_name) if hasattr(utils, func_name) else None
-        if func is not None and callable(func):
-            print(func.__name__)
-            face_data[col] = face_data[col].apply(func)
+    if args.discretization:
+        cate_cols = ['appearance', 'scale']
+        for col in cate_cols:
+            func_name = col + '_discretization'
+            func = getattr(utils, func_name) if hasattr(utils, func_name) else None
+            if func is not None and callable(func):
+                print(func.__name__)
+                face_data[col] = face_data[col].apply(func)
 
     if args.online:
         FACE_MAX_FEATURE_FILE = 'face_max_feature' + '.' + fmt
