@@ -314,13 +314,13 @@ if __name__ == '__main__':
         user_item_test = pd.merge(user_item_test, test, how='left', on=[who])
 
 
-    who = 'photo_cluster_label'
-    for id_feature in ['user_id']:
-        train, test = gen_pos_neg_id_fea(user_item_train, user_item_test, who, id_feature)
-        print(train.head())
-        print(test.head())
-        user_item_train = pd.merge(user_item_train, train, how='left', on=[who])
-        user_item_test = pd.merge(user_item_test, test, how='left', on=[who])
+    # who = 'photo_cluster_label'
+    # for id_feature in ['user_id']:
+    #     train, test = gen_pos_neg_id_fea(user_item_train, user_item_test, who, id_feature)
+    #     print(train.head())
+    #     print(test.head())
+    #     user_item_train = pd.merge(user_item_train, train, how='left', on=[who])
+    #     user_item_test = pd.merge(user_item_test, test, how='left', on=[who])
 
     user_item_train.reset_index(drop=True, inplace=True)
     user_item_test.reset_index(drop=True, inplace=True)
@@ -341,7 +341,8 @@ if __name__ == '__main__':
     train_matrixs = []
     test_matrixs = []
     print("开始cv.....")
-    for feature in ['pos_user_id', 'neg_user_id', 'pos_photo_id', 'neg_photo_id', 'pos_photo_cluster_label', 'neg_photo_cluster_label', 'cover_words']:
+    # pos_user_id, neg_user_id
+    for feature in ['pos_photo_id', 'neg_photo_id', 'pos_photo_cluster_label', 'neg_photo_cluster_label', 'cover_words']:
         print("生成 " + feature + " CountVector")
         cv.fit(user_item_train[feature].astype('str'))
         print("开始转换 " + feature + " CountVector")
