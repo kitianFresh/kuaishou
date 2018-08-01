@@ -217,7 +217,7 @@ class DCN(BaseEstimator, TransformerMixin):
         start = index * batch_size
         end = (index + 1) * batch_size
         end = end if end < len(y) else len(y)
-        return Xi[start:end],Xv[start:end],Xv2[start:end],[[y_] for y_ in y[start:end]]
+        return Xi[start:end],Xv[start:end],Xv2[start:end],np.reshape(y[start:end], (-1,1))
 
     # shuffle three lists simutaneously
     def shuffle_in_unison_scary(self, a, b, c,d):
@@ -297,7 +297,7 @@ class DCN(BaseEstimator, TransformerMixin):
             if has_valid:
                 y_valid = np.array(y_valid).reshape((-1,1))
                 eval_result = self.evaluate(cate_Xi_valid, cate_Xv_valid, numeric_Xv_valid, y_valid)
-                print("epoch",epoch, "eval", eval_result)
+                print("epoch",epoch, "validation auc", eval_result)
 
     def predict(self, Xi, Xv,Xv2, y):
         """
@@ -331,7 +331,7 @@ class DCN(BaseEstimator, TransformerMixin):
                 y_pred = np.concatenate((y_pred, np.reshape(batch_out, (num_batch,))))
 
             batch_index += 1
-            cate_Xi_batch, cate_Xv_batch, numeric_Xv_batch, y_batch = self.get_batch(Xi, Xv, dummy_y, self.batch_size,
+            cate_Xi_batch, cate_Xv_batch, numeric_Xv_batch, y_batch = self.get_batch(Xi, Xv, Xv2, y, self.batch_size,
                                                                                      batch_index)
         print("valid logloss is %.6f" % (total_loss / total_size))
         print("predict end")
@@ -345,6 +345,7 @@ class DCN(BaseEstimator, TransformerMixin):
         :return: metric of the evaluation
         """
         y_pred = self.predict(cate_Xi, cate_Xv, numeric_Xv, y)
+        y = np.reshape(y, (-1,1))
         #print(Xi[0], Xv[0])
         #print(len(Xi), len(Xv), len(Xi[0]), len(Xv[0]))
         #print(y)
