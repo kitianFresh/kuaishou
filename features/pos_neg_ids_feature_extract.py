@@ -17,7 +17,7 @@ from tqdm import tqdm
 from collections import defaultdict
 
 from conf.modelconf import *
-from common.utils import read_data
+from common.utils import read_data, store_data
 
 
 parser = argparse.ArgumentParser()
@@ -196,10 +196,10 @@ def gen_pos_neg_id_fea(train_data, test2_data, who, id_feat):
             pos_len, neg_len = len(pos_id), len(neg_id)
             total = (pos_len + neg_len)*1.
             convert = pos_len / total if total > 0 else -1
-            test2_neg_pos_id[whoid] = [' '.join(map(str, pos_id)), ' '.join(map(str, neg_id)), convert]
+            test2_neg_pos_id[whoid] = [' '.join(map(str, pos_id)), ' '.join(map(str, neg_id)), convert, pos_len, neg_len]
 #     df_test2 = pd.DataFrame.from_dict(data=test2_neg_pos_id, orient='index')
     df_test2 = pd.DataFrame.from_dict(data=test2_neg_pos_id, orient='index').reset_index()
-    df_test2.columns = [who, 'pos_' + id_feat, 'neg_' + id_feat, who + '_ctr']
+    df_test2.columns = [who, 'pos_' + id_feat, 'neg_' + id_feat, who + '_ctr', 'pos_' + id_feat + '_len', 'neg_' + id_feat + '_len']
 
     train_neg_pos_id = {}
     for row in tqdm(train_data.itertuples(), total=len(train_data)):
@@ -213,10 +213,10 @@ def gen_pos_neg_id_fea(train_data, test2_data, who, id_feat):
         pos_len, neg_len = len(pos_id), len(neg_id)
         total = (pos_len + neg_len)*1.
         convert = pos_len / total if total > 0 else -1
-        train_neg_pos_id[whoid] = [' '.join(map(str, pos_id)), ' '.join(map(str, neg_id)), convert]
+        train_neg_pos_id[whoid] = [' '.join(map(str, pos_id)), ' '.join(map(str, neg_id)), convert, pos_len, neg_len]
 
     df_train = pd.DataFrame.from_dict(data=train_neg_pos_id, orient='index').reset_index()
-    df_train.columns = [who, 'pos_' + id_feat, 'neg_' + id_feat, who + '_ctr']
+    df_train.columns = [who, 'pos_' + id_feat, 'neg_' + id_feat, who + '_ctr', 'pos_' + id_feat + '_len', 'neg_' + id_feat + '_len']
 
     return df_train, df_test2
 
@@ -341,8 +341,21 @@ if __name__ == '__main__':
         if args.online:
             sparse.save_npz(os.path.join(feature_store_dir, feat + '_vector_feature_train.npz'), all_train_data_x)
             sparse.save_npz(os.path.join(feature_store_dir, feat + '_vector_feature_test.npz'), test_data_x)
+
+            store_data(os.path.join(col_feature_store_dir, feat))
         else:
             sparse.save_npz(os.path.join(feature_store_dir, feat + '_vector_feature_train' + str(kfold) + '.npz'), all_train_data_x)
             sparse.save_npz(os.path.join(feature_store_dir, feat + '_vector_feature_test' + str(kfold) + '.npz'), test_data_x)
+
+    all_id_feats = pos_id_features+neg_id_features
+    len_feats = [feat+'_len' for feat in all_id_feats]
+    for len_feat in len_feats:
+        if args.online:
+            store_data(user_item_train[[len_feat]], os.path.join(col_feature_store_dir, len_feat + '_train' + '.' + fmt), fmt)
+            store_data(user_item_test[[len_feat]], os.path.join(col_feature_store_dir, len_feat + '_test' + '.' + fmt), fmt)
+        else:
+            store_data(user_item_train[[len_feat]], os.path.join(col_feature_store_dir, len_feat + '_train' + str(kfold) +  '.' + fmt), fmt)
+            store_data(user_item_test[[len_feat]], os.path.join(col_feature_store_dir, len_feat + '_test' + str(kfold) +  '.' + fmt), fmt)
+
 
 

@@ -107,7 +107,7 @@ if __name__ == '__main__':
 
 
     print(user_item_train.info())
-    print(user_item_train.head())
+    print(user_item_test.info())
 
 
     user_item_train.sort_values(['user_id', 'photo_id'], inplace=True)
