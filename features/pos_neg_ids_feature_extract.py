@@ -24,6 +24,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-o', '--online', help='online feature extract', action="store_true")
 parser.add_argument('-k', '--offline-kfold', help='offline kth fold feature extract, extract kth fold', default=0)
+parser.add_argument('-c', '--column', help='type name of count vector feature you want to extract')
+parser.add_argument('-m', '--max-feature', help='max feature to use count vector', default=500000)
 args = parser.parse_args()
 
 
@@ -223,6 +225,7 @@ if __name__ == '__main__':
 
     fmt = args.format if args.format else 'csv'
     kfold = int(args.offline_kfold)
+
     if args.online:
         TRAIN_USER_INTERACT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
             'train_interaction.txt')
@@ -267,46 +270,19 @@ if __name__ == '__main__':
                                  header=None,
                                   names=['user_id', 'photo_id'])
 
-    text_train = pd.read_csv(TRAIN_TEXT,
-                             sep='\t',
-                             header=None,
-                             names=['photo_id', 'cover_words'])
-
-    print(text_train.info())
-
-    text_test = pd.read_csv(TEST_TEXT,
-                            sep='\t',
-                            header=None,
-                            names=['photo_id', 'cover_words'])
-
-    print(text_test.info())
-
-    def words_to_list(words):
-        if words == '0':
-            return []
-        else:
-            return words.split(',')
 
 
-    text_train['cover_words'] = text_train['cover_words'].apply(words_to_list)
-    text_test['cover_words'] = text_test['cover_words'].apply(words_to_list)
-    text_train['cover_words'] = text_train['cover_words'].apply(lambda x: ' '.join(x))
-    text_test['cover_words'] = text_test['cover_words'].apply(lambda  x: ' '.join(x))
-
-    user_item_train = pd.merge(user_item_train, text_train, how='left', on=['photo_id'])
-    user_item_test = pd.merge(user_item_test, text_test, how='left', on=['photo_id'])
     user_item_train = pd.merge(user_item_train, visual_train, how='left', on=['user_id', 'photo_id'])
     user_item_test = pd.merge(user_item_test, visual_test, how='left', on=['user_id', 'photo_id'])
 
-    del text_train
-    del text_test
     del visual_train
     del visual_test
     gc.collect()
 
+    id_features = [args.column]
     y_label = 'click' # 千万不要用 user_item_train[user_item_train[['click']] == 1], 很多返回空，不要加多索引[]
     who = 'user_id'
-    for id_feature in ['photo_id', 'photo_cluster_label']:
+    for id_feature in id_features:
         train, test = gen_pos_neg_id_fea(user_item_train, user_item_test, who, id_feature)
         print(train.head())
         print(test.head())
@@ -337,12 +313,14 @@ if __name__ == '__main__':
     print(user_item_train.head())
     print(user_item_test.head())
 
-    cv = CountVectorizer(token_pattern='\w+', max_features=20000)  # max_features = 20000
+    cv = CountVectorizer(token_pattern='\w+', max_features=int(args.max_feature))  # max_features = 20000
     train_matrixs = []
     test_matrixs = []
     print("开始cv.....")
     # pos_user_id, neg_user_id
-    for feature in ['pos_photo_id', 'neg_photo_id', 'pos_photo_cluster_label', 'neg_photo_cluster_label', 'cover_words']:
+    pos_id_features = ['pos_' + feat for feat in id_features]
+    neg_id_features = ['neg_' + feat for feat in id_features]
+    for feature in pos_id_features+neg_id_features:
         print("生成 " + feature + " CountVector")
         cv.fit(user_item_train[feature].astype('str'))
         print("开始转换 " + feature + " CountVector")
@@ -356,14 +334,15 @@ if __name__ == '__main__':
     test_data_x = sparse.hstack(test_matrixs)
 
     print('cv prepared')
-    print(all_train_data_x.head())
-    print(test_data_x.head())
+    print(all_train_data_x.shape)
+    print(test_data_x.shape)
 
-    if args.online:
-        sparse.save_npz(os.path.join(feature_store_dir, 'embedding_vector_feature_train.npz'), all_train_data_x)
-        sparse.save_npz(os.path.join(feature_store_dir, 'embedding_vector_feature_test.npz'), test_data_x)
-    else:
-        sparse.save_npz(os.path.join(feature_store_dir, 'embedding_vector_feature_train' + str(kfold) + '.npz'), all_train_data_x)
-        sparse.save_npz(os.path.join(feature_store_dir, 'embedding_vector_feature_test' + str(kfold) + '.npz'), test_data_x)
+    for feat in id_features:
+        if args.online:
+            sparse.save_npz(os.path.join(feature_store_dir, feat + '_vector_feature_train.npz'), all_train_data_x)
+            sparse.save_npz(os.path.join(feature_store_dir, feat + '_vector_feature_test.npz'), test_data_x)
+        else:
+            sparse.save_npz(os.path.join(feature_store_dir, feat + '_vector_feature_train' + str(kfold) + '.npz'), all_train_data_x)
+            sparse.save_npz(os.path.join(feature_store_dir, feat + '_vector_feature_test' + str(kfold) + '.npz'), test_data_x)
 
 
