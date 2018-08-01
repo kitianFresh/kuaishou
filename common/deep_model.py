@@ -276,9 +276,9 @@ class DCN(BaseEstimator, TransformerMixin):
         :param refit: refit the model on the train+valid dataset or not
         :return: None
         """
-        print(cate_Xi_train.shape)
-        print(cate_Xv_train.shape)
-        print(numeric_Xv_train.shape)
+        print(len(cate_Xi_train), len(cate_Xi_train[0]))
+        print(len(cate_Xv_train), len(cate_Xv_train[0]))
+        print(len(numeric_Xv_train), len(numeric_Xv_train[0]))
         print(len(y_train))
         has_valid = cate_Xv_valid is not None
         for epoch in range(self.epoch):
