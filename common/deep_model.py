@@ -141,7 +141,10 @@ class DCN(BaseEstimator, TransformerMixin):
             #init
             self.saver = tf.train.Saver()
             init = tf.global_variables_initializer()
-            self.sess = tf.Session()
+            config = tf.ConfigProto(device_count={"gpu": 0, "gpu": 1})
+            config.gpu_options.allow_growth = True
+            self.sess = tf.Session(config=config)
+
             self.sess.run(init)
 
             # number of params

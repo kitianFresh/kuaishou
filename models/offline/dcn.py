@@ -60,6 +60,7 @@ class FeatureDictionary(object):
             else:
                 us = df[col].unique()
                 self.feat_dict[col] = dict(zip(us, range(tc, len(us) + tc)))
+                print(col, us, tc)
                 tc += len(us)
         self.feat_dim = tc
 
@@ -110,6 +111,7 @@ class DataParser(object):
         cate_Xv = dfv.values.tolist()
         print(len(cate_Xi), len(cate_Xi[0]))
         print(len(cate_Xv), len(cate_Xv[0]))
+        print(len(numeric_Xv), len(numeric_Xv[0]))
         print(cate_used_cols, len(cate_used_cols))
         print(cate_Xi[0])
         print(cate_Xv[0])
@@ -209,7 +211,7 @@ if __name__ == '__main__':
         "dropout_deep": [0.5, 0.5, 0.5],
         "deep_layers_activation": tf.nn.relu,
         "epoch": 30,
-        "batch_size": 1024,
+        "batch_size": 512,
         "learning_rate": 0.001,
         "optimizer_type": "adam",
         "batch_norm": 1,
