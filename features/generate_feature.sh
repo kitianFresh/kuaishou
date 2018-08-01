@@ -83,7 +83,7 @@ else
     fi
     echo KFOLD = "${KFOLD}"
     python face_feature_extract.py -k ${KFOLD} &
-    python face_max_feature_extract.py -k ${KFOLD} -d &
+    python face_max_feature_extract.py -k ${KFOLD}  &
 
     python3 text_classify.py -k ${KFOLD}
     python3 text_feature_extract.py -k ${KFOLD}
