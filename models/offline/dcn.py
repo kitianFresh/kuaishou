@@ -12,6 +12,7 @@ from multiprocessing import cpu_count
 
 import numpy as np
 import pandas as pd
+from scipy import sparse
 import tensorflow as tf
 
 from common.utils import FeatureMerger, read_data, store_data, load_config_from_pyfile
@@ -144,6 +145,11 @@ if __name__ == '__main__':
                        features_to_train=features_to_train)
 
     start = time.time()
+    cover_words_vector_train = sparse.load_npz(
+        os.path.join(feature_store_dir, 'cover_words_vector_feature_train' + str(kfold) + '.npz'))
+    cover_words_vector_test = sparse.load_npz(
+        os.path.join(feature_store_dir, 'cover_words_vector_feature_test' + str(kfold) + '.npz'))
+
     if all_one:
         ALL_FEATURE_TRAIN_FILE = 'deep_feature_train' + str(kfold) + '.' + fmt
         ensemble_train = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TRAIN_FILE), fmt)
@@ -189,6 +195,8 @@ if __name__ == '__main__':
     print(ensemble_test[y_label].mean(), ensemble_test[y_label].std())
     print(ensemble_train[features_to_train].shape, ensemble_train[y_label].shape)
     print(ensemble_test[features_to_train].shape, ensemble_test[features_to_train].shape)
+
+
     import gc
     gc.collect()
     start_time_1 = time.time()
