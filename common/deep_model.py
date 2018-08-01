@@ -343,7 +343,7 @@ class DCN(BaseEstimator, TransformerMixin):
             static_index_dict_batch, dynamic_index_dict_batch, dynamic_lengths_dict_batch, y_batch \
                 = self.get_batch(static_index_dict, dynamic_index_dict, dynamic_lengths_dict, dummy_y, batch_size,
                                  batch_index)
-        print "valid logloss is %.6f" % (total_loss / total_size)
+        print("valid logloss is %.6f" % (total_loss / total_size))
         return y_pred
 
 
@@ -355,16 +355,16 @@ class DCN(BaseEstimator, TransformerMixin):
         :param y:
         :return:
         """
-        print "evaluate begin"
-        print "predicting ing"
+        print("evaluate begin")
+        print("predicting ing")
         b_time = time()
         y_pred = self.predict(static_index_dict, dynamic_index_dict, dynamic_lengths_dict, y)
-        print "predicting costs %.1f" %(time()- b_time)
-        print "counting eval ing"
+        print("predicting costs %.1f" %(time()- b_time))
+        print("counting eval ing")
         b_time = time()
         res =  self.eval_metric(y, y_pred)
-        print "counting eval cost %.1f" %(time()- b_time)
-        print "evaluate end"
+        print("counting eval cost %.1f" %(time()- b_time))
+        print("evaluate end")
         return res
 
     def save_model(self, path, i):
@@ -372,5 +372,5 @@ class DCN(BaseEstimator, TransformerMixin):
 
     def load_model(self, path):
         model_file = tf.train.latest_checkpoint(path)
-        print model_file,"model file"
+        print(model_file,"model file")
         self.saver.restore(self.sess, path)
