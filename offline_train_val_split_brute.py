@@ -95,7 +95,8 @@ print('val click mean before remove intersection: %s' % kfold_user_item_val['cli
 kfold_user_item_val = kfold_user_item_val.loc[kfold_user_item_val.photo_id.isin(val_photo_ids)]
 #
 print(kfold_user_item_val_inter.shape)
-kfold_user_item_train = kfold_user_item_train.append(kfold_user_item_val_inter)
+# do not add to train, possible time intersection
+# kfold_user_item_train = kfold_user_item_train.append(kfold_user_item_val_inter)
 print('val click mean after remove intersection: %s' % kfold_user_item_val['click'].mean())
 print("train shape after validation remove intersection: (%d, %d)" % (kfold_user_item_train.shape[0], kfold_user_item_train.shape[1]))
 print("valid shape after validation remove intersection: (%d, %d)" % (kfold_user_item_val.shape[0], kfold_user_item_val.shape[1]))
