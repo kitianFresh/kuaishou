@@ -104,7 +104,7 @@ if __name__ == '__main__':
         visual_test = None
 
     user_item_train = pd.merge(user_item_train, users,
-                               how='inner',
+                               how='left',
                                on=['user_id'])
 
     user_item_train = pd.merge(user_item_train, photo_data,
@@ -122,7 +122,7 @@ if __name__ == '__main__':
                                    how='left', on=['user_id', 'photo_id'])
 
     user_item_test = pd.merge(user_item_test, users,
-                              how='inner',
+                              how='left',
                               on=['user_id'])
 
     user_item_test = pd.merge(user_item_test, photo_data,
