@@ -9,6 +9,8 @@ import time
 
 sys.path.append("../../")
 from multiprocessing import cpu_count
+import bloscpack as bp
+
 
 import numpy as np
 import pandas as pd
@@ -131,6 +133,8 @@ if __name__ == '__main__':
     num_workers = args.num_workers
     config = load_config_from_pyfile(args.config_file)
     features_to_train = config.features_to_train
+    cate_features = config.cate_features
+    float32_cols = config.float32_cols
     seed = config.seed
     y_label = config.y_label
 
@@ -147,10 +151,7 @@ if __name__ == '__main__':
                        features_to_train=features_to_train)
 
     start = time.time()
-    cover_words_vector_train = sparse.load_npz(
-        os.path.join(feature_store_dir, 'cover_words_vector_feature_train' + str(kfold) + '.npz'))
-    cover_words_vector_test = sparse.load_npz(
-        os.path.join(feature_store_dir, 'cover_words_vector_feature_test' + str(kfold) + '.npz'))
+
 
     if all_one:
         ALL_FEATURE_TRAIN_FILE = 'deep_feature_train' + str(kfold) + '.' + fmt
@@ -160,7 +161,7 @@ if __name__ == '__main__':
         ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
     else:
         deep_col_feature_store_dir = os.path.join(col_feature_store_dir, "deep")
-        feature_to_use = id_features + features_to_train
+        feature_to_use = id_features + cate_features + float32_cols
         fm_trainer = FeatureMerger(deep_col_feature_store_dir, feature_to_use + y_label, fmt=fmt, data_type='train',
                                    pool_type='process', num_workers=num_workers)
         fm_tester = FeatureMerger(deep_col_feature_store_dir, feature_to_use + y_label, fmt=fmt, data_type='test',
@@ -192,6 +193,28 @@ if __name__ == '__main__':
 
     # cover_words_vector_len = cover_words_vector_train.shape[1]
     # ensemble_train = sparse.hstack([ensemble_train, cover_words_vector_train])
+    EMBEDDING_TRAIN_FILE = 'cover_words_embedding_feature_train' + str(kfold) + '.blp'
+    EMBEDDING_TEST_FILE = 'cover_words_embedding_feature_test' + str(kfold) + '.blp'
+
+
+    cover_words_vector_train = bp.unpack_ndarray_file(
+        os.path.join(feature_store_dir, EMBEDDING_TRAIN_FILE))
+
+    cover_words_vector_test = bp.unpack_ndarray_file(
+        os.path.join(feature_store_dir, EMBEDDING_TEST_FILE))
+
+    cover_words_vector_train = np.reshape(cover_words_vector_train, (-1,100))
+    cover_words_vector_test = np.reshape(cover_words_vector_test, (-1,100))
+
+    print(cover_words_vector_train.shape)
+    cover_words_train = pd.DataFrame(cover_words_vector_train)
+    cover_words_test = pd.DataFrame(cover_words_vector_test)
+    cover_words_train.columns = ['w' + str(i) for i in range(100)]
+    cover_words_test.columns = ['w' + str(i) for i in range(100)]
+
+    ensemble_train = pd.concat([ensemble_train, cover_words_train], axis=1)
+    ensemble_test = pd.concat([ensemble_test, cover_words_test], axis=1)
+
     print('Training model %s......' % model_name)
 
     print(ensemble_train[y_label].mean(), ensemble_train[y_label].std())
