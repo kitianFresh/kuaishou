@@ -27,7 +27,7 @@ logging.getLogger('').addHandler(console)
 
 # feature config
 # 'hour_click_ratio', 'period_click_ratio', 'click_ratio'， 'playing_duration_favor'
-user_action_features = ['click_ratio', 'browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum','duration_sum', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq', 'playing_freq',  'duration_favor']
+user_action_features = ['click_ratio', 'browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum','duration_sum', 'like_ratio', 'follow_ratio', 'playing_ratio', 'browse_time_diff', 'click_freq', 'browse_freq', 'playing_freq',  'duration_favor', 'playing_duration_favor']
     
 face_features = ['face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age', 'woman_avg_age',
                  'human_avg_age',  'man_avg_attr', 'woman_avg_attr', 'human_avg_attr', 'woman_num_ratio', 'man_num_ratio']
