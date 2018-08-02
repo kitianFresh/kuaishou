@@ -8,6 +8,8 @@ from time import time
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.metrics import roc_auc_score
 
+import logging
+
 class DCN(BaseEstimator, TransformerMixin):
 
     def __init__(self, cate_feature_size, field_size,numeric_feature_size,
@@ -156,7 +158,7 @@ class DCN(BaseEstimator, TransformerMixin):
                     variable_parameters *= dim.value
                 total_parameters += variable_parameters
             if self.verbose > 0:
-                print("#params: %d" % total_parameters)
+                logging("#params: %d" % total_parameters)
 
 
 
@@ -264,7 +266,7 @@ class DCN(BaseEstimator, TransformerMixin):
 
     def fit(self, cate_Xi_train, cate_Xv_train,numeric_Xv_train, y_train,
             cate_Xi_valid=None, cate_Xv_valid=None, numeric_Xv_valid=None,y_valid=None,
-            early_stopping=False, refit=False):
+            early_stopping=False, refit=False, train_auc=True):
         """
         :param Xi_train: [[ind1_1, ind1_2, ...], [ind2_1, ind2_2, ...], ..., [indi_1, indi_2, ..., indi_j, ...], ...]
                          indi_j is the feature index of feature field j of sample i in the training set
@@ -279,25 +281,28 @@ class DCN(BaseEstimator, TransformerMixin):
         :param refit: refit the model on the train+valid dataset or not
         :return: None
         """
-        print(len(cate_Xi_train), len(cate_Xi_train[0]))
-        print(len(cate_Xv_train), len(cate_Xv_train[0]))
-        print(len(numeric_Xv_train), len(numeric_Xv_train[0]))
-        print(len(y_train))
+        logging.info(len(cate_Xi_train), len(cate_Xi_train[0]))
+        logging.info(len(cate_Xv_train), len(cate_Xv_train[0]))
+        logging.info(len(numeric_Xv_train), len(numeric_Xv_train[0]))
+        logging.info(len(y_train))
         has_valid = cate_Xv_valid is not None
         for epoch in range(self.epoch):
-            t1 = time()
-            self.shuffle_in_unison_scary(cate_Xi_train, cate_Xv_train,numeric_Xv_train, y_train)
+            self.shuffle_in_unison_scary(cate_Xi_train, cate_Xi_train,numeric_Xv_train, y_train)
             total_batch = int(len(y_train) / self.batch_size)
             for i in range(total_batch):
                 cate_Xi_batch, cate_Xv_batch,numeric_Xv_batch, y_batch = self.get_batch(cate_Xi_train, cate_Xv_train, numeric_Xv_train,y_train, self.batch_size, i)
 
                 self.fit_on_batch(cate_Xi_batch, cate_Xv_batch,numeric_Xv_batch, y_batch)
 
+            if train_auc:
+                y_valid = np.array(y_train).reshape((-1, 1))
+                eval_result = self.evaluate(cate_Xi_train, cate_Xi_train, numeric_Xv_train, y_train)
+                logging.info("epoch: %d, train auc: %d" % (epoch, eval_result))
 
             if has_valid:
                 y_valid = np.array(y_valid).reshape((-1,1))
                 eval_result = self.evaluate(cate_Xi_valid, cate_Xv_valid, numeric_Xv_valid, y_valid)
-                print("epoch",epoch, "validation auc", eval_result)
+                logging.info("epoch: %d, valid auc: %d" % (epoch, eval_result))
 
     def predict(self, Xi, Xv,Xv2, y):
         """
@@ -333,8 +338,8 @@ class DCN(BaseEstimator, TransformerMixin):
             batch_index += 1
             cate_Xi_batch, cate_Xv_batch, numeric_Xv_batch, y_batch = self.get_batch(Xi, Xv, Xv2, y, self.batch_size,
                                                                                      batch_index)
-        print("valid logloss is %.6f" % (total_loss / total_size))
-        print("predict end")
+        logging.info("valid logloss is %.6f" % (total_loss / total_size))
+        logging.info("predict end")
         return y_pred
 
     def evaluate(self, cate_Xi, cate_Xv, numeric_Xv, y):
@@ -358,5 +363,5 @@ class DCN(BaseEstimator, TransformerMixin):
 
     def load_model(self, path):
         model_file = tf.train.latest_checkpoint(path)
-        print(model_file,"model file")
+        logging.info(model_file,"model file")
         self.saver.restore(self.sess, path)

@@ -5,7 +5,7 @@
 # feature config
 # 'hour_click_ratio', 'period_click_ratio', 'click_ratio'， 'playing_duration_favor'
 user_action_features = ['click_ratio', 'browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum',
-                        'duration_sum', 'like_ratio', 'follow_ratio', 'playing_ratio', 'duration_favor']
+                        'duration_sum', 'like_ratio', 'follow_ratio', 'playing_ratio', 'duration_favor', 'playing_duration_favor']
 
 face_features = ['face_num', 'man_num', 'woman_num', 'man_scale', 'woman_scale', 'human_scale', 'man_avg_age',
                  'woman_avg_age',
@@ -25,8 +25,8 @@ expand_id_features = ['uid0', 'uid1', 'uid2', 'uid3', 'uid4', 'uid5', 'uid6', 'u
 time_features = ['time', 'duration_time']
 # time_features = ['time_cate', 'duration_time_cate']
 
-# 0.0006 max_word_ctr
-text_features = ['cover_length', 'avg_tfidf', 'key_words_num', 'text_class_label', 'text_cluster_label',
+# 0.0006 max_word_ctr, 'text_class_label
+text_features = ['cover_length', 'avg_tfidf', 'key_words_num', 'text_cluster_label',
                  'text_cluster_exposure_num', 'text_clicked_ratio']
 # text_features = ['cover_length', 'avg_tfidf', 'key_words_num','text_class_label','text_cluster_label']
 # text_features = ['cover_length', 'avg_tfidf', 'key_words_num']

@@ -1,5 +1,5 @@
 
-categorical_features = ['gender', 'photo_cluster_label', 'text_cluster_label', "have_text_cate", "have_face_cate", "text_class_label"]
+categorical_features = ['gender', 'photo_cluster_label', 'text_cluster_label', "have_text_cate", "have_face_cate"]
 
 to_discretization_features = ['time', 'duration_time'] + ["key_words_num", "exposure_num", "browse_num", "face_num", "woman_num", "man_num",
                                      "age", "appearance", "cover_length"]
