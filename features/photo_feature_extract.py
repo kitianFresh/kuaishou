@@ -119,7 +119,6 @@ if __name__ == '__main__':
     print(photo_data.info())
     print(np.sum(photo_data.isnull()))
 
-    photo_data.fillna(0, inplace=True)
     photo_data['have_face_cate'] = photo_data['face_num'].apply(lambda x: x >= 1).astype(feature_dtype_map['have_face_cate'])
     photo_data['have_text_cate'] = photo_data['cover_length'].apply(lambda x: x > 0).astype(feature_dtype_map['have_text_cate'])
     photo_data['text_class_label'] = photo_data['text_class_label'].astype(feature_dtype_map['text_class_label'])
@@ -130,6 +129,8 @@ if __name__ == '__main__':
     photo_data['gender'].fillna(-1, inplace=True)
     photo_data['age'].fillna(-1, inplace=True)
     photo_data['appearance'].fillna(-1, inplace=True)
+    photo_data.fillna(0, inplace=True)
+
 
 
     if args.online:
