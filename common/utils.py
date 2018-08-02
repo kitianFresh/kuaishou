@@ -809,13 +809,13 @@ def woman_num_discretization(woman_num):
 def age_discretization(age):
     if age == -1:
         return -1
-    elif 0 <= age <= 12:
+    elif 0 <= age < 12:
         return 0
-    elif 12 < age <= 18:
+    elif 12 <= age < 18:
         return 1
     elif 18 <= age < 24:
         return 2
-    elif 24 < age <= 32:
+    elif 24 <= age < 32:
         return 3
     else:
         return 4
@@ -823,12 +823,19 @@ def age_discretization(age):
 def appearance_discretization(appearance):
     if appearance == -1:
         return -1
-    elif 0 <= appearance <= 60:
+    elif 0 <= appearance < 40:
         return 0
-    elif 60 <= appearance <= 80:
+    elif 40 <= appearance < 60:
         return 1
-    else:
+    elif 60 <= appearance < 70:
         return 2
+    elif 70 <= appearance < 80:
+        return 3
+    elif 80 <= appearance < 90:
+        return 4
+    else:
+        return 5
+
 
 
 def human_avg_age_discretization(human_age):
