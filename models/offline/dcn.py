@@ -77,12 +77,13 @@ class DataParser(object):
     def parse(self, infile=None, df=None, has_label=False):
         assert not ((infile is None) and (df is None)), "infile or df at least one is set"
         assert not ((infile is not None) and (df is not None)), "only one can be set"
-        if infile is None:
-            dfi = df.copy()
-        else:
-            dfi = pd.read_csv(infile)
+        # if infile is None:
+        #     dfi = df.copy()
+        # else:
+        #     dfi = pd.read_csv(infile)
+        dfi = df
         if has_label:
-            y = dfi["click"].values.tolist()
+            y = dfi["click"].values
             dfi.drop(["user_id", "photo_id", "click"], axis=1, inplace=True)
         else:
             ids = dfi[["user_id", "photo_id"]]
@@ -92,7 +93,7 @@ class DataParser(object):
         # dfi for feature index
         # dfv for feature value which can be either binary (1/0) or float (e.g., 10.24)
 
-        numeric_Xv = dfi[self.feat_dict.numeric_cols].values.tolist()
+        numeric_Xv = dfi[self.feat_dict.numeric_cols].values
         dfi.drop(self.feat_dict.numeric_cols,axis=1,inplace=True)
 
         dfv = dfi.copy()
@@ -108,9 +109,9 @@ class DataParser(object):
                 dfv[col] = 1.
 
         # list of list of feature indices of each sample in the dataset
-        cate_Xi = dfi.values.tolist()
+        cate_Xi = dfi.values
         # list of list of feature values of each sample in the dataset
-        cate_Xv = dfv.values.tolist()
+        cate_Xv = dfv.values
         print(len(cate_Xi), len(cate_Xi[0]))
         print(len(cate_Xv), len(cate_Xv[0]))
         print(len(numeric_Xv), len(numeric_Xv[0]))
@@ -212,8 +213,8 @@ if __name__ == '__main__':
     cover_words_train.columns = ['w' + str(i) for i in range(100)]
     cover_words_test.columns = ['w' + str(i) for i in range(100)]
 
-    ensemble_train = pd.concat([ensemble_train, cover_words_train], axis=1)
-    ensemble_test = pd.concat([ensemble_test, cover_words_test], axis=1)
+    # ensemble_train = pd.concat([ensemble_train, cover_words_train], axis=1)
+    # ensemble_test = pd.concat([ensemble_test, cover_words_test], axis=1)
 
     print('Training model %s......' % model_name)
 
@@ -245,9 +246,9 @@ if __name__ == '__main__':
         "cross_layer_num": 3,
     }
 
-    # ensemble_train = ensemble_train[:10000]
-    # ensemble_test = ensemble_test[:10000]
-
+    # ensemble_train = ensemble_train[:1000]
+    # ensemble_test = ensemble_test[:100]
+    #
     fd = FeatureDictionary(ensemble_train, ensemble_test, numeric_cols=config.numeric_features,
                            ignore_cols=config.ignore_features,
                            cate_cols=config.cate_features)

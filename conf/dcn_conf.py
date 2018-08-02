@@ -24,7 +24,8 @@ float32_cols = ['cover_words_ctr', 'face_num_ctr', 'woman_num_ctr', 'man_num_ctr
 
 cate_features = categorical_features + to_discretization_features
 
-word_embedding_cols = ['w' + str(i) for i in range(100)]
+# word_embedding_cols = ['w' + str(i) for i in range(100)]
+word_embedding_cols = []
 numeric_features = float32_cols + word_embedding_cols
 
 real_value_vector_features = ['cover_words', 'visual', 'pos_photo_id', 'neg_photo_id', 'pos_photo_cluster_label',

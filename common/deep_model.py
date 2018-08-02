@@ -158,7 +158,7 @@ class DCN(BaseEstimator, TransformerMixin):
                     variable_parameters *= dim.value
                 total_parameters += variable_parameters
             if self.verbose > 0:
-                logging("#params: %d" % total_parameters)
+                logging.info("#params: %d" % total_parameters)
 
 
 
@@ -281,11 +281,17 @@ class DCN(BaseEstimator, TransformerMixin):
         :param refit: refit the model on the train+valid dataset or not
         :return: None
         """
-        logging.info(len(cate_Xi_train), len(cate_Xi_train[0]))
-        logging.info(len(cate_Xv_train), len(cate_Xv_train[0]))
-        logging.info(len(numeric_Xv_train), len(numeric_Xv_train[0]))
-        logging.info(len(y_train))
+        logging.info('sparse one hot index train feature: (%s, %s)' % (len(cate_Xi_train), len(cate_Xi_train[0])))
+        logging.info('sparse one hot value train feature: (%s, %s)' % (len(cate_Xv_train), len(cate_Xv_train[0])))
+        logging.info('dense numeric train feature: (%s, %s)' % (len(numeric_Xv_train), len(numeric_Xv_train[0])))
+        logging.info('train data length: %s' % (len(y_train)))
         has_valid = cate_Xv_valid is not None
+        if has_valid:
+            logging.info('sparse one hot index valid feature: (%s, %s)' % (len(cate_Xi_valid), len(cate_Xi_valid[0])))
+            logging.info('sparse one hot value valid feature: (%s, %s)' % (len(cate_Xv_valid), len(cate_Xv_valid[0])))
+            logging.info('dense numeric valid feature: (%s, %s)' % (len(numeric_Xv_valid), len(numeric_Xv_valid[0])))
+            logging.info('valid data length: %s' % (len(y_valid)))
+
         for epoch in range(self.epoch):
             self.shuffle_in_unison_scary(cate_Xi_train, cate_Xi_train,numeric_Xv_train, y_train)
             total_batch = int(len(y_train) / self.batch_size)
@@ -294,15 +300,24 @@ class DCN(BaseEstimator, TransformerMixin):
 
                 self.fit_on_batch(cate_Xi_batch, cate_Xv_batch,numeric_Xv_batch, y_batch)
 
+            train_eval_result = 0.
+            valid_eval_result = 0.
             if train_auc:
-                y_valid = np.array(y_train).reshape((-1, 1))
-                eval_result = self.evaluate(cate_Xi_train, cate_Xi_train, numeric_Xv_train, y_train)
-                logging.info("epoch: %d, train auc: %d" % (epoch, eval_result))
+                y_train = np.array(y_train).reshape((-1, 1))
+                train_eval_result = self.evaluate(cate_Xi_train, cate_Xv_train, numeric_Xv_train, y_train)
 
             if has_valid:
                 y_valid = np.array(y_valid).reshape((-1,1))
-                eval_result = self.evaluate(cate_Xi_valid, cate_Xv_valid, numeric_Xv_valid, y_valid)
-                logging.info("epoch: %d, valid auc: %d" % (epoch, eval_result))
+                valid_eval_result = self.evaluate(cate_Xi_valid, cate_Xv_valid, numeric_Xv_valid, y_valid)
+
+            if train_auc and has_valid:
+                logging.info("epoch: %d, train auc: %f, valid auc: %f" % (epoch, train_eval_result, valid_eval_result))
+            elif train_auc and not has_valid:
+                logging.info("epoch: %d, train auc: %f" % (epoch, train_eval_result))
+            elif has_valid and not train_auc:
+                logging.info("epoch: %d, valid auc: %f" % (epoch, valid_eval_result))
+
+
 
     def predict(self, Xi, Xv,Xv2, y):
         """
@@ -338,8 +353,7 @@ class DCN(BaseEstimator, TransformerMixin):
             batch_index += 1
             cate_Xi_batch, cate_Xv_batch, numeric_Xv_batch, y_batch = self.get_batch(Xi, Xv, Xv2, y, self.batch_size,
                                                                                      batch_index)
-        logging.info("valid logloss is %.6f" % (total_loss / total_size))
-        logging.info("predict end")
+        # logging.info("valid logloss is %.6f" % (total_loss / total_size))
         return y_pred
 
     def evaluate(self, cate_Xi, cate_Xv, numeric_Xv, y):
@@ -350,11 +364,12 @@ class DCN(BaseEstimator, TransformerMixin):
         :return: metric of the evaluation
         """
         y_pred = self.predict(cate_Xi, cate_Xv, numeric_Xv, y)
-        y = np.reshape(y, (-1,1))
         #print(Xi[0], Xv[0])
         #print(len(Xi), len(Xv), len(Xi[0]), len(Xv[0]))
-        #print(y)
-        #print(y_pred)
+        # print(y)
+        # print(len(y))
+        # print(y_pred)
+        # print(len(y_pred))
         return self.eval_metric(y, y_pred)
 
 
@@ -363,5 +378,5 @@ class DCN(BaseEstimator, TransformerMixin):
 
     def load_model(self, path):
         model_file = tf.train.latest_checkpoint(path)
-        logging.info(model_file,"model file")
+        logging.info("model file %s" % model_file)
         self.saver.restore(self.sess, path)
