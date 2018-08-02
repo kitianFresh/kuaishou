@@ -132,6 +132,9 @@ if __name__ == '__main__':
 
     user_item_train.fillna(0, inplace=True)
     user_item_test.fillna(0, inplace=True)
+    user_item_train.sort_values(['user_id', 'photo_id'], inplace=True)
+    user_item_test.sort_values(['user_id', 'photo_id'], inplace=True)
+
     input_features = id_features + user_features + photo_features + time_features + combine_ctr_features + one_ctr_features
 
     print(np.sum(user_item_train.isnull()))
