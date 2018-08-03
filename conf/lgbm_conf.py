@@ -55,6 +55,9 @@ for col1, col2 in itertools.permutations(cate_cols, 2):
     neg_col = col1 + '_' + col2 + '_neg_cnt'
     pos_neg_cnt_features.append(pos_col)
     pos_neg_cnt_features.append(neg_col)
+    combine_ctr_features.append(col1 + '_' + col2 + '_ctr')
+pos_neg_cnt_features = ['time_photo_cluster_label_pos_cnt', 'time_photo_cluster_label_neg_cnt']
+pos_neg_cnt_features =[]
 
 
 y_label = ['click']

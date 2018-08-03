@@ -40,11 +40,11 @@ def count_feat_times(train, test):
             d = d.split(' ')
         for x in d:
             if x not in total_dict:
-                cnt_vec.append(-1)
+                cnt_vec.append(0)
             else:
                 cnt_vec.append(total_dict[x])
         if len(cnt_vec) == 0:
-            train_res.append(-1)
+            train_res.append(0)
         else:
             train_res.append(max(cnt_vec))
 
@@ -56,11 +56,11 @@ def count_feat_times(train, test):
                 assert isinstance(d, basestring)
                 d = d.split(' ')
             if x not in total_dict:
-                cnt_vec.append(-1)
+                cnt_vec.append(0)
             else:
                 cnt_vec.append(total_dict[x])
         if len(cnt_vec) == 0:
-            test_res.append(-1)
+            test_res.append(0)
         else:
             test_res.append(max(cnt_vec))
 
@@ -97,11 +97,11 @@ def combine_feat_times(train1, train2, test1, test2):
             for y in d2:
                 comb = x + '|' + y
                 if comb not in total_dict:
-                    count_vec.append(-1)
+                    count_vec.append(0)
                 else:
                     count_vec.append(total_dict[comb])
         if len(count_vec) == 0:
-            train_res.append(-1)
+            train_res.append(0)
         else:
             train_res.append(max(count_vec))
 
@@ -119,11 +119,11 @@ def combine_feat_times(train1, train2, test1, test2):
             for y in d2:
                 comb = x + '|' + y
                 if comb not in total_dict:
-                    count_vec.append(-1)
+                    count_vec.append(0)
                 else:
                     count_vec.append(total_dict[comb])
         if len(count_vec) == 0:
-            test_res.append(-1)
+            test_res.append(0)
         else:
             test_res.append(max(count_vec))
 
@@ -160,22 +160,22 @@ def count_pos_neg_times(train, test, label):
         for x in d:
             if label[i] == 1:
                 if x not in pos_dict:
-                    cnt_vec_pos.append(-1)
+                    cnt_vec_pos.append(0)
                 else:
                     cnt_vec_pos.append(pos_dict[x])
             if label[i] == 0:
                 if x not in neg_dict:
-                    cnt_vec_neg.append(-1)
+                    cnt_vec_neg.append(0)
                 else:
                     cnt_vec_neg.append(neg_dict[x])
 
         if len(cnt_vec_pos) == 0:
-            train_res_pos.append(-1)
+            train_res_pos.append(0)
         else:
             train_res_pos.append(max(cnt_vec_pos))
 
         if len(cnt_vec_neg) == 0:
-            train_res_neg.append(-1)
+            train_res_neg.append(0)
         else:
             train_res_neg.append(max(cnt_vec_neg))
 
@@ -191,22 +191,22 @@ def count_pos_neg_times(train, test, label):
         for x in d:
             if label[i] == 1:
                 if x not in pos_dict:
-                    cnt_vec_pos.append(-1)
+                    cnt_vec_pos.append(0)
                 else:
                     cnt_vec_pos.append(pos_dict[x])
             if label[i] == 0:
                 if x not in neg_dict:
-                    cnt_vec_neg.append(-1)
+                    cnt_vec_neg.append(0)
                 else:
                     cnt_vec_neg.append(neg_dict[x])
 
         if len(cnt_vec_pos) == 0:
-            test_res_pos.append(-1)
+            test_res_pos.append(0)
         else:
             test_res_pos.append(max(cnt_vec_pos))
 
         if len(cnt_vec_neg) == 0:
-            test_res_neg.append(-1)
+            test_res_neg.append(0)
         else:
             test_res_neg.append(max(cnt_vec_neg))
 
@@ -256,22 +256,22 @@ def combine_pos_neg_times(train1, train2, test1, test2, label):
                 comb = x + '|' + y
                 if label[i] == 1:
                     if comb not in pos_dict:
-                        count_vec_pos.append(-1)
+                        count_vec_pos.append(0)
                     else:
                         count_vec_pos.append(pos_dict[comb])
                 if label[i] == 0:
                     if comb not in neg_dict:
-                        count_vec_neg.append(-1)
+                        count_vec_neg.append(0)
                     else:
                         count_vec_neg.append(neg_dict[comb])
 
         if len(count_vec_pos) == 0:
-            train_res_pos.append(-1)
+            train_res_pos.append(0)
         else:
             train_res_pos.append(max(count_vec_pos))
 
         if len(count_vec_neg) == 0:
-            train_res_neg.append(-1)
+            train_res_neg.append(0)
         else:
             train_res_neg.append(max(count_vec_neg))
 
@@ -290,25 +290,25 @@ def combine_pos_neg_times(train1, train2, test1, test2, label):
             d2 = d2.split(' ')
         for x in d1:
             for y in d2:
+                comb = x + '|' + y
                 if label[i] == 1:
-                    comb = x + '|' + y
                     if comb not in pos_dict:
-                        count_vec_pos.append(-1)
+                        count_vec_pos.append(0)
                     else:
                         count_vec_pos.append(pos_dict[comb])
                 if label[i] == 0:
                     if comb not in neg_dict:
-                        count_vec_neg.append(-1)
+                        count_vec_neg.append(0)
                     else:
                         count_vec_neg.append(neg_dict[comb])
 
         if len(count_vec_pos) == 0:
-            test_res_pos.append(-1)
+            test_res_pos.append(0)
         else:
             test_res_pos.append(max(count_vec_pos))
 
         if len(count_vec_neg) == 0:
-            test_res_neg.append(-1)
+            test_res_neg.append(0)
         else:
             test_res_neg.append(max(count_vec_neg))
 
