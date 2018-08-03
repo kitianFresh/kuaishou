@@ -10,6 +10,7 @@ sys.path.append("../../")
 from multiprocessing import cpu_count
 
 import numpy as np
+from scipy import sparse
 from sklearn.model_selection import cross_val_score, train_test_split, StratifiedKFold, RandomizedSearchCV
 from evolutionary_search import EvolutionaryAlgorithmSearchCV
 
@@ -72,11 +73,15 @@ if __name__ == '__main__':
         ALL_FEATURE_TEST_FILE = 'ensemble_feature_test' + str(kfold) + '.' + fmt
         ensemble_test = read_data(os.path.join(feature_store_dir, ALL_FEATURE_TEST_FILE), fmt)
     else:
-        feature_to_use = id_features + user_features + photo_features + time_features + one_ctr_features + combine_ctr_features
+        feature_to_use = id_features + features_to_train
         fm_trainer = FeatureMerger(col_feature_store_dir, feature_to_use+y_label, fmt=fmt, data_type='train', pool_type='process', num_workers=num_workers)
         fm_tester = FeatureMerger(col_feature_store_dir, feature_to_use+y_label, fmt=fmt, data_type='test', pool_type='process', num_workers=num_workers)
         ensemble_train = fm_trainer.concat()
         ensemble_test = fm_tester.concat()
+
+    # cover_words_vector_train = sparse.load_npz(os.path.join(feature_store_dir, 'cover_words_vector_feature_train' + str(kfold) + '.npz'))
+    # cover_words_vector_test = sparse.load_npz(os.path.join(feature_store_dir, 'cover_words_vector_feature_test' + str(kfold) + '.npz'))
+
 
     end = time.time()
     print('data read in %s seconds' % str(end - start))
@@ -102,10 +107,14 @@ if __name__ == '__main__':
 
 
     print('Training model %s......' % model_name)
+    # num_words = cover_words_vector_train.shape[1]
 
     X_train, y_train = ensemble_train[features_to_train].values, ensemble_train[y_label].values
 
     X_val, y_val = ensemble_test[features_to_train].values, ensemble_test[y_label].values
+
+    # X_train = sparse.hstack([X_train, cover_words_vector_train])
+    # X_val = sparse.hstack([X_val, cover_words_vector_test])
 
     print(y_train.mean(), y_train.std())
     print(y_val.mean(), y_val.std())
@@ -122,7 +131,7 @@ if __name__ == '__main__':
                                 learning_rate=0.05, min_child_weight=200,
                                 random_state=2018, n_jobs=-1, device='gpu' if args.gpu_mode else 'cpu',
                                 silent=False)
-    model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())], eval_metric='auc', early_stopping_rounds=300)
+    model.clf.fit(X_train, y_train.ravel(),eval_set=[(X_train, y_train.ravel()),(X_val, y_val.ravel())], eval_metric='auc', early_stopping_rounds=100)
 
     # model.clf = LGBMClassifier(boosting_type='gbdt', num_leaves=127,
     #                max_depth=8, learning_rate=0.1,

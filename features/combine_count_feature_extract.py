@@ -4,15 +4,21 @@ import argparse
 import sys
 
 sys.path.append('..')
+import itertools
+import time
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from multiprocessing import cpu_count
 
 import pandas as pd
 import numpy as np
 from common.utils import read_data, store_data
 from conf.modelconf import get_data_file, data_dir, feature_dtype_map
-from common.utils import count_combine_feat_ctr
+from common.utils import count_combine_feat_ctr, combine_pos_neg_times, combine_feat_times
 from common import utils
 
 parser = argparse.ArgumentParser()
+parser.add_argument('-p', '--pool-type', help='pool type, threads or process, here use process for more performance')
+parser.add_argument('-n', '--num-workers', help='workers num in pool', default=cpu_count())
 parser.add_argument('-f', '--format', help='store pandas feature format, csv, pkl')
 parser.add_argument('-o', '--online', help='online feature extract', action="store_true")
 parser.add_argument('-k', '--offline-kfold', help='offline kth fold feature extract, extract kth fold', default=0)
@@ -28,10 +34,6 @@ if __name__ == '__main__':
     fmt = args.format if args.format else 'csv'
     kfold = int(args.offline_kfold)
     if args.online:
-        TRAIN_TEXT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('train_text.txt',
-                                                                                              args.online)
-        TEST_TEXT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('test_text.txt',
-                                                                                             args.online)
         TRAIN_FACE, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('train_face.txt',
                                                                                               args.online)
         TEST_FACE, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file('test_face.txt',
@@ -42,13 +44,11 @@ if __name__ == '__main__':
 
         VISUAL_FEATURE_TRAIN_FILE = 'visual_feature_train' + '.' + fmt
         VISUAL_FEATURE_TEST_FILE = 'visual_feature_test' + '.' + fmt
+        TEXT_FEATURE_FILE = 'text_feature' + '.' + fmt
+
 
 
     else:
-        TRAIN_TEXT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
-            'train_text' + str(kfold) + '.txt', online=False)
-        TEST_TEXT, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
-            'test_text' + str(kfold) + '.txt', online=False)
         TRAIN_FACE, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
             'train_face' + str(kfold) + '.txt', args.online)
         TEST_FACE, online_data_dir, feature_store_dir, col_feature_store_dir = get_data_file(
@@ -61,6 +61,10 @@ if __name__ == '__main__':
 
         VISUAL_FEATURE_TRAIN_FILE = 'visual_feature_train' + str(kfold) + '.' + fmt
         VISUAL_FEATURE_TEST_FILE = 'visual_feature_test' + str(kfold) + '.' + fmt
+        TEXT_FEATURE_FILE = 'text_feature' + str(kfold) + '.' + fmt
+
+    text_data = read_data(os.path.join(feature_store_dir, TEXT_FEATURE_FILE), fmt)
+    print(text_data.info())
 
     face_train = pd.read_csv(TRAIN_FACE,
                              sep='\t',
@@ -72,11 +76,6 @@ if __name__ == '__main__':
                                   header=None,
                                   names=['user_id', 'photo_id', 'click', 'like', 'follow', 'time', 'playing_time',
                                          'duration_time'])
-
-    text_train = pd.read_csv(TRAIN_TEXT,
-                             sep='\t',
-                             header=None,
-                             names=['photo_id', 'cover_words'])
 
     face_test = pd.read_csv(TEST_FACE,
                             sep='\t',
@@ -95,11 +94,6 @@ if __name__ == '__main__':
                                      names=['user_id', 'photo_id', 'click', 'like', 'follow', 'time', 'playing_time',
                                          'duration_time'])
 
-    text_test = pd.read_csv(TEST_TEXT,
-                            sep='\t',
-                            header=None,
-                            names=['photo_id', 'cover_words'])
-
     visual_train = read_data(os.path.join(feature_store_dir, VISUAL_FEATURE_TRAIN_FILE), fmt)
     visual_test = read_data(os.path.join(feature_store_dir, VISUAL_FEATURE_TEST_FILE), fmt)
 
@@ -107,6 +101,9 @@ if __name__ == '__main__':
     print(visual_test.head())
     user_item_train = pd.merge(user_item_train, visual_train, how='left', on=['user_id', 'photo_id'])
     user_item_test = pd.merge(user_item_test, visual_test, how='left', on=['user_id', 'photo_id'])
+    user_item_train = pd.merge(user_item_train, text_data, how='left', on=['photo_id'])
+    user_item_test = pd.merge(user_item_test, text_data, how='left', on=['photo_id'])
+
 
     num_face_train = face_train.shape[0]
     face_data = pd.concat([face_train, face_test]).reset_index(drop=True)
@@ -169,23 +166,7 @@ if __name__ == '__main__':
         df['appearance'].fillna(-1, inplace=True)
 
 
-    def words_to_list(words):
-        if words == '0':
-            return []
-        else:
-            return words.split(',')
-
-
-    text_train['cover_words'] = text_train['cover_words'].apply(words_to_list)
-    text_train['cover_length'] = text_train['cover_words'].apply(len)
-    text_test['cover_words'] = text_test['cover_words'].apply(words_to_list)
-    text_test['cover_length'] = text_test['cover_words'].apply(len)
-
-    user_item_train = pd.merge(user_item_train, text_train, how='left', on=['photo_id'])
-    user_item_test = pd.merge(user_item_test, text_test, how='left', on=['photo_id'])
-
-    cate_cols = ['face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length', 'duration_time', 'time', 'photo_cluster_label']
-    cate_cols = ['photo_cluster_label']
+    cate_cols = ['face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length', 'duration_time', 'time', 'photo_cluster_label', 'text_cluster_label']
     if args.discretization:
         for col in cate_cols:
             func_name = col + '_discretization'
@@ -197,27 +178,29 @@ if __name__ == '__main__':
 
 
     combine_cols = []
-    for col1 in ['user_id']:
-        for col2 in cate_cols:
-            col = col1 + '_' + col2 + '_ctr'
-            user_item_train[col], user_item_test[col] = count_combine_feat_ctr(
+    for col1, col2 in itertools.permutations(cate_cols, 2):
+            pos_col = col1 + '_' + col2 + '_pos_cnt'
+            neg_col = col1 + '_' + col2 + '_neg_cnt'
+            user_item_train[pos_col], user_item_train[neg_col], user_item_test[pos_col], user_item_test[neg_col] = combine_pos_neg_times(
                                                                             user_item_train[col1].astype(str).values,
                                                                             user_item_train[col2].astype(str).values,
                                                                             user_item_test[col1].astype(str).values,
                                                                            user_item_test[col2].astype(str).values,
                                                                            user_item_train['click'].values)
-            combine_cols.append(col)
+            # combine_feat_times()
+            combine_cols.append(pos_col)
+            combine_cols.append(neg_col)
 
 
 
     print(combine_cols)
     if args.online:
-        COMBINE_TRAIN_FEATURE_FILE = 'combine_ctr_feature_train' + '.' + fmt
-        COMBINE_TEST_FEATURE_FILE = 'combine_ctr_feature_test' + '.' + fmt
+        COMBINE_TRAIN_FEATURE_FILE = 'combine_cnt_feature_train' + '.' + fmt
+        COMBINE_TEST_FEATURE_FILE = 'combine_cnt_feature_test' + '.' + fmt
 
     else:
-        COMBINE_TRAIN_FEATURE_FILE = 'combine_ctr_feature_train' + str(kfold) + '.' + fmt
-        COMBINE_TEST_FEATURE_FILE = 'combine_ctr_feature_test' + str(kfold) + '.' + fmt
+        COMBINE_TRAIN_FEATURE_FILE = 'combine_cnt_feature_train' + str(kfold) + '.' + fmt
+        COMBINE_TEST_FEATURE_FILE = 'combine_cnt_feature_test' + str(kfold) + '.' + fmt
 
     combine_train = user_item_train[['user_id', 'photo_id'] + combine_cols]
     combine_test = user_item_test[['user_id', 'photo_id'] + combine_cols]
@@ -231,10 +214,26 @@ if __name__ == '__main__':
 
     if not os.path.exists(feature_store_dir):
         os.mkdir(feature_store_dir)
-    # store_data(combine_train, os.path.join(feature_store_dir, COMBINE_TRAIN_FEATURE_FILE), fmt)
-    # store_data(combine_test, os.path.join(feature_store_dir, COMBINE_TEST_FEATURE_FILE), fmt)
+    store_data(combine_train, os.path.join(feature_store_dir, COMBINE_TRAIN_FEATURE_FILE), fmt)
+    store_data(combine_test, os.path.join(feature_store_dir, COMBINE_TEST_FEATURE_FILE), fmt)
 
     #column
-    for col in combine_cols:
-        store_data(combine_train[[col]], os.path.join(col_feature_store_dir, col + '_train.csv'), fmt)
-        store_data(combine_test[[col]], os.path.join(col_feature_store_dir, col + '_test.csv'), fmt)
+    # column
+    tasks_args = []
+    for col in set(combine_train.columns) - set(['user_id', 'photo_id']):
+        tasks_args.append((combine_train[[col]], os.path.join(col_feature_store_dir, col + '_train.csv'), fmt))
+        tasks_args.append((combine_test[[col]], os.path.join(col_feature_store_dir, col + '_test.csv'), fmt))
+
+
+    def feature_saver(args):
+        df, path, fmt = args
+        res = store_data(df, path, fmt)
+        return res
+
+
+    start_time_1 = time.time()
+    Executor = ThreadPoolExecutor if args.pool_type == 'thread' else ProcessPoolExecutor
+    with Executor(max_workers=int(args.num_workers)) as executor:
+        for file in executor.map(feature_saver, tasks_args):
+            print('%s saved' % file)
+    print ("%s pool execution in %s seconds" % (args.pool_type, str(time.time() - start_time_1)))

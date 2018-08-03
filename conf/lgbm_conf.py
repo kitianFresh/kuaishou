@@ -3,6 +3,7 @@
 # model config
 
 # feature config
+import itertools
 # 'hour_click_ratio', 'period_click_ratio', 'click_ratio'， 'playing_duration_favor'
 user_action_features = ['click_ratio', 'browse_num', 'click_num', 'like_num', 'follow_num', 'playing_sum',
                         'duration_sum', 'like_ratio', 'follow_ratio', 'playing_ratio', 'duration_favor', 'playing_duration_favor']
@@ -45,7 +46,18 @@ combine_ctr_features = []
 one_ctr_features = ['cover_words_ctr', 'face_num_ctr', 'woman_num_ctr', 'man_num_ctr', 'gender_ctr', 'age_ctr',
                     'appearance_ctr', 'cover_length_ctr', 'duration_time_ctr', 'time_ctr', 'photo_cluster_label_ctr']
 
+cate_cols = ['face_num', 'woman_num', 'man_num', 'gender', 'age', 'appearance', 'cover_length', 'duration_time', 'time',
+             'photo_cluster_label', 'text_cluster_label']
+
+pos_neg_cnt_features = []
+for col1, col2 in itertools.permutations(cate_cols, 2):
+    pos_col = col1 + '_' + col2 + '_pos_cnt'
+    neg_col = col1 + '_' + col2 + '_neg_cnt'
+    pos_neg_cnt_features.append(pos_col)
+    pos_neg_cnt_features.append(neg_col)
+
+
 y_label = ['click']
 
-features_to_train = user_features + photo_features + time_features + combine_ctr_features + one_ctr_features
+features_to_train = user_features + photo_features + time_features + combine_ctr_features + one_ctr_features + pos_neg_cnt_features
 # features_to_train = list(set(features_to_train) - set(['clicked_ratio']))

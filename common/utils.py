@@ -12,12 +12,307 @@ import io
 import json
 import sys
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from tqdm import tqdm
 
 import numpy as np
 import pandas as pd
 import scipy.special as special
 
 from conf.modelconf import feature_dtype_map, alpha, beta
+
+
+def count_feat_times(train, test):
+    total_dict = {}
+    for i, d in tqdm(enumerate(train)):
+        if not isinstance(d, list) and not isinstance(d, tuple):
+            assert isinstance(d, basestring)
+            d = d.split(' ')
+        for x in d:
+            if x not in total_dict:
+                total_dict[x] = 0.0
+            total_dict[x] += 1
+
+    train_res = []
+    for i, d in tqdm(enumerate(train)):
+        cnt_vec = []
+        if not isinstance(d, list) and not isinstance(d, tuple):
+            assert isinstance(d, basestring)
+            d = d.split(' ')
+        for x in d:
+            if x not in total_dict:
+                cnt_vec.append(-1)
+            else:
+                cnt_vec.append(total_dict[x])
+        if len(cnt_vec) == 0:
+            train_res.append(-1)
+        else:
+            train_res.append(max(cnt_vec))
+
+    test_res = []
+    for i, d in tqdm(enumerate(test)):
+        cnt_vec = []
+        for x in d:
+            if not isinstance(d, list) and not isinstance(d, tuple):
+                assert isinstance(d, basestring)
+                d = d.split(' ')
+            if x not in total_dict:
+                cnt_vec.append(-1)
+            else:
+                cnt_vec.append(total_dict[x])
+        if len(cnt_vec) == 0:
+            test_res.append(-1)
+        else:
+            test_res.append(max(cnt_vec))
+
+    return np.array(train_res), np.array(test_res)
+
+def combine_feat_times(train1, train2, test1, test2):
+    total_dict = {}
+    for i, d1 in tqdm(enumerate(train1)):
+        d2 = train2[i]
+        if not isinstance(d1, list) and not isinstance(d1, tuple):
+            assert isinstance(d1, basestring)
+            d1 = d1.split(' ')
+        if not isinstance(d2, list) and not isinstance(d2, tuple):
+            assert isinstance(d2, basestring)
+            d2 = d2.split(' ')
+        for x in d1:
+            for y in d2:
+                comb = x + '|' + y
+                if comb not in total_dict:
+                    total_dict[comb] = 0.0
+                total_dict[comb] += 1
+
+    train_res = []
+    for i, d1 in tqdm(enumerate(train1)):
+        d2 = train2[i]
+        count_vec = []
+        if not isinstance(d1, list) and not isinstance(d1, tuple):
+            assert isinstance(d1, basestring)
+            d1 = d1.split(' ')
+        if not isinstance(d2, list) and not isinstance(d2, tuple):
+            assert isinstance(d2, basestring)
+            d2 = d2.split(' ')
+        for x in d1:
+            for y in d2:
+                comb = x + '|' + y
+                if comb not in total_dict:
+                    count_vec.append(-1)
+                else:
+                    count_vec.append(total_dict[comb])
+        if len(count_vec) == 0:
+            train_res.append(-1)
+        else:
+            train_res.append(max(count_vec))
+
+    test_res = []
+    for i, d1 in tqdm(enumerate(test1)):
+        d2 = test2[i]
+        count_vec = []
+        if not isinstance(d1, list) and not isinstance(d1, tuple):
+            assert isinstance(d1, basestring)
+            d1 = d1.split(' ')
+        if not isinstance(d2, list) and not isinstance(d2, tuple):
+            assert isinstance(d2, basestring)
+            d2 = d2.split(' ')
+        for x in d1:
+            for y in d2:
+                comb = x + '|' + y
+                if comb not in total_dict:
+                    count_vec.append(-1)
+                else:
+                    count_vec.append(total_dict[comb])
+        if len(count_vec) == 0:
+            test_res.append(-1)
+        else:
+            test_res.append(max(count_vec))
+
+    return np.array(train_res), np.array(test_res)
+
+def count_pos_neg_times(train, test, label):
+    pos_dict = {}
+    neg_dict = {}
+    n = len(train)
+    for i, d in tqdm(enumerate(train), total=n):
+        if not isinstance(d, list) and not isinstance(d, tuple):
+            assert isinstance(d, basestring)
+            d = d.split(' ')
+        for x in d:
+            if label[i] == 1:
+                if x not in pos_dict:
+                    pos_dict[x] = 0.0
+                else:
+                    pos_dict[x] += 1
+            if label[i] == 0:
+                if x not in neg_dict:
+                    neg_dict[x] = 0.0
+                else:
+                    neg_dict[x] += 1
+
+    train_res_pos = []
+    train_res_neg = []
+    for i, d in tqdm(enumerate(train), total=n):
+        cnt_vec_pos = []
+        cnt_vec_neg = []
+        if not isinstance(d, list) and not isinstance(d, tuple):
+            assert isinstance(d, basestring)
+            d = d.split(' ')
+        for x in d:
+            if label[i] == 1:
+                if x not in pos_dict:
+                    cnt_vec_pos.append(-1)
+                else:
+                    cnt_vec_pos.append(pos_dict[x])
+            if label[i] == 0:
+                if x not in neg_dict:
+                    cnt_vec_neg.append(-1)
+                else:
+                    cnt_vec_neg.append(neg_dict[x])
+
+        if len(cnt_vec_pos) == 0:
+            train_res_pos.append(-1)
+        else:
+            train_res_pos.append(max(cnt_vec_pos))
+
+        if len(cnt_vec_neg) == 0:
+            train_res_neg.append(-1)
+        else:
+            train_res_neg.append(max(cnt_vec_neg))
+
+    test_res_pos = []
+    test_res_neg = []
+    len_test = len(test)
+    for i, d in tqdm(enumerate(test), total=len_test):
+        cnt_vec_pos = []
+        cnt_vec_neg = []
+        if not isinstance(d, list) and not isinstance(d, tuple):
+            assert isinstance(d, basestring)
+            d = d.split(' ')
+        for x in d:
+            if label[i] == 1:
+                if x not in pos_dict:
+                    cnt_vec_pos.append(-1)
+                else:
+                    cnt_vec_pos.append(pos_dict[x])
+            if label[i] == 0:
+                if x not in neg_dict:
+                    cnt_vec_neg.append(-1)
+                else:
+                    cnt_vec_neg.append(neg_dict[x])
+
+        if len(cnt_vec_pos) == 0:
+            test_res_pos.append(-1)
+        else:
+            test_res_pos.append(max(cnt_vec_pos))
+
+        if len(cnt_vec_neg) == 0:
+            test_res_neg.append(-1)
+        else:
+            test_res_neg.append(max(cnt_vec_neg))
+
+    return np.array(train_res_pos), np.array(train_res_neg), np.array(test_res_pos), np.array(test_res_neg)
+
+
+def combine_pos_neg_times(train1, train2, test1, test2, label):
+    pos_dict = {}
+    neg_dict = {}
+    n = len(train1)
+    for i, d1 in tqdm(enumerate(train1), total=n):
+        d2 = train2[i]
+        if not isinstance(d1, list) and not isinstance(d1, tuple):
+            assert isinstance(d1, basestring)
+            d1 = d1.split(' ')
+        if not isinstance(d2, list) and not isinstance(d2, tuple):
+            assert isinstance(d2, basestring)
+            d2 = d2.split(' ')
+        for x in d1:
+            for y in d2:
+                comb = x + '|' + y
+                if label[i] == 1:
+                    if comb not in pos_dict:
+                        pos_dict[comb] = 0.0
+                    else:
+                        pos_dict[comb] += 1
+                if label[i] == 0:
+                    if comb not in neg_dict:
+                        neg_dict[comb] = 0.0
+                    else:
+                        neg_dict[comb] += 1
+
+    train_res_pos = []
+    train_res_neg = []
+    for i, d1 in tqdm(enumerate(train1), total=n):
+        d2 = train2[i]
+        count_vec_pos = []
+        count_vec_neg = []
+        if not isinstance(d1, list) and not isinstance(d1, tuple):
+            assert isinstance(d1, basestring)
+            d1 = d1.split(' ')
+        if not isinstance(d2, list) and not isinstance(d2, tuple):
+            assert isinstance(d2, basestring)
+            d2 = d2.split(' ')
+        for x in d1:
+            for y in d2:
+                comb = x + '|' + y
+                if label[i] == 1:
+                    if comb not in pos_dict:
+                        count_vec_pos.append(-1)
+                    else:
+                        count_vec_pos.append(pos_dict[comb])
+                if label[i] == 0:
+                    if comb not in neg_dict:
+                        count_vec_neg.append(-1)
+                    else:
+                        count_vec_neg.append(neg_dict[comb])
+
+        if len(count_vec_pos) == 0:
+            train_res_pos.append(-1)
+        else:
+            train_res_pos.append(max(count_vec_pos))
+
+        if len(count_vec_neg) == 0:
+            train_res_neg.append(-1)
+        else:
+            train_res_neg.append(max(count_vec_neg))
+
+    test_res_pos = []
+    test_res_neg = []
+    len_test = len(test1)
+    for i, d1 in tqdm(enumerate(test1), total=len_test):
+        d2 = test2[i]
+        count_vec_pos = []
+        count_vec_neg = []
+        if not isinstance(d1, list) and not isinstance(d1, tuple):
+            assert isinstance(d1, basestring)
+            d1 = d1.split(' ')
+        if not isinstance(d2, list) and not isinstance(d2, tuple):
+            assert isinstance(d2, basestring)
+            d2 = d2.split(' ')
+        for x in d1:
+            for y in d2:
+                if label[i] == 1:
+                    comb = x + '|' + y
+                    if comb not in pos_dict:
+                        count_vec_pos.append(-1)
+                    else:
+                        count_vec_pos.append(pos_dict[comb])
+                if label[i] == 0:
+                    if comb not in neg_dict:
+                        count_vec_neg.append(-1)
+                    else:
+                        count_vec_neg.append(neg_dict[comb])
+
+        if len(count_vec_pos) == 0:
+            test_res_pos.append(-1)
+        else:
+            test_res_pos.append(max(count_vec_pos))
+
+        if len(count_vec_neg) == 0:
+            test_res_neg.append(-1)
+        else:
+            test_res_neg.append(max(count_vec_neg))
+
+    return np.array(train_res_pos), np.array(train_res_neg), np.array(test_res_pos), np.array(test_res_neg)
 
 
 def gen_count_dict(data, labels, begin, end):
@@ -45,7 +340,8 @@ def count_feat_ctr(train, test, labels):
     prior = alpha / (alpha + beta)
     total_dict, pos_dict = gen_count_dict(train, labels, 1, 0)
     train_res = []
-    for i, d in enumerate(train):
+    n =len(train)
+    for i, d in tqdm(enumerate(train), total=n):
         ctr_vec = []
         if not isinstance(d, list) and not isinstance(d, tuple):
             assert isinstance(d, basestring)
@@ -61,7 +357,8 @@ def count_feat_ctr(train, test, labels):
             train_res.append(max(ctr_vec))
 
     test_res = []
-    for i, d in enumerate(test):
+    len_test = len(test)
+    for i, d in tqdm(enumerate(test), total=len_test):
         ctr_vec = []
         for x in d:
             if not isinstance(d, list) and not isinstance(d, tuple):
@@ -110,7 +407,8 @@ def count_combine_feat_ctr(train1, train2, test1, test2, labels):
     prior = alpha / (alpha + beta)
     total_dict, pos_dict = gen_combine_count_dict(train1, train2, labels, 1, 0)
     train_res = []
-    for i, d1 in enumerate(train1):
+    n = len(train1)
+    for i, d1 in tqdm(enumerate(train1), total=n):
         d2 = train2[i]
         ctr_vec = []
         if not isinstance(d1, list) and not isinstance(d1, tuple):
@@ -126,13 +424,14 @@ def count_combine_feat_ctr(train1, train2, test1, test2, labels):
                     ctr_vec.append(prior)
                 else:
                     ctr_vec.append((alpha + pos_dict[comb])/ (alpha+beta+total_dict[comb]))
-            if len(ctr_vec) == 0:
-                train_res.append(prior)
-            else:
-                train_res.append(max(ctr_vec))
+        if len(ctr_vec) == 0:
+            train_res.append(prior)
+        else:
+            train_res.append(max(ctr_vec))
 
     test_res = []
-    for i, d1 in enumerate(test1):
+    len_test = len(test1)
+    for i, d1 in tqdm(enumerate(test1), total=len_test):
         d2 = test2[i]
         ctr_vec = []
         if not isinstance(d1, list) and not isinstance(d1, tuple):
@@ -148,10 +447,10 @@ def count_combine_feat_ctr(train1, train2, test1, test2, labels):
                     ctr_vec.append(prior)
                 else:
                     ctr_vec.append((alpha + pos_dict[comb])/ (alpha+beta+total_dict[comb]))
-            if len(ctr_vec) == 0:
-                test_res.append(prior)
-            else:
-                test_res.append(max(ctr_vec))
+        if len(ctr_vec) == 0:
+            test_res.append(prior)
+        else:
+            test_res.append(max(ctr_vec))
 
     return np.array(train_res), np.array(test_res)
 
